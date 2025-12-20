@@ -1,0 +1,46 @@
+services:
+  warehouse:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: warehouse-microservice-green
+    ports:
+      - "${PORT:-3201}:${PORT:-3201}"
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=${NODE_ENV:-production}
+      - SERVICE_NAME=${SERVICE_NAME:-warehouse-microservice}
+      - PORT=${PORT:-3201}
+      - DB_HOST=${DB_HOST:-db-server-postgres}
+      - DB_PORT=${DB_PORT:-5432}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME:-warehouse_db}
+      - DATABASE_URL=${DATABASE_URL}
+      - RABBITMQ_URL=${RABBITMQ_URL:-amqp://guest:guest@rabbitmq:5672}
+      - CATALOG_SERVICE_URL=${CATALOG_SERVICE_URL:-http://catalog-microservice:3200}
+      - AUTH_SERVICE_URL=${AUTH_SERVICE_URL}
+      - LOGGING_SERVICE_URL=${LOGGING_SERVICE_URL}
+      - JWT_SECRET=${JWT_SECRET}
+    networks:
+      - nginx-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 128M
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:${PORT:-3201}/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+networks:
+  nginx-network:
+    external: true
+    name: nginx-network
+
