@@ -26,25 +26,35 @@ export class StockEventsService implements OnModuleInit, OnModuleDestroy {
       const url = process.env.RABBITMQ_URL || 'amqp://guest:guest@localhost:5672';
       this.logger.log(`Connecting to RabbitMQ: ${url}`, 'StockEventsService');
 
-      this.connection = await amqp.connect(url);
-      this.channel = await this.connection.createChannel();
+      const conn = await amqp.connect(url);
+      this.connection = conn as unknown as amqp.Connection;
+      const ch = await this.connection.createChannel();
+      this.channel = ch as unknown as amqp.Channel;
 
       // Declare exchange for stock events
       await this.channel.assertExchange(this.exchangeName, 'topic', { durable: true });
 
       this.logger.log('Connected to RabbitMQ', 'StockEventsService');
-    } catch (error) {
-      this.logger.error(`Failed to connect to RabbitMQ: ${error.message}`, error.stack, 'StockEventsService');
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      this.logger.error(`Failed to connect to RabbitMQ: ${errorMessage}`, errorStack, 'StockEventsService');
     }
   }
 
   private async disconnect() {
     try {
-      if (this.channel) await this.channel.close();
-      if (this.connection) await this.connection.close();
+      if (this.channel) {
+        await this.channel.close();
+      }
+      if (this.connection) {
+        await this.connection.close();
+      }
       this.logger.log('Disconnected from RabbitMQ', 'StockEventsService');
-    } catch (error) {
-      this.logger.error(`Error disconnecting from RabbitMQ: ${error.message}`, error.stack, 'StockEventsService');
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      this.logger.error(`Error disconnecting from RabbitMQ: ${errorMessage}`, errorStack, 'StockEventsService');
     }
   }
 
@@ -109,8 +119,10 @@ export class StockEventsService implements OnModuleInit, OnModuleDestroy {
         persistent: true,
         contentType: 'application/json',
       });
-    } catch (error) {
-      this.logger.error(`Failed to publish event: ${error.message}`, error.stack, 'StockEventsService');
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      this.logger.error(`Failed to publish event: ${errorMessage}`, errorStack, 'StockEventsService');
     }
   }
 }

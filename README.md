@@ -152,8 +152,8 @@ docker compose -f docker-compose.blue.yml up -d
 ## Related Services
 
 - `catalog-microservice` (3200) - Product catalog
-- `supplier-microservice` (3202) - Supplier API integration
-- `order-microservice` (3203) - Order processing
+- `suppliers-microservice` (3202) - Supplier API integration
+- `orders-microservice` (3203) - Order processing
 - `allegro-service` (34xx) - Allegro sales channel (subscribes to stock events)
 - `flipflop-service` (35xx) - FlipFlop website (subscribes to stock events)
 
