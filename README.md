@@ -59,7 +59,8 @@ Base URL: `https://warehouse.statex.cz/api` (or `http://localhost:3201/api` in d
 
 ### Health
 
-- `GET /health` - Health check
+- `GET /api/health` - Health check
+- `GET /api/ready` - Readiness check
 
 ## RabbitMQ Events
 
