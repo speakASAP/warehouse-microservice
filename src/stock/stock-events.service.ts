@@ -7,7 +7,7 @@ import { LoggerService } from '../logger/logger.service';
  */
 @Injectable()
 export class StockEventsService implements OnModuleInit, OnModuleDestroy {
-  private connection: amqp.Connection | null = null;
+  private connection: any = null;
   private channel: amqp.Channel | null = null;
   private readonly exchangeName = 'stock.events';
 
@@ -27,9 +27,15 @@ export class StockEventsService implements OnModuleInit, OnModuleDestroy {
       this.logger.log(`Connecting to RabbitMQ: ${url}`, 'StockEventsService');
 
       const conn = await amqp.connect(url);
-      this.connection = conn as unknown as amqp.Connection;
+      this.connection = conn;
+      if (!this.connection) {
+        throw new Error('Failed to establish RabbitMQ connection');
+      }
       const ch = await this.connection.createChannel();
       this.channel = ch as unknown as amqp.Channel;
+      if (!this.channel) {
+        throw new Error('Failed to create RabbitMQ channel');
+      }
 
       // Declare exchange for stock events
       await this.channel.assertExchange(this.exchangeName, 'topic', { durable: true });
@@ -46,9 +52,11 @@ export class StockEventsService implements OnModuleInit, OnModuleDestroy {
     try {
       if (this.channel) {
         await this.channel.close();
+        this.channel = null;
       }
       if (this.connection) {
         await this.connection.close();
+        this.connection = null;
       }
       this.logger.log('Disconnected from RabbitMQ', 'StockEventsService');
     } catch (error: unknown) {
