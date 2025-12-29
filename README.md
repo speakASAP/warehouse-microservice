@@ -121,15 +121,15 @@ git clone git@github.com:speakASAP/warehouse-microservice.git
 cd warehouse-microservice
 ```
 
-2. Copy `.env.example` to `.env` and configure
+1. Copy `.env.example` to `.env` and configure
 
-3. Install dependencies:
+2. Install dependencies:
 
 ```bash
 npm install
 ```
 
-4. Run in development:
+1. Run in development:
 
 ```bash
 npm run start:dev
@@ -157,4 +157,3 @@ docker compose -f docker-compose.blue.yml up -d
 - `orders-microservice` (3203) - Order processing
 - `allegro-service` (34xx) - Allegro sales channel (subscribes to stock events)
 - `flipflop-service` (35xx) - FlipFlop website (subscribes to stock events)
-
