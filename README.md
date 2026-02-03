@@ -11,7 +11,7 @@ The Warehouse Microservice tracks stock levels across all warehouses and publish
 **Port Range**: 32xx (Central e-commerce microservices)
 
 | Service | Subdomain | Port |
-|---------|-----------|------|
+| ------- | --------- | ---- |
 | warehouse-microservice | warehouse.statex.cz | 3201 |
 
 ## Features
