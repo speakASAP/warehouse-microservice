@@ -19,5 +19,5 @@ flipflop-service, allegro-service, aukro-service, bazos-service, heureka-service
 ## SLA
 
 - Port: 3201 (<http://warehouse-microservice:3201>)
-- Production: <https://warehouse.statex.cz>
+- Production: <https://warehouse.alfares.cz>
 - Event: `stock.updated` → RabbitMQ

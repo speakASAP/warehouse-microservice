@@ -47,7 +47,7 @@ Create a technological ecosystem where multiple microservices are available on t
         │                   │                   │
 ┌───────▼──────┐  ┌────────▼────────┐   ┌───────▼──────┐
 │  Application │  │  Application    │   │  Application │
-│  (flipflop)  │  │  (statex.cz)    │   │  (crypto-ai) │
+│  (flipflop)  │  │  (alfares.cz)    │   │  (crypto-ai) │
 └───────┬──────┘  └─────────┬───────┘   └───────┬──────┘
         │                   │                   │
         └───────────────────┼───────────────────┘
@@ -76,7 +76,7 @@ Create a technological ecosystem where multiple microservices are available on t
   - Automatic SSL certificate management (Let's Encrypt/Certbot)
   - Blue/green deployment orchestration
   - Load balancing and routing
-  - Used by: All applications (statex.cz, flipflop.statex.cz, crypto-ai-agent.statex.cz, etc.)
+  - Used by: All applications (alfares.cz, flipfloalfares.czczcz, crypto-ai-agalfares.cz.cz.cz, etc.)
 
 #### 2. **database-server**
 
@@ -94,7 +94,7 @@ Create a technological ecosystem where multiple microservices are available on t
 
 - **Purpose**: Multi-channel notification service
 - **Access**:
-  - Production URL: `https://notifications.statex.cz`
+  - Production URL: `https://notifications.alfares.cz`
   - Docker Network: `http://notifications-microservice:${PORT:-3368}` (port configured in notifications-microservice/.env)
 - **Features**:
   - Email notifications (SendGrid)
@@ -102,13 +102,13 @@ Create a technological ecosystem where multiple microservices are available on t
   - WhatsApp notifications
   - SMS notifications (future)
   - Template management
-  - Used by: flipflop, statex.cz, and other applications
+  - Used by: flipflop, alfares.cz, and other applications
 
 #### 4. **logging-microservice**
 
 - **Purpose**: Centralized logging service
 - **Access**:
-  - Production URL: `https://logging.statex.cz`
+  - Production URL: `https://logging.alfares.cz`
   - Docker Network: `http://logging-microservice:${PORT:-3367}` (port configured in logging-microservice/.env)
 - **Features**:
   - Centralized log collection
@@ -120,7 +120,7 @@ Create a technological ecosystem where multiple microservices are available on t
 
 - **Purpose**: Centralized payment processing service
 - **Access**:
-  - Production URL: `https://payments.statex.cz`
+  - Production URL: `https://payments.alfares.cz`
   - Docker Network: `http://payments-microservice:${SERVICE_PORT:-3468}` (port configured in payments-microservice/.env)
 - **Features**:
   - Multiple payment methods (PayPal, Stripe, PayU, Fio Banka, ComGate)
@@ -135,7 +135,7 @@ Create a technological ecosystem where multiple microservices are available on t
 
 - **Purpose**: Centralized authentication and login service
 - **Access**:
-  - Production URL: `https://auth.statex.cz`
+  - Production URL: `https://auth.alfares.cz`
   - Docker Network: `http://auth-microservice:${PORT:-3370}` (port configured in auth-microservice/.env)
 - **Features**:
   - User registration and login (email/password)
@@ -154,7 +154,7 @@ Create a technological ecosystem where multiple microservices are available on t
 
 - **Purpose**: Centralized AI processing service for business automation
 - **Access**:
-  - Production URL: `https://ai.statex.cz`
+  - Production URL: `https://ai.alfares.cz`
   - Docker Network: `http://ai-microservice:${AI_ORCHESTRATOR_PORT:-3380}` (port configured in ai-microservice/.env)
 - **Features**:
   - AI Orchestrator - Central coordination for all AI operations
@@ -175,7 +175,7 @@ Create a technological ecosystem where multiple microservices are available on t
 
 - **Purpose**: Centralized warehouse and stock management with real-time updates
 - **Access**:
-  - Production URL: `https://warehouse.statex.cz`
+  - Production URL: `https://warehouse.alfares.cz`
   - Docker Network: `http://warehouse-microservice:${PORT:-3201}` (port configured in warehouse-microservice/.env)
 - **Features**:
   - Track stock across multiple warehouses (own and supplier dropship)
@@ -189,7 +189,7 @@ Create a technological ecosystem where multiple microservices are available on t
 
 - **Purpose**: Single source of truth for all product data across the e-commerce platform
 - **Access**:
-  - Production URL: `https://catalog.statex.cz`
+  - Production URL: `https://catalog.alfares.cz`
   - Docker Network: `http://catalog-microservice:${PORT:-3200}` (port configured in catalog-microservice/.env)
 - **Features**:
   - Centralized product management (SKU, title, description, brand, EAN, dimensions)
@@ -203,7 +203,7 @@ Create a technological ecosystem where multiple microservices are available on t
 
 - **Purpose**: Supplier API integration and product import service
 - **Access**:
-  - Production URL: `https://supplier.statex.cz`
+  - Production URL: `https://supplier.alfares.cz`
   - Docker Network: `http://suppliers-microservice:${PORT:-3202}` (port configured in suppliers-microservice/.env)
 - **Features**:
   - Connect to supplier REST/XML/CSV APIs
@@ -216,7 +216,7 @@ Create a technological ecosystem where multiple microservices are available on t
 
 - **Purpose**: Central order processing service for all sales channels
 - **Access**:
-  - Production URL: `https://orders.statex.cz`
+  - Production URL: `https://orders.alfares.cz`
   - Docker Network: `http://orders-microservice:${PORT:-3203}` (port configured in orders-microservice/.env)
 - **Features**:
   - Centralized order processing from all sales channels
@@ -245,7 +245,7 @@ Create a technological ecosystem where multiple microservices are available on t
 
 ## 📱 Applications
 
-### 1. **flipflop-service** (flipflop.statex.cz)
+### 1. **flipflop-service** (flipflop.alfares.cz)
 
 - **Purpose**: FlipFlop.cz e-commerce website service for selling diverse product categories
 - **Technology**: NestJS (TypeScript), PostgreSQL, Redis
@@ -253,7 +253,7 @@ Create a technological ecosystem where multiple microservices are available on t
 - **Documentation**: See `flipflop-service/README.md`
 - **Uses**: All shared microservices (database, notifications, logging, payments, auth)
 
-### 2. **crypto-ai-agent** (crypto-ai-agent.statex.cz)
+### 2. **crypto-ai-agent** (crypto-ai-agent.alfares.cz)
 
 - **Purpose**: AI-powered cryptocurrency trading and portfolio management platform
 - **Technology**: Python (FastAPI), PostgreSQL, Redis
@@ -261,7 +261,7 @@ Create a technological ecosystem where multiple microservices are available on t
 - **Documentation**: See `crypto-ai-agent/README.md`
 - **Uses**: All shared microservices (database, notifications, logging, payments, auth)
 
-### 3. **statex** (statex.cz)
+### 3. **statex** (alfares.cz)
 
 - **Purpose**: AI-powered business automation platform
 - **Technology**: Python (FastAPI), Next.js, PostgreSQL, Redis, RabbitMQ, MinIO, Elasticsearch
@@ -270,7 +270,7 @@ Create a technological ecosystem where multiple microservices are available on t
 - **Uses**: All shared microservices (database, notifications, logging, payments, auth, ai)
 - **Sub-services**: Multiple internal microservices (platform services, website services)
 
-### 4. **allegro-service** (allegro.statex.cz)
+### 4. **allegro-service** (allegro.alfares.cz)
 
 - **Purpose**: Sales channel service for Allegro.cz/pl marketplaces - multi-account offer management
 - **Technology**: NestJS (TypeScript), PostgreSQL
@@ -284,7 +284,7 @@ Create a technological ecosystem where multiple microservices are available on t
   - Polling events from Allegro API
   - Scheduled sync jobs
 
-### 5. **aukro-service** (aukro.statex.cz)
+### 5. **aukro-service** (aukro.alfares.cz)
 
 - **Purpose**: Aukro.cz marketplace integration service
 - **Technology**: NestJS (TypeScript), PostgreSQL
@@ -297,7 +297,7 @@ Create a technological ecosystem where multiple microservices are available on t
   - Subscribe to stock events → update Aukro stock
   - Receive Aukro orders → forward to orders-microservice
 
-### 6. **heureka-service** (heureka.statex.cz)
+### 6. **heureka-service** (heureka.alfares.cz)
 
 - **Purpose**: Heureka.cz/sk XML feed generation service
 - **Technology**: NestJS (TypeScript), PostgreSQL
@@ -310,7 +310,7 @@ Create a technological ecosystem where multiple microservices are available on t
   - Support multiple feed types (Heureka.cz, Heureka.sk)
   - Store feed generation history
 
-### 7. **bazos-service** (bazos.statex.cz)
+### 7. **bazos-service** (bazos.alfares.cz)
 
 - **Purpose**: Bazos.cz classifieds automation service
 - **Technology**: NestJS (TypeScript), PostgreSQL
@@ -323,7 +323,7 @@ Create a technological ecosystem where multiple microservices are available on t
   - Manage multiple Bazos accounts
   - Handle ad renewal/expiration
 
-### 8. **messenger** (messenger.statex.cz)
+### 8. **messenger** (messenger.alfares.cz)
 
 - **Purpose**: Self-hosted Matrix messaging service with Synapse homeserver, Element X client, and LiveKit SFU for A/V calls
 - **Technology**: Synapse (Matrix), PostgreSQL, Redis, LiveKit, Element X
@@ -338,7 +338,7 @@ Create a technological ecosystem where multiple microservices are available on t
   - Blue/green deployment support
   - Automatic SSL certificate management via nginx-microservice
 
-### 9. **beauty** (beauty.statex.cz)
+### 9. **beauty** (beauty.alfares.cz)
 
 - **Purpose**: Multi-tenant event-driven IT platform for beauty franchise network
 - **Technology**: Domain-Driven Design (DDD), Event-Driven Architecture, PostgreSQL, NATS/Kafka
@@ -356,7 +356,7 @@ Create a technological ecosystem where multiple microservices are available on t
   - Public website + online booking
   - Event-driven architecture with tenant isolation
 
-### 10. **marathon** (marathon.statex.cz)
+### 10. **marathon** (marathon.alfares.cz)
 
 - **Purpose**: Standalone marathon product for intensive learning programs
 - **Technology**: NestJS (TypeScript), PostgreSQL, Redis
@@ -365,7 +365,7 @@ Create a technological ecosystem where multiple microservices are available on t
 - **Uses**: All shared microservices (database, notifications, logging, payments, auth)
 - **Notes**: Production-only deployment with blue/green via nginx-microservice
 
-### 11. **shop-assistant** (shop-assistant.statex.cz)
+### 11. **shop-assistant** (shop-assistant.alfares.cz)
 
 - **Purpose**: AI shopping assistant ("Я хочу") – voice/text search, iterative refinement, best price across the web, redirect to merchant
 - **Technology**: NestJS (TypeScript), PostgreSQL, Prisma
@@ -405,26 +405,26 @@ REDIS_PORT=${REDIS_SERVER_PORT:-6379}  # From database-server/.env
 
 # Notifications (Shared)
 # Configured in notifications-microservice/.env: PORT (default: 3368)
-NOTIFICATION_SERVICE_URL=https://notifications.statex.cz  # Production
+NOTIFICATION_SERVICE_URL=https://notifications.alfares.cz  # Production
 # or
 NOTIFICATION_SERVICE_URL=http://notifications-microservice:${PORT:-3368}  # Docker network
 
 # Logging (Shared)
 # Configured in logging-microservice/.env: PORT (default: 3367)
-LOGGING_SERVICE_URL=https://logging.statex.cz  # Production
+LOGGING_SERVICE_URL=https://logging.alfares.cz  # Production
 # or
 LOGGING_SERVICE_URL=http://logging-microservice:${PORT:-3367}  # Docker network
 
 # Payments (Shared)
 # Configured in payments-microservice/.env: SERVICE_PORT (default: 3468), PORT_BLUE/PORT_GREEN (default: 3369)
-PAYMENT_SERVICE_URL=https://payments.statex.cz  # Production
+PAYMENT_SERVICE_URL=https://payments.alfares.cz  # Production
 # or
 PAYMENT_SERVICE_URL=http://payments-microservice:${SERVICE_PORT:-3468}  # Docker network
 PAYMENT_API_KEY=<your-api-key>
 
 # Authentication (Shared)
 # Configured in auth-microservice/.env: PORT (default: 3370)
-AUTH_SERVICE_URL=https://auth.statex.cz  # Production
+AUTH_SERVICE_URL=https://auth.alfares.cz  # Production
 # or
 AUTH_SERVICE_URL=http://auth-microservice:${PORT:-3370}  # Docker network
 
@@ -434,7 +434,7 @@ JWT_SECRET=<copy-from-auth-microservice/.env>  # Must match auth-microservice JW
 
 # AI Services (Shared)
 # Configured in ai-microservice/.env: AI_ORCHESTRATOR_PORT (default: 3380)
-AI_SERVICE_URL=https://ai.statex.cz  # Production
+AI_SERVICE_URL=https://ai.alfares.cz  # Production
 # or
 AI_SERVICE_URL=http://ai-microservice:${AI_ORCHESTRATOR_PORT:-3380}  # Docker network
 ```
@@ -499,16 +499,16 @@ networks:
 
 ```bash
 # Notifications
-curl https://notifications.statex.cz/health
+curl https://notifications.alfares.cz/health
 
 # Logging
-curl https://logging.statex.cz/health
+curl https://logging.alfares.cz/health
 
 # Payments
-curl https://payments.statex.cz/health
+curl https://payments.alfares.cz/health
 
 # Authentication
-curl https://auth.statex.cz/health
+curl https://auth.alfares.cz/health
 
 # Database (via SSH tunnel)
 # Port configured in database-server/.env: DB_SERVER_PORT (default: 5432)
@@ -550,7 +550,7 @@ cd /home/statex/ai-microservice
 
 ### 1. **Service Discovery**
 
-- **Production**: Use HTTPS URLs (`https://<service>.statex.cz`)
+- **Production**: Use HTTPS URLs (`https://<service>.alfares.cz`)
 - **Docker Network**: Use service names (`http://<service-name>:<port>`)
 - **Local Development**: Use SSH tunnels or localhost with port forwarding
 
@@ -609,7 +609,7 @@ const notificationService = new NotificationService();
 await notificationService.sendNotification({
   channel: 'email',
   type: 'error_alert',
-  recipient: 'admin@statex.cz',
+  recipient: 'admin@alfares.cz',
   message: 'Critical error in logging service',
 });
 ```
@@ -746,7 +746,7 @@ import { DatabaseModule } from '@shared/database';
 export class AppModule {}
 ```
 
-### Example 2: Statex.cz Application
+### Example 2: alfares.cz Application
 
 ```typescript
 // Same shared services, different application
@@ -825,7 +825,7 @@ This section documents all ports used by applications and microservices to help 
 
 - **31xx**: crypto-ai-agent (3100-3104)
 - **32xx**: Central e-commerce microservices (3200-3203) - catalog, warehouse, suppliers, orders
-- **33xx**: Shared infrastructure microservices (3367-3371, 3380-3389) - auth, notifications, payment, logging, ai
+- **33xx**: Shared infrastructure microservices (3367-3376, 3380-3389) - auth, notifications, payment, logging, agentic-email, ai
 - **34xx**: allegro-service (3402-3411)
 - **35xx**: flipflop-service (3500-3511)
 - **36xx**: statex (3600-3626) - platform, website, infrastructure
@@ -867,12 +867,12 @@ This section documents all ports used by applications and microservices to help 
 | **nginx-microservice** | 80, 443 | 80, 443 | N/A (standard ports) | HTTP/HTTPS reverse proxy | External (production) |
 | **database-server** (PostgreSQL) | `${DB_SERVER_PORT}` | `${DB_SERVER_PORT}` | `DB_SERVER_PORT` (database-server/.env) | Shared PostgreSQL database | Docker: `db-server-postgres:${DB_SERVER_PORT}`, SSH: `localhost:${DB_SERVER_PORT}` |
 | **database-server** (Redis) | `${REDIS_SERVER_PORT}` | `${REDIS_SERVER_PORT}` | `REDIS_SERVER_PORT` (database-server/.env) | Shared Redis cache | Docker: `db-server-redis:${REDIS_SERVER_PORT}`, SSH: `localhost:${REDIS_SERVER_PORT}` |
-| **auth-microservice** (Blue) | `${PORT}` | `${PORT}` | `PORT` (auth-microservice/.env) | Authentication service (blue deployment) | Docker: `auth-microservice:${PORT}`, Production: `https://auth.statex.cz` |
-| **auth-microservice** (Green) | 3371 | `${PORT}` | `PORT` (auth-microservice/.env) | Authentication service (green deployment) | Docker: `auth-microservice:${PORT}`, Production: `https://auth.statex.cz` |
-| **notifications-microservice** | `${PORT}` | `${PORT}` | `PORT` (notifications-microservice/.env) | Notification service | Docker: `notifications-microservice:${PORT}`, Production: `https://notifications.statex.cz` |
-| **logging-microservice** | `${PORT}` | `${PORT}` | `PORT` (logging-microservice/.env) | Logging service | Docker: `logging-microservice:${PORT}`, Production: `https://logging.statex.cz` |
-| **payments-microservice** (Blue) | `${PORT_BLUE}` | `${SERVICE_PORT}` | `PORT_BLUE`, `SERVICE_PORT` (payments-microservice/.env) | Payment processing service (blue deployment) | Docker: `payments-microservice:${SERVICE_PORT}`, Production: `https://payments.statex.cz` |
-| **payments-microservice** (Green) | `${PORT_GREEN}` | `${SERVICE_PORT}` | `PORT_GREEN`, `SERVICE_PORT` (payments-microservice/.env) | Payment processing service (green deployment) | Docker: `payments-microservice:${SERVICE_PORT}`, Production: `https://payments.statex.cz` |
+| **auth-microservice** (Blue) | `${PORT}` | `${PORT}` | `PORT` (auth-microservice/.env) | Authentication service (blue deployment) | Docker: `auth-microservice:${PORT}`, Production: `https://auth.alfares.cz` |
+| **auth-microservice** (Green) | 3371 | `${PORT}` | `PORT` (auth-microservice/.env) | Authentication service (green deployment) | Docker: `auth-microservice:${PORT}`, Production: `https://auth.alfares.cz` |
+| **notifications-microservice** | `${PORT}` | `${PORT}` | `PORT` (notifications-microservice/.env) | Notification service | Docker: `notifications-microservice:${PORT}`, Production: `https://notifications.alfares.cz` |
+| **logging-microservice** | `${PORT}` | `${PORT}` | `PORT` (logging-microservice/.env) | Logging service | Docker: `logging-microservice:${PORT}`, Production: `https://logging.alfares.cz` |
+| **payments-microservice** (Blue) | `${PORT_BLUE}` | `${SERVICE_PORT}` | `PORT_BLUE`, `SERVICE_PORT` (payments-microservice/.env) | Payment processing service (blue deployment) | Docker: `payments-microservice:${SERVICE_PORT}`, Production: `https://payments.alfares.cz` |
+| **payments-microservice** (Green) | `${PORT_GREEN}` | `${SERVICE_PORT}` | `PORT_GREEN`, `SERVICE_PORT` (payments-microservice/.env) | Payment processing service (green deployment) | Docker: `payments-microservice:${SERVICE_PORT}`, Production: `https://payments.alfares.cz` |
 
 ### Central E-commerce Microservices Ports (32xx Range)
 
@@ -1372,18 +1372,18 @@ ssh statex
 docker ps | grep -E 'nginx|database|notification|logging|payment|auth|ai'
 
 # Check health endpoints
-curl https://notifications.statex.cz/health
-curl https://logging.statex.cz/health
-curl https://payments.statex.cz/health
-curl https://auth.statex.cz/health
-curl https://ai.statex.cz/health
+curl https://notifications.alfares.cz/health
+curl https://logging.alfares.cz/health
+curl https://payments.alfares.cz/health
+curl https://auth.alfares.cz/health
+curl https://ai.alfares.cz/health
 ```
 
 ---
 
 ## 📖 Documentation
 
-- **FlipFlop Platform**: `/Users/sergiystashok/Documents/GitHub/statex.cz/flipflop-service/docs/`
+- **FlipFlop Platform**: `/Users/sergiystashok/Documents/GitHub/alfares.cz/flipflop-service/docs/`
 - **Statex Platform**: `/home/statex/statex/docs/`
 - **Microservice READMEs**: Each microservice has its own README.md
 
