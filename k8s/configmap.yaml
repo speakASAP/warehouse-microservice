@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: warehouse-microservice-config
+  namespace: statex-apps
+  labels:
+    app: warehouse-microservice
+    managed-by: k8s-migration
+data:
+  NODE_ENV: "production"
+  SERVICE_NAME: "warehouse-microservice"
+  DOMAIN: "warehouse.alfares.cz"
+  PORT: "3201"
+  DB_HOST: "192.168.88.53"
+  DB_PORT: "5432"
+  DB_USER: "dbadmin"
+  DB_NAME: "warehouse"
+  DB_SYNC: "false"
+  DB_AUTO_CREATE: "true"
+  LOG_LEVEL: "info"
+  LOGGING_SERVICE_URL: "http://logging-microservice.statex-apps.svc.cluster.local:3367"
+  AUTH_SERVICE_URL: "http://auth-microservice.statex-apps.svc.cluster.local:3370"
+  RABBITMQ_URL: "amqp://guest:guest@host.k3s.internal:5672"
