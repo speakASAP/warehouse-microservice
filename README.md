@@ -71,7 +71,7 @@ Create a technological ecosystem where multiple microservices are available on t
 - **Purpose**: Reverse proxy, SSL termination, and blue/green deployment management
 - **Access**:
   - Production: Managed via nginx-microservice container
-  - Configuration: `/home/statex/nginx-microservice`
+  - Configuration: `~/Documents/Github/nginx-microservice`
 - **Features**:
   - Automatic SSL certificate management (Let's Encrypt/Certbot)
   - Blue/green deployment orchestration
@@ -249,7 +249,7 @@ Create a technological ecosystem where multiple microservices are available on t
 
 - **Purpose**: FlipFlop.cz e-commerce website service for selling diverse product categories
 - **Technology**: NestJS (TypeScript), PostgreSQL, Redis
-- **Location**: `/home/statex/flipflop-service`
+- **Location**: `~/Documents/Github/flipflop-service`
 - **Documentation**: See `flipflop-service/README.md`
 - **Uses**: All shared microservices (database, notifications, logging, payments, auth)
 
@@ -257,7 +257,7 @@ Create a technological ecosystem where multiple microservices are available on t
 
 - **Purpose**: AI-powered cryptocurrency trading and portfolio management platform
 - **Technology**: Python (FastAPI), PostgreSQL, Redis
-- **Location**: `/home/statex/crypto-ai-agent`
+- **Location**: `~/Documents/Github/crypto-ai-agent`
 - **Documentation**: See `crypto-ai-agent/README.md`
 - **Uses**: All shared microservices (database, notifications, logging, payments, auth)
 
@@ -265,7 +265,7 @@ Create a technological ecosystem where multiple microservices are available on t
 
 - **Purpose**: AI-powered business automation platform
 - **Technology**: Python (FastAPI), Next.js, PostgreSQL, Redis, RabbitMQ, MinIO, Elasticsearch
-- **Location**: `/home/statex/statex`
+- **Location**: `~/Documents/Github/statex`
 - **Documentation**: See `statex/README.md`
 - **Uses**: All shared microservices (database, notifications, logging, payments, auth, ai)
 - **Sub-services**: Multiple internal microservices (platform services, website services)
@@ -274,7 +274,7 @@ Create a technological ecosystem where multiple microservices are available on t
 
 - **Purpose**: Sales channel service for Allegro.cz/pl marketplaces - multi-account offer management
 - **Technology**: NestJS (TypeScript), PostgreSQL
-- **Location**: `/home/statex/allegro-service`
+- **Location**: `~/Documents/Github/allegro-service`
 - **Documentation**: See `allegro-service/README.md`
 - **Uses**: All shared microservices (database, notifications, logging, payments, auth)
 - **Features**:
@@ -288,7 +288,7 @@ Create a technological ecosystem where multiple microservices are available on t
 
 - **Purpose**: Aukro.cz marketplace integration service
 - **Technology**: NestJS (TypeScript), PostgreSQL
-- **Location**: `/home/statex/aukro-service`
+- **Location**: `~/Documents/Github/aukro-service`
 - **Documentation**: See `aukro-service/README.md`
 - **Uses**: All shared microservices (database, notifications, logging, payments, auth) and central e-commerce microservices (catalog, warehouse, orders)
 - **Features**:
@@ -301,7 +301,7 @@ Create a technological ecosystem where multiple microservices are available on t
 
 - **Purpose**: Heureka.cz/sk XML feed generation service
 - **Technology**: NestJS (TypeScript), PostgreSQL
-- **Location**: `/home/statex/heureka-service`
+- **Location**: `~/Documents/Github/heureka-service`
 - **Documentation**: See `heureka-service/README.md`
 - **Uses**: All shared microservices (database, notifications, logging, payments, auth) and central e-commerce microservices (catalog, warehouse)
 - **Features**:
@@ -314,7 +314,7 @@ Create a technological ecosystem where multiple microservices are available on t
 
 - **Purpose**: Bazos.cz classifieds automation service
 - **Technology**: NestJS (TypeScript), PostgreSQL
-- **Location**: `/home/statex/bazos-service`
+- **Location**: `~/Documents/Github/bazos-service`
 - **Documentation**: See `bazos-service/README.md`
 - **Uses**: All shared microservices (database, notifications, logging, payments, auth) and central e-commerce microservices (catalog, warehouse, orders)
 - **Features**:
@@ -327,7 +327,7 @@ Create a technological ecosystem where multiple microservices are available on t
 
 - **Purpose**: Self-hosted Matrix messaging service with Synapse homeserver, Element X client, and LiveKit SFU for A/V calls
 - **Technology**: Synapse (Matrix), PostgreSQL, Redis, LiveKit, Element X
-- **Location**: `/home/statex/messenger`
+- **Location**: `~/Documents/Github/messenger`
 - **Documentation**: See `messenger/README.md`
 - **Features**:
   - Synapse Matrix homeserver for messaging and federation
@@ -342,7 +342,7 @@ Create a technological ecosystem where multiple microservices are available on t
 
 - **Purpose**: Multi-tenant event-driven IT platform for beauty franchise network
 - **Technology**: Domain-Driven Design (DDD), Event-Driven Architecture, PostgreSQL, NATS/Kafka
-- **Location**: `/home/statex/beauty`
+- **Location**: `~/Documents/Github/beauty`
 - **Documentation**: See `beauty/README.md`
 - **Uses**: All shared microservices (database, notifications, logging, payments, auth)
 - **Features**:
@@ -360,7 +360,7 @@ Create a technological ecosystem where multiple microservices are available on t
 
 - **Purpose**: Standalone marathon product for intensive learning programs
 - **Technology**: NestJS (TypeScript), PostgreSQL, Redis
-- **Location**: `/home/statex/marathon`
+- **Location**: `~/Documents/Github/marathon`
 - **Repository**: `git@github.com:speakASAP/marathon.git`
 - **Uses**: All shared microservices (database, notifications, logging, payments, auth)
 - **Notes**: Production-only deployment with blue/green via nginx-microservice
@@ -369,7 +369,7 @@ Create a technological ecosystem where multiple microservices are available on t
 
 - **Purpose**: AI shopping assistant ("Я хочу") – voice/text search, iterative refinement, best price across the web, redirect to merchant
 - **Technology**: NestJS (TypeScript), PostgreSQL, Prisma
-- **Location**: `/home/statex/shop-assistant`
+- **Location**: `~/Documents/Github/shop-assistant`
 - **Documentation**: See `shop-assistant/README.md`
 - **Uses**: Shared microservices (database, logging, auth), ai-microservice (ASR, LLM), external search API (e.g. Serper)
 - **Port range**: 45xx (4500 blue, 4501 green)
@@ -532,16 +532,16 @@ psql -h db-server-postgres -p ${DB_SERVER_PORT:-5432} -U dbadmin -d <database>  
 
 ```bash
 # Connect to production server
-ssh statex
+ssh alfares
 
 # Access microservice directories
-cd /home/statex/nginx-microservice
-cd /home/statex/database-server
-cd /home/statex/notifications-microservice
-cd /home/statex/logging-microservice
-cd /home/statex/payments-microservice
-cd /home/statex/auth-microservice
-cd /home/statex/ai-microservice
+cd ~/Documents/Github/nginx-microservice
+cd ~/Documents/Github/database-server
+cd ~/Documents/Github/notifications-microservice
+cd ~/Documents/Github/logging-microservice
+cd ~/Documents/Github/payments-microservice
+cd ~/Documents/Github/auth-microservice
+cd ~/Documents/Github/ai-microservice
 ```
 
 ---
@@ -584,7 +584,7 @@ cd /home/statex/ai-microservice
 
 ### 6. **Environment Variables Sync (.env)**
 
-`.env` files exist in three places: **local** (`/Users/sergiystashok/Documents/GitHub`), **statex** (`ssh statex` → `/home/statex`), **sgipreal** (`ssh sgipreal` → `/home/sgipreal`). Use the scripts in `scripts/` to compare and sync:
+`.env` files exist in three places: **local** (`/Users/sergiystashok/Documents/GitHub`), **statex** (`ssh alfares` → `/home/statex`), **sgipreal** (`ssh sgipreal` → `/home/sgipreal`). Use the scripts in `scripts/` to compare and sync:
 
 - **Quick overview** (which projects differ): `./scripts/env-diff-summary.sh`
 - **Detailed comparison** (variable-by-variable): `./scripts/compare-env.sh` or `./scripts/compare-env.sh <project>`
@@ -645,7 +645,7 @@ await database.query('SELECT * FROM orders');
 2. **Deploy to production server**:
 
    ```bash
-   ssh statex
+   ssh alfares
    cd /home/statex
    git clone <repo-url> <new-microservice>
    ```
@@ -1368,7 +1368,7 @@ Check service status:
 
 ```bash
 # On production server
-ssh statex
+ssh alfares
 docker ps | grep -E 'nginx|database|notification|logging|payment|auth|ai'
 
 # Check health endpoints
@@ -1384,7 +1384,7 @@ curl https://ai.alfares.cz/health
 ## 📖 Documentation
 
 - **FlipFlop Platform**: `/Users/sergiystashok/Documents/GitHub/alfares.cz/flipflop-service/docs/`
-- **Statex Platform**: `/home/statex/statex/docs/`
+- **Statex Platform**: `~/Documents/Github/statex/docs/`
 - **Microservice READMEs**: Each microservice has its own README.md
 
 ---
