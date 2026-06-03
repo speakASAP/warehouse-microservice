@@ -82,7 +82,7 @@ Create a technological ecosystem where multiple microservices are available on t
 
 - **Purpose**: Shared PostgreSQL and Redis database server
 - **Access**:
-  - Docker Network: `db-server-postgres:${DB_SERVER_PORT:-5432}`, `db-server-redis:${REDIS_SERVER_PORT:-6379}` (ports configured in database-server/.env)
+  - Kubernetes DNS: `db-server-postgres:5432`, `db-server-redis:6379`
   - SSH Tunnel (local dev): `localhost:${DB_SERVER_PORT:-5432}`, `localhost:${REDIS_SERVER_PORT:-6379}` (ports configured in database-server/.env)
 - **Features**:
   - Centralized database management
@@ -388,9 +388,9 @@ All microservices are configured via environment variables in `.env`:
 ```bash
 # Database (Shared)
 # Configured in database-server/.env: DB_SERVER_PORT (default: 5432)
-DB_HOST=db-server-postgres  # Docker network
+DB_HOST=db-server-postgres  # Kubernetes service DNS
 # or
-DB_HOST=localhost  # SSH tunnel for local dev
+DB_HOST=db-server-postgres  # Kubernetes service DNS for local dev
 DB_PORT=${DB_SERVER_PORT:-5432}  # From database-server/.env
 DB_USER=dbadmin
 DB_PASSWORD=<password>
@@ -398,9 +398,9 @@ DB_NAME=<application-database-name>
 
 # Redis (Shared)
 # Configured in database-server/.env: REDIS_SERVER_PORT (default: 6379)
-REDIS_HOST=db-server-redis  # Docker network
+REDIS_HOST=db-server-redis  # Kubernetes service DNS
 # or
-REDIS_HOST=localhost  # SSH tunnel for local dev
+REDIS_HOST=db-server-redis  # Kubernetes service DNS for local dev
 REDIS_PORT=${REDIS_SERVER_PORT:-6379}  # From database-server/.env
 
 # Notifications (Shared)
@@ -510,7 +510,7 @@ curl https://payments.alfares.cz/health
 # Authentication
 curl https://auth.alfares.cz/health
 
-# Database (via SSH tunnel)
+# Database (via Kubernetes service DNS)
 # Port configured in database-server/.env: DB_SERVER_PORT (default: 5432)
 ssh -L ${DB_SERVER_PORT:-5432}:localhost:${DB_SERVER_PORT:-5432} statex
 psql -h localhost -p ${DB_SERVER_PORT:-5432} -U dbadmin -d <database>
@@ -552,7 +552,7 @@ cd ~/Documents/Github/ai-microservice
 
 - **Production**: Use HTTPS URLs (`https://<service>.alfares.cz`)
 - **Docker Network**: Use service names (`http://<service-name>:<port>`)
-- **Local Development**: Use SSH tunnels or localhost with port forwarding
+- **Local Development**: Use Kubernetes service DNSs or localhost with port forwarding
 
 ### 2. **Configuration Management**
 
@@ -779,7 +779,7 @@ This section documents all ports used by applications and microservices to help 
 
 **Analysis Date**: 2025-12-04
 
-**Total Ports Analyzed**: 89 unique host ports
+**Total Ports Analyzed**: 89 unique Kubernetes service DNS
 
 **Conflict Status**: ✅ **NO CONFLICTS DETECTED**
 
@@ -797,7 +797,7 @@ This section documents all ports used by applications and microservices to help 
 - Central e-commerce microservices use 32xx range (3200-3203)
 - Shared infrastructure microservices use 33xx range (3367-3371, 3380-3389)
 - Database ports (5432, 6379) are localhost-only and shared via Docker network
-- Blue/green deployments use same host ports (only one active at a time)
+- Blue/green deployments use same Kubernetes service DNS (only one active at a time)
 - All port mappings follow consistent patterns per application
 
 **Port Range Summary**:
@@ -844,7 +844,7 @@ This section documents all ports used by applications and microservices to help 
 1. **Host Port = Container Port** (Preferred for consistency):
    - **allegro-service**: All services use same host and container ports (e.g., `${API_GATEWAY_PORT:-3411}:${API_GATEWAY_PORT:-3411}`, `${PRODUCT_SERVICE_PORT:-3402}:${PRODUCT_SERVICE_PORT:-3402}`)
    - **crypto-ai-agent**: All services use same host and container ports (e.g., `${FRONTEND_PORT:-3100}:${FRONTEND_PORT:-3100}`, `${API_PORT:-3102}:${API_PORT:-3102}`)
-   - **Shared microservices**: Most host ports match container ports (e.g., `${PORT:-3367}:${PORT:-3367}`, `${PORT:-3368}:${PORT:-3368}`, `${PORT:-3370}:${PORT:-3370}`), except payment (`${PORT_BLUE:-3369}:${SERVICE_PORT:-3468}`) and auth green (`3371:${PORT:-3370}`)
+   - **Shared microservices**: Most Kubernetes service DNS match container ports (e.g., `${PORT:-3367}:${PORT:-3367}`, `${PORT:-3368}:${PORT:-3368}`, `${PORT:-3370}:${PORT:-3370}`), except payment (`${PORT_BLUE:-3369}:${SERVICE_PORT:-3468}`) and auth green (`3371:${PORT:-3370}`)
 
 2. **Host Port ≠ Container Port** (For standard application ports):
    - **flipflop-service**: Host ports (35xx) map to standard container ports (3000, 3002-3009, 3011)
@@ -856,7 +856,7 @@ This section documents all ports used by applications and microservices to help 
 - All ports can be forwarded to host without conflicts
 - Visual distinction by port range makes it easy to identify which application a service belongs to
 - Reduces errors when configuring services
-- Container ports can remain standard (3000, 8000, etc.) for compatibility while host ports provide unique identification
+- Container ports can remain standard (3000, 8000, etc.) for compatibility while Kubernetes service DNS provide unique identification
 
 ### Shared Infrastructure Services Ports
 
@@ -865,8 +865,8 @@ This section documents all ports used by applications and microservices to help 
 | Service | Host Port | Container Port | .env Variable | Description | Access Method |
 | ------- | --------- | -------------- | ------------- | ----------- | ------------- |
 | **nginx-microservice** | 80, 443 | 80, 443 | N/A (standard ports) | HTTP/HTTPS reverse proxy | External (production) |
-| **database-server** (PostgreSQL) | `${DB_SERVER_PORT}` | `${DB_SERVER_PORT}` | `DB_SERVER_PORT` (database-server/.env) | Shared PostgreSQL database | Docker: `db-server-postgres:${DB_SERVER_PORT}`, SSH: `localhost:${DB_SERVER_PORT}` |
-| **database-server** (Redis) | `${REDIS_SERVER_PORT}` | `${REDIS_SERVER_PORT}` | `REDIS_SERVER_PORT` (database-server/.env) | Shared Redis cache | Docker: `db-server-redis:${REDIS_SERVER_PORT}`, SSH: `localhost:${REDIS_SERVER_PORT}` |
+| **database-server** (PostgreSQL) | `5432` | `5432` | `DB_SERVER_PORT` | Shared PostgreSQL database | `db-server-postgres:5432` |
+| **database-server** (Redis) | `6379` | `6379` | `REDIS_SERVER_PORT` | Shared Redis cache | `db-server-redis:6379` |
 | **auth-microservice** (Blue) | `${PORT}` | `${PORT}` | `PORT` (auth-microservice/.env) | Authentication service (blue deployment) | Docker: `auth-microservice:${PORT}`, Production: `https://auth.alfares.cz` |
 | **auth-microservice** (Green) | 3371 | `${PORT}` | `PORT` (auth-microservice/.env) | Authentication service (green deployment) | Docker: `auth-microservice:${PORT}`, Production: `https://auth.alfares.cz` |
 | **notifications-microservice** | `${PORT}` | `${PORT}` | `PORT` (notifications-microservice/.env) | Notification service | Docker: `notifications-microservice:${PORT}`, Production: `https://notifications.alfares.cz` |
@@ -1052,9 +1052,9 @@ This section documents all ports used by applications and microservices to help 
 | **Backend API** (Green) | `${API_PORT_GREEN}` | `${API_PORT}` | `API_PORT_GREEN` | FastAPI backend service (green deployment) |
 | **UI Port** | `${UI_PORT}` | `${UI_PORT}` | `UI_PORT` | Additional UI interface (Streamlit) |
 
-**Note:** Green deployment uses different host ports but same container ports as blue deployment.
+**Note:** Green deployment uses different Kubernetes service DNS but same container ports as blue deployment.
 
-**Note:** crypto-ai-agent uses the shared **database-server** (db-server-postgres:${DB_SERVER_PORT}, db-server-redis:${REDIS_SERVER_PORT}) via the nginx-network, like all other applications. Local Postgres/Redis containers have been removed to eliminate port conflicts and ensure consistency across the ecosystem.
+**Note:** crypto-ai-agent uses the shared **database-server** via Kubernetes service DNS: `db-server-postgres:5432` and `db-server-redis:6379`.
 
 ### Statex Application Ports (36xx Range)
 
@@ -1062,7 +1062,7 @@ This section documents all ports used by applications and microservices to help 
 
 #### Core Platform Services
 
-**Note**: These services support blue/green deployments. Blue and green use the same host ports (only one deployment is active at a time).
+**Note**: These services support blue/green deployments. Blue and green use the same Kubernetes service DNS (only one deployment is active at a time).
 
 | Service | Host Port (Blue/Green) | Container Port | .env Variable | Description |
 | ------- | ---------------------- | -------------- | ------------- | ----------- |
@@ -1072,7 +1072,7 @@ This section documents all ports used by applications and microservices to help 
 
 #### Website Services (statex-website)
 
-**Note**: These services support blue/green deployments. Blue and green use the same host ports (only one deployment is active at a time).
+**Note**: These services support blue/green deployments. Blue and green use the same Kubernetes service DNS (only one deployment is active at a time).
 
 | Service | Host Port (Blue/Green) | Container Port | .env Variable | Description |
 | ------- | ---------------------- | -------------- | ------------- | ----------- |
@@ -1111,7 +1111,7 @@ This section documents all ports used by applications and microservices to help 
 
 **Note:**
 
-- PostgreSQL and Redis are provided by shared **database-server** (db-server-postgres:${DB_SERVER_PORT}, db-server-redis:${REDIS_SERVER_PORT}) via nginx-network
+- PostgreSQL and Redis are provided by shared **database-server** via Kubernetes service DNS: `db-server-postgres:5432` and `db-server-redis:6379`
 - Logging Service and Notification Service have been removed from statex and now use shared microservices (logging-microservice:${PORT}, notifications-microservice:${PORT})
 
 #### Additional Statex Services
@@ -1128,9 +1128,9 @@ This section documents all ports used by applications and microservices to help 
 | ---- | ------------------------ | --------------- |
 | **80** | nginx-microservice | ✅ No conflict (single service) |
 | **443** | nginx-microservice | ✅ No conflict (single service) |
-| **3000** | Container ports (flipflop Frontend, statex Frontend) | ✅ No conflict (different host ports) |
+| **3000** | Container ports (flipflop Frontend, statex Frontend) | ✅ No conflict (different Kubernetes service DNS) |
 | **3001** | statex Frontend Green (container) | ✅ No conflict (green deployment) |
-| **3002-3009** | Container ports (flipflop services) | ✅ No conflict (different host ports) |
+| **3002-3009** | Container ports (flipflop services) | ✅ No conflict (different Kubernetes service DNS) |
 | **3100** | crypto-ai-agent Frontend (Blue) | ✅ No conflict |
 | **3101** | crypto-ai-agent Frontend (Green) | ✅ No conflict (green deployment) |
 | **3102** | crypto-ai-agent Backend API (Blue) | ✅ No conflict |
@@ -1213,10 +1213,10 @@ This section documents all ports used by applications and microservices to help 
 | **3381-3389** | ai-microservice AI services (host) | ✅ No conflict |
 | **3620** | statex MinIO (host) | ✅ No conflict |
 | **3621** | statex MinIO Console (host) | ✅ No conflict |
-| **5432** | database-server PostgreSQL (localhost only) | ✅ No conflict - Shared via Docker network (db-server-postgres:5432) |
+| **5432** | database-server PostgreSQL | Shared via Kubernetes service DNS (`db-server-postgres:5432`) |
 | **5672** | statex RabbitMQ | ✅ No conflict |
-| **6379** | database-server Redis (localhost only) | ✅ No conflict - Shared via Docker network (db-server-redis:6379) |
-| **8000** | Container ports (statex Platform Management, Submission Service, Content Service, User Portal) | ✅ No conflict (different host ports: 3600, 3603, 3609, 3606) |
+| **6379** | database-server Redis | Shared via Kubernetes service DNS (`db-server-redis:6379`) |
+| **8000** | Container ports (statex Platform Management, Submission Service, Content Service, User Portal) | ✅ No conflict (different Kubernetes service DNS: 3600, 3603, 3609, 3606) |
 | **3380-3389** | ai-microservice AI services (host and container ports match) | ✅ No conflict (separate microservice) |
 | **8020** | Container port (statex Dashboard) | ✅ No conflict (host port: 3626) |
 | **5353** | statex DNS Service (DNS server UDP/TCP) | ✅ No conflict |
@@ -1232,7 +1232,7 @@ This section documents all ports used by applications and microservices to help 
 **What we checked:**
 
 - **Configs used**: all `docker-compose*.yml` files in every app/microservice, plus all top-level `.env` files (allegro-service, flipflop-service, crypto-ai-agent, statex, database-server, nginx-microservice, logging-microservice, notifications-microservice, payments-microservice, auth-microservice, ai-microservice).
-- **Scope**: host ports exposed with `ports:` in Docker Compose and all `*_PORT` variables in `.env`.
+- **Scope**: Kubernetes service DNS exposed with `ports:` in Kubernetes and all `*_PORT` variables in `.env`.
 - **Verification Date**: 2025-12-04
 - **Status**: ✅ **NO PORT CONFLICTS DETECTED** - All ports verified across all applications and microservices (including ai-microservice ports 3380-3389, aukro-service ports 3700-3705, heureka-service ports 3800-3805, bazos-service ports 3900-3905, messenger ports 4000-4004, beauty ports 4100-4107)
 
@@ -1240,7 +1240,7 @@ This section documents all ports used by applications and microservices to help 
 
 **Important**: All ports are configured in respective `.env` files. This table shows default values for reference. Always check the `.env` file for the actual configured port.
 
-This table lists all host ports used across all services for quick conflict checking:
+This table lists all Kubernetes service DNS used across all services for quick conflict checking:
 
 | Port (Default) | .env Variable | Service | Application/Microservice | Notes |
 | -------------- | ------------- | ------- | ------------------------ | ----- |
