@@ -83,7 +83,6 @@ Create a technological ecosystem where multiple microservices are available on t
 - **Purpose**: Shared PostgreSQL and Redis database server
 - **Access**:
   - Kubernetes DNS: `db-server-postgres:5432`, `db-server-redis:6379`
-  - SSH Tunnel (local dev): `localhost:${DB_SERVER_PORT:-5432}`, `localhost:${REDIS_SERVER_PORT:-6379}` (ports configured in database-server/.env)
 - **Features**:
   - Centralized database management
   - Multiple databases (one per application)
@@ -386,22 +385,16 @@ Create a technological ecosystem where multiple microservices are available on t
 All microservices are configured via environment variables in `.env`:
 
 ```bash
-# Database (Shared)
-# Configured in database-server/.env: DB_SERVER_PORT (default: 5432)
-DB_HOST=db-server-postgres  # Kubernetes service DNS
-# or
-DB_HOST=db-server-postgres  # Kubernetes service DNS for local dev
-DB_PORT=${DB_SERVER_PORT:-5432}  # From database-server/.env
+# Database (Shared Kubernetes datastore)
+DB_HOST=db-server-postgres
+DB_PORT=5432
 DB_USER=dbadmin
-DB_PASSWORD=<password>
+DB_PASSWORD=<from Kubernetes Secret>
 DB_NAME=<application-database-name>
 
-# Redis (Shared)
-# Configured in database-server/.env: REDIS_SERVER_PORT (default: 6379)
-REDIS_HOST=db-server-redis  # Kubernetes service DNS
-# or
-REDIS_HOST=db-server-redis  # Kubernetes service DNS for local dev
-REDIS_PORT=${REDIS_SERVER_PORT:-6379}  # From database-server/.env
+# Redis (Shared Kubernetes datastore)
+REDIS_HOST=db-server-redis
+REDIS_PORT=6379
 
 # Notifications (Shared)
 # Configured in notifications-microservice/.env: PORT (default: 3368)
@@ -510,10 +503,8 @@ curl https://payments.alfares.cz/health
 # Authentication
 curl https://auth.alfares.cz/health
 
-# Database (via Kubernetes service DNS)
-# Port configured in database-server/.env: DB_SERVER_PORT (default: 5432)
-ssh -L ${DB_SERVER_PORT:-5432}:localhost:${DB_SERVER_PORT:-5432} statex
-psql -h localhost -p ${DB_SERVER_PORT:-5432} -U dbadmin -d <database>
+# Database (via Kubernetes)
+kubectl exec -n statex-apps deploy/db-server-postgres -- psql -U dbadmin -d <database>
 ```
 
 ### Docker Network Access
@@ -525,7 +516,7 @@ curl http://notifications-microservice:${PORT:-3368}/health  # notifications-mic
 curl http://logging-microservice:${PORT:-3367}/health  # logging-microservice/.env
 curl http://payments-microservice:${SERVICE_PORT:-3468}/health  # payments-microservice/.env
 curl http://auth-microservice:${PORT:-3370}/health  # auth-microservice/.env
-psql -h db-server-postgres -p ${DB_SERVER_PORT:-5432} -U dbadmin -d <database>  # database-server/.env
+kubectl exec -n statex-apps deploy/db-server-postgres -- psql -U dbadmin -d <database>
 ```
 
 ### SSH Access
@@ -865,8 +856,8 @@ This section documents all ports used by applications and microservices to help 
 | Service | Host Port | Container Port | .env Variable | Description | Access Method |
 | ------- | --------- | -------------- | ------------- | ----------- | ------------- |
 | **nginx-microservice** | 80, 443 | 80, 443 | N/A (standard ports) | HTTP/HTTPS reverse proxy | External (production) |
-| **database-server** (PostgreSQL) | `5432` | `5432` | `DB_SERVER_PORT` | Shared PostgreSQL database | `db-server-postgres:5432` |
-| **database-server** (Redis) | `6379` | `6379` | `REDIS_SERVER_PORT` | Shared Redis cache | `db-server-redis:6379` |
+| **database-server** (PostgreSQL) | Kubernetes service | `5432` | ConfigMap | Shared PostgreSQL database | `db-server-postgres:5432` |
+| **database-server** (Redis) | Kubernetes service | `6379` | ConfigMap | Shared Redis cache | `db-server-redis:6379` |
 | **auth-microservice** (Blue) | `${PORT}` | `${PORT}` | `PORT` (auth-microservice/.env) | Authentication service (blue deployment) | Docker: `auth-microservice:${PORT}`, Production: `https://auth.alfares.cz` |
 | **auth-microservice** (Green) | 3371 | `${PORT}` | `PORT` (auth-microservice/.env) | Authentication service (green deployment) | Docker: `auth-microservice:${PORT}`, Production: `https://auth.alfares.cz` |
 | **notifications-microservice** | `${PORT}` | `${PORT}` | `PORT` (notifications-microservice/.env) | Notification service | Docker: `notifications-microservice:${PORT}`, Production: `https://notifications.alfares.cz` |
@@ -947,7 +938,6 @@ This section documents all ports used by applications and microservices to help 
 
 | Service | Host Port | Container Port | .env Variable | Description |
 | ------- | --------- | -------------- | ------------ | ----------- |
-| **PostgreSQL** | `${POSTGRES_HOST_PORT:-4000}` | `${POSTGRES_PORT:-5432}` | `POSTGRES_HOST_PORT`, `POSTGRES_PORT` | PostgreSQL database for Synapse |
 | **Redis** | `${REDIS_HOST_PORT:-4001}` | `${REDIS_PORT:-6379}` | `REDIS_HOST_PORT`, `REDIS_PORT` | Redis cache and worker coordination |
 | **Synapse** | `${SYNAPSE_HOST_PORT:-4002}` | `${SYNAPSE_PORT:-3708}` | `SYNAPSE_HOST_PORT`, `SYNAPSE_PORT` | Matrix homeserver |
 | **LiveKit** | `${LIVEKIT_HOST_PORT:-4003}` | `${LIVEKIT_HTTP_PORT:-7880}` | `LIVEKIT_HOST_PORT`, `LIVEKIT_HTTP_PORT` | LiveKit SFU for A/V calls |
@@ -1295,7 +1285,6 @@ This table lists all Kubernetes service DNS used across all services for quick c
 | **3903** | `BAZOS_SETTINGS_SERVICE_PORT` | Settings Service | bazos-service | bazos-service/.env |
 | **3904** | `GATEWAY_PROXY_PORT` | Gateway Proxy | bazos-service | bazos-service/.env |
 | **3905** | `BAZOS_FRONTEND_SERVICE_PORT` | Frontend Service | bazos-service | bazos-service/.env |
-| **4000** | `POSTGRES_HOST_PORT` | PostgreSQL | messenger | messenger/.env |
 | **4001** | `REDIS_HOST_PORT` | Redis | messenger | messenger/.env |
 | **4002** | `SYNAPSE_HOST_PORT` | Synapse | messenger | messenger/.env |
 | **4003** | `LIVEKIT_HOST_PORT` | LiveKit | messenger | messenger/.env |
@@ -1350,9 +1339,7 @@ This table lists all Kubernetes service DNS used across all services for quick c
 | **3621** | `MINIO_CONSOLE_PORT` | MinIO Console | statex-infrastructure | statex/.env |
 | **3626** | `DASHBOARD_PORT` | Dashboard | statex | statex/.env |
 | **5353** | `DNS_SERVER_PORT` | DNS Server | statex-dns-service | statex/.env (UDP/TCP) |
-| **5432** | `DB_SERVER_PORT` | PostgreSQL | database-server | database-server/.env (localhost only) |
 | **5672** | `RABBITMQ_PORT` | RabbitMQ | statex-infrastructure | statex/.env |
-| **6379** | `REDIS_SERVER_PORT` | Redis | database-server | database-server/.env (localhost only) |
 | **8053** | `DNS_SERVICE_EXTERNAL_PORT` | DNS Service API | statex-dns-service | statex/.env (HTTP) |
 | **3102** | `API_PORT` | Backend API | crypto-ai-agent (Blue) | crypto-ai-agent/.env |
 | **3103** | `API_PORT_GREEN` | Backend API | crypto-ai-agent (Green) | crypto-ai-agent/.env |
