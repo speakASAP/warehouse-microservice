@@ -10,6 +10,7 @@
     token: localStorage.getItem(storage.token) || '',
     warehouses: [],
     reservations: [],
+    supplierReconciliation: null,
     selectedProductId: '',
   };
 
@@ -45,6 +46,9 @@
       refreshPublicStatus();
       loadAuthorizedSummaries(true);
     });
+    $$('[data-action="refresh-status"]').forEach((button) => {
+      button.addEventListener('click', () => refreshPublicStatus());
+    });
     $('[data-action="load-warehouses"]').addEventListener('click', () => loadWarehouses(true));
     $('[data-action="load-reservations"]').addEventListener('click', () => loadReservations(true));
     $('[data-action="reset-warehouse"]').addEventListener('click', () => resetWarehouseForm());
@@ -71,6 +75,7 @@
     $('#movementLookupForm').addEventListener('submit', submitMovementLookup);
     $('#stockActionForm').addEventListener('submit', submitStockAction);
     $('#reservationActionForm').addEventListener('submit', submitReservationAction);
+    $('#supplierReconciliationForm').addEventListener('submit', submitSupplierReconciliation);
   }
 
   function showPanel(panelId) {
@@ -90,10 +95,11 @@
   }
 
   async function refreshPublicStatus() {
-    await Promise.all([
+    const [health, ready] = await Promise.all([
       loadStatus('health', '#healthStatus', '#healthDetail'),
       loadStatus('ready', '#readyStatus', '#readyDetail'),
     ]);
+    renderHealthSignals(health, ready);
   }
 
   async function loadStatus(path, statusSelector, detailSelector) {
@@ -108,10 +114,12 @@
       $(statusSelector).textContent = status.label;
       $(detailSelector).textContent = status.detail;
       card.classList.add(status.kind);
+      return payload;
     } catch (error) {
       $(statusSelector).textContent = 'Unavailable';
       $(detailSelector).textContent = error.message;
       card.classList.add('bad');
+      return null;
     }
   }
 
@@ -244,6 +252,25 @@
     await loadReservations();
   }
 
+  async function submitSupplierReconciliation(event) {
+    event.preventDefault();
+    const data = formData(event.currentTarget);
+    data.quantity = Number(data.quantity);
+    if (data.observedAt) {
+      data.observedAt = new Date(data.observedAt).toISOString();
+    } else {
+      delete data.observedAt;
+    }
+
+    const response = await request('supplier-reconciliations', { method: 'POST', body: data });
+    state.supplierReconciliation = response.data || null;
+    renderSupplierReconciliation(state.supplierReconciliation);
+    showMessage(`Supplier reconciliation ${state.supplierReconciliation?.status || 'completed'}.`);
+    if (data.productId) {
+      $('#stockLookupForm').elements.productId.value = data.productId;
+    }
+  }
+
   function renderWarehouses() {
     const rows = state.warehouses.map((warehouse) => {
       const location = [warehouse.city, warehouse.country].filter(Boolean).join(', ') || warehouse.address || '-';
@@ -343,6 +370,67 @@
     $('#movementsTable').innerHTML = rows || emptyRow(9);
   }
 
+  function renderSupplierReconciliation(reconciliation) {
+    if (!reconciliation) {
+      $('#supplierResultTable').innerHTML = emptyRow(9);
+      return;
+    }
+
+    $('#supplierResultTable').innerHTML = `
+      <tr>
+        <td>${statusPill(reconciliation.status)}</td>
+        <td>${escapeHtml(reconciliation.supplierId)}</td>
+        <td><code>${escapeHtml(reconciliation.productId)}</code></td>
+        <td><code>${escapeHtml(reconciliation.warehouseId)}</code></td>
+        <td>${reconciliation.supplierQuantity ?? '-'}</td>
+        <td>${reconciliation.previousQuantity ?? '-'}</td>
+        <td>${reconciliation.reservedQuantity ?? '-'}</td>
+        <td>${escapeHtml(reconciliation.externalReference || '-')}</td>
+        <td>${escapeHtml(reconciliation.conflictReason || '-')}</td>
+      </tr>
+    `;
+  }
+
+  function renderHealthSignals(health, ready) {
+    const data = health?.data || health || {};
+    const dependencies = data.dependencies || {};
+    const operations = data.operations || {};
+    const rabbitmq = dependencies.rabbitmq || {};
+    const eventKind = rabbitmq.status === 'up' ? 'ok' : rabbitmq.status ? 'bad' : 'warn';
+
+    setStatusCard('#eventStatus', '#eventDetail', rabbitmq.status === 'up' ? 'OK' : rabbitmq.status || 'Unknown', eventKind, rabbitmq.lastError || 'stock.events');
+
+    const mutationFailures = Number(operations.mutations?.failures || 0);
+    const eventFailures = Number(operations.stockEvents?.failures || 0);
+    const opsKind = mutationFailures || eventFailures ? 'warn' : 'ok';
+    setStatusCard('#operationsStatus', '#operationsDetail', opsKind === 'ok' ? 'OK' : 'Review', opsKind, `mutations ${mutationFailures}, events ${eventFailures}`);
+
+    const readyData = ready?.data || ready || {};
+    renderMetrics('#dependencyHealth', Object.entries(dependencies).map(([label, value]) => ({
+      label,
+      value: value?.status || value || '-',
+    })).concat([{ label: 'readiness', value: readyData.status || '-' }]));
+
+    renderMetrics('#operationsHealth', [
+      metricFromStatus('mutation attempts', operations.mutations?.attempts),
+      metricFromStatus('mutation failures', operations.mutations?.failures),
+      metricFromStatus('event attempts', operations.stockEvents?.attempts),
+      metricFromStatus('event failures', operations.stockEvents?.failures),
+    ]);
+  }
+
+  function setStatusCard(statusSelector, detailSelector, label, kind, detail) {
+    const card = $(statusSelector).closest('.status-card');
+    card.classList.remove('ok', 'warn', 'bad');
+    card.classList.add(kind);
+    $(statusSelector).textContent = label;
+    $(detailSelector).textContent = detail;
+  }
+
+  function metricFromStatus(label, value) {
+    return { label, value: value ?? 0 };
+  }
+
   function renderMetrics(selector, metrics) {
     $(selector).innerHTML = metrics.length
       ? metrics.map((metric) => `
@@ -415,7 +503,7 @@
     const payload = contentType.includes('application/json') ? await response.json() : await response.text();
     if (!response.ok) {
       const message = typeof payload === 'string'
-        ? payload
+        ? `Request failed with ${response.status}`
         : payload.message || payload.error || `Request failed with ${response.status}`;
       throw new Error(Array.isArray(message) ? message.join(', ') : message);
     }
@@ -452,6 +540,7 @@
     $('#stockTable').innerHTML = emptyRow(7);
     $('#reservationsTable').innerHTML = emptyRow(7);
     $('#movementsTable').innerHTML = emptyRow(9);
+    $('#supplierResultTable').innerHTML = emptyRow(9);
   }
 
   function emptyRow(colspan) {
@@ -460,9 +549,9 @@
 
   function statusPill(status) {
     const value = status || 'unknown';
-    const kind = ['active', 'fulfilled', 'returned'].includes(value)
+    const kind = ['active', 'fulfilled', 'returned', 'applied'].includes(value)
       ? 'ok'
-      : ['expired', 'cancelled', 'released', 'inactive'].includes(value)
+      : ['expired', 'cancelled', 'released', 'inactive', 'conflict'].includes(value)
         ? 'warn'
         : '';
     return `<span class="pill ${kind}">${escapeHtml(value)}</span>`;

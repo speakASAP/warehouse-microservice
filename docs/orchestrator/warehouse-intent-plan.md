@@ -201,6 +201,18 @@ Acceptance criteria:
 - Migration status can be checked from the running production image.
 - `npm test`, `npm run build`, deploy, production health, and migration status checks pass.
 
+### WH-G9 - Production warehouse admin console
+
+Objective: Give warehouse operators a deployed admin console for the production stock authority without bypassing the existing auth/RBAC boundary.
+
+Acceptance criteria:
+
+- `/admin` serves the warehouse admin console from the production warehouse service.
+- The console shows health, readiness, RabbitMQ, operation counters, warehouses, reservations, stock, movements, stock actions, reservation lifecycle actions, and supplier reconciliation.
+- Authenticated API calls still require a bearer token; unauthenticated mutation attempts are blocked client-side before reaching protected endpoints.
+- Static admin assets are included in the production Docker image.
+- `node --check public/admin/app.js`, `npm run build`, deploy, production `/api/health`, production `/admin`, and browser smoke checks pass.
+
 ## First Next Step
 
 Implement WH-G1 first. Do not start with catalog integration, reservation redesign, or UI. The current deploy and Dockerfile issues can block any production-grade change from rolling out, and health currently does not prove the event path is available.
@@ -268,3 +280,5 @@ Each future session should:
 - 2026-06-12: WH-G5 smoke verified catalog product `aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa4` (`FF-BOTTLE-SPORT-004`) exists in catalog, warehouse batch availability returns `totalAvailable: 55`, and FlipFlop API returns the same product with `stockQuantity: 55`.
 - 2026-06-12: WH-G8 added shared TypeORM data source `src/database/typeorm-data-source.ts`, migration scripts, Kubernetes migration Job template, and deploy-time migration execution.
 - 2026-06-12: WH-G8 deployed image `localhost:5000/warehouse-microservice:wh-g8-migrations-20260612`; migration Job executed `InitialWarehouseSchema1781200000000`, production `/api/health` returned healthy, and running pod `migration:show:prod` reported `[X] 1 InitialWarehouseSchema1781200000000`.
+- 2026-06-12: WH-G9 added production admin console updates for supplier reconciliation, RabbitMQ event-bus status, dependency health, and operations counters.
+- 2026-06-12: WH-G9 verification passed: `node --check public/admin/app.js`, `npm test -- --runInBand`, `npm run build`, rollout image `localhost:5000/warehouse-microservice:wh-g9-admin-console-20260612`, production `/api/health`, `/admin` HTTP 200, unauthenticated supplier reconciliation API `401`, and browser smoke checks with no console warnings.

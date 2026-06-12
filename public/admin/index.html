@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Warehouse Admin</title>
-    <link rel="stylesheet" href="/admin/style.css?v=admin-20260612-0716">
+    <link rel="stylesheet" href="/admin/style.css?v=admin-20260612-whg9">
   </head>
   <body>
     <div class="app-shell">
@@ -22,6 +22,7 @@
           <button class="nav-item" type="button" data-panel="stock">Stock</button>
           <button class="nav-item" type="button" data-panel="reservations">Reservations</button>
           <button class="nav-item" type="button" data-panel="movements">Movements</button>
+          <button class="nav-item" type="button" data-panel="suppliers">Suppliers</button>
           <button class="nav-item" type="button" data-panel="actions">Actions</button>
         </nav>
       </aside>
@@ -66,6 +67,16 @@
             <strong id="reservationCount">-</strong>
             <small id="reservationDetail">authorized</small>
           </div>
+          <div class="status-card">
+            <span class="label">Event bus</span>
+            <strong id="eventStatus">Checking</strong>
+            <small id="eventDetail">RabbitMQ</small>
+          </div>
+          <div class="status-card">
+            <span class="label">Operations</span>
+            <strong id="operationsStatus">Checking</strong>
+            <small id="operationsDetail">mutations/events</small>
+          </div>
         </section>
 
         <div class="message hidden" id="message" role="status"></div>
@@ -92,6 +103,20 @@
                 <button class="link-button" type="button" data-panel-link="reservations">Open</button>
               </div>
               <div id="reservationMix" class="metric-list"></div>
+            </article>
+            <article class="surface">
+              <div class="surface-head">
+                <h3>Dependency health</h3>
+                <button class="link-button" type="button" data-action="refresh-status">Refresh</button>
+              </div>
+              <div id="dependencyHealth" class="metric-list"></div>
+            </article>
+            <article class="surface">
+              <div class="surface-head">
+                <h3>Operations health</h3>
+                <button class="link-button" type="button" data-action="refresh-status">Refresh</button>
+              </div>
+              <div id="operationsHealth" class="metric-list"></div>
             </article>
           </div>
         </section>
@@ -259,6 +284,45 @@
           </div>
         </section>
 
+        <section class="panel" id="suppliers" aria-labelledby="suppliersTitle">
+          <div class="section-head">
+            <div>
+              <h2 id="suppliersTitle">Suppliers</h2>
+              <p>Dropship stock reconciliation with conflict evidence.</p>
+            </div>
+          </div>
+          <form class="surface form-grid" id="supplierReconciliationForm">
+            <label>Supplier ID<input name="supplierId" required maxlength="200"></label>
+            <label>Warehouse ID<input name="warehouseId" required maxlength="200"></label>
+            <label>Product ID<input name="productId" required maxlength="200"></label>
+            <label>Quantity<input name="quantity" type="number" min="0" step="1" required></label>
+            <label>External reference<input name="externalReference" required maxlength="200"></label>
+            <label>Actor<input name="actor" required maxlength="200" placeholder="supplier-sync"></label>
+            <label>Observed at<input name="observedAt" type="datetime-local"></label>
+            <div class="form-actions">
+              <button class="button primary" type="submit">Reconcile stock</button>
+            </div>
+          </form>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Status</th>
+                  <th>Supplier</th>
+                  <th>Product</th>
+                  <th>Warehouse</th>
+                  <th>Supplier qty</th>
+                  <th>Previous qty</th>
+                  <th>Reserved</th>
+                  <th>Reference</th>
+                  <th>Conflict</th>
+                </tr>
+              </thead>
+              <tbody id="supplierResultTable"></tbody>
+            </table>
+          </div>
+        </section>
+
         <section class="panel" id="actions" aria-labelledby="actionsTitle">
           <div class="section-head">
             <div>
@@ -322,6 +386,6 @@
       <tr><td colspan="9" class="empty">No data loaded.</td></tr>
     </template>
 
-    <script src="/admin/app.js?v=admin-20260612-0716" defer></script>
+    <script src="/admin/app.js?v=admin-20260612-whg9" defer></script>
   </body>
 </html>

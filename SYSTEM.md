@@ -19,11 +19,11 @@ NestJS + PostgreSQL. Real-time stock events via RabbitMQ.
 ## Current State
 <!-- AI-maintained -->
 Stage: production
-Health: ok - HTTP health is up and RabbitMQ is reachable from the warehouse pod.
+Health: ok - HTTP health is up, RabbitMQ is reachable from the warehouse pod, and `/admin` is deployed.
 
 ## Known Issues
 <!-- AI-maintained -->
-- No known production blockers after WH-G8.
+- No known production blockers after WH-G9.
 
 ## Recent Fixes
 <!-- AI-maintained -->
@@ -45,3 +45,5 @@ Health: ok - HTTP health is up and RabbitMQ is reachable from the warehouse pod.
 - 2026-06-12: WH-G7 deployed image `localhost:5000/warehouse-microservice:wh-g7-ops-20260612`; production health reported database, RabbitMQ, and operations fields.
 - 2026-06-12: WH-G8 added a committed TypeORM migration workflow, baseline schema migration, and deploy-time Kubernetes migration Job.
 - 2026-06-12: WH-G8 deployed image `localhost:5000/warehouse-microservice:wh-g8-migrations-20260612`; production health reported database and RabbitMQ up, and `migration:show:prod` reported the baseline migration applied.
+- 2026-06-12: WH-G9 deployed production admin console updates at `/admin`, including supplier reconciliation, event-bus status, dependency health, and operations counters.
+- 2026-06-12: WH-G9 deployed image `localhost:5000/warehouse-microservice:wh-g9-admin-console-20260612`; production health, `/admin`, unauthenticated protected API boundary, and browser smoke checks passed.

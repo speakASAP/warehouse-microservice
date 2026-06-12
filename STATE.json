@@ -3,13 +3,13 @@
   "project": "warehouse-microservice",
   "stage": "production",
   "health": "ok",
-  "cycle": 8,
-  "last_cycle_at": "2026-06-12T08:11:30Z",
+  "cycle": 9,
+  "last_cycle_at": "2026-06-12T09:03:19Z",
   "tasks_active": 0,
   "tasks_failed_last_cycle": 0,
   "open_task_ids": [],
-  "last_milestone": "WH-G8 implemented - committed TypeORM migration workflow, baseline schema migration, and deploy-time Kubernetes migration job deployed",
-  "next_focus": "All planned WH-G goals are complete; await owner-approved next goal",
+  "last_milestone": "WH-G9 implemented - production warehouse admin console deployed with supplier reconciliation and operations status",
+  "next_focus": "All planned WH-G goals are complete after WH-G9; await owner-approved next goal",
   "blockers": [],
   "budget_units_used": 0,
   "metrics": {
@@ -20,7 +20,6 @@
       "database": "up",
       "rabbitmq": "up",
       "event_health": "up",
-      "deployed_image": "localhost:5000/warehouse-microservice:wh-g7-ops-20260612",
       "stock_exchange": "stock.events",
       "stock_mutation_contracts": "dto-required",
       "stock_movement_transaction": "enabled",
@@ -48,8 +47,13 @@
       "migration_table": "warehouse_migrations",
       "baseline_migration": "InitialWarehouseSchema1781200000000",
       "deploy_migration_job": "enabled",
-      "deployed_image": "localhost:5000/warehouse-microservice:wh-g8-migrations-20260612",
-      "wh_g8_tests": "passed"
+      "deployed_image": "localhost:5000/warehouse-microservice:wh-g9-admin-console-20260612",
+      "wh_g8_tests": "passed",
+      "admin_console": "enabled",
+      "admin_url": "https://warehouse.alfares.cz/admin",
+      "admin_supplier_reconciliation": "enabled",
+      "admin_browser_smoke": "passed",
+      "wh_g9_tests": "passed"
     }
   }
 }
