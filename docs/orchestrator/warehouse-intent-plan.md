@@ -238,6 +238,8 @@ Each future session should:
 - 2026-06-12: WH-G3 changed stock mutation service methods to validate audit context and quantity invariants before writing.
 - 2026-06-12: WH-G3 wraps stock row writes and stock movement inserts in a single TypeORM transaction, with pessimistic write locks for existing stock rows.
 - 2026-06-12: WH-G3 added `test/stock.service.spec.ts`; `npm test` passed 4 tests covering missing reason, negative input, insufficient stock, and the lock/transaction write path.
+- 2026-06-12: WH-G6 added supplier dropship reconciliation contract `POST /api/supplier-reconciliations`, persistent reconciliation evidence, idempotent supplier references, movement records for applied updates, and conflict records when supplier quantity falls below reserved stock.
+- 2026-06-12: WH-G6 verification passed: `npm test -- --runInBand`, `npm run build`, production schema table/index creation for `supplier_stock_reconciliations`, deployment image `localhost:5000/warehouse-microservice:wh-g6-supplier-reconciliation-20260612`, production `/api/health`, unauthenticated reconciliation POST returning `401`, authenticated dry request reaching warehouse validation, and new pod startup with one RabbitMQ connection.
 - 2026-06-12: WH-G3 `npm run build` passed after DTO, service, and test changes.
 - 2026-06-12: WH-G3 deployed image `localhost:5000/warehouse-microservice:0350b8e`; rollout completed and production `/api/health` returned `status: healthy` with database and RabbitMQ up.
 - 2026-06-12: WH-G4 added reservation row lifecycle writes for reserve, release, fulfill, cancel, expire, and return. Stock, reservation status, and movement records are updated inside the same TypeORM transaction.

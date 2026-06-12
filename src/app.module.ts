@@ -10,6 +10,7 @@ import { HealthModule } from './health/health.module';
 import { LoggerModule } from './logger/logger.module';
 import { AuthModule } from './auth/auth.module';
 import { JwtRolesGuard } from './auth/jwt-roles.guard';
+import { SuppliersModule } from './suppliers/suppliers.module';
 
 /**
  * Main application module for Warehouse Microservice
@@ -40,10 +41,10 @@ import { JwtRolesGuard } from './auth/jwt-roles.guard';
     StockModule,
     MovementsModule,
     ReservationsModule,
+    SuppliersModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtRolesGuard },
   ],
 })
 export class AppModule {}
-

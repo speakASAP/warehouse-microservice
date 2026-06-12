@@ -3,16 +3,15 @@
   "project": "warehouse-microservice",
   "stage": "production",
   "health": "ok",
-  "cycle": 5,
-  "last_cycle_at": "2026-06-12T07:25:46Z",
+  "cycle": 6,
+  "last_cycle_at": "2026-06-12T07:40:52Z",
   "tasks_active": 0,
   "tasks_failed_last_cycle": 0,
   "open_task_ids": [
-    "WH-G6-T1",
     "WH-G7-T1"
   ],
-  "last_milestone": "WH-G5 implemented - catalog identity ingestion contract documented and batch availability endpoint deployed",
-  "next_focus": "WH-G6 - supplier dropship reconciliation",
+  "last_milestone": "WH-G6 implemented - supplier dropship reconciliation endpoint deployed with idempotent evidence and reserved-stock conflict detection",
+  "next_focus": "WH-G7 - production observability and operations",
   "blockers": [],
   "budget_units_used": 0,
   "metrics": {
@@ -23,7 +22,7 @@
       "database": "up",
       "rabbitmq": "up",
       "event_health": "up",
-      "deployed_image": "localhost:5000/warehouse-microservice:ee192be",
+      "deployed_image": "localhost:5000/warehouse-microservice:wh-g6-supplier-reconciliation-20260612",
       "stock_exchange": "stock.events",
       "stock_mutation_contracts": "dto-required",
       "stock_movement_transaction": "enabled",
@@ -36,7 +35,11 @@
       "trusted_catalog_ingestion_contract": "documented",
       "batch_availability_endpoint": "enabled",
       "wh_g5_tests": "passed",
-      "wh_g5_smoke": "catalog-warehouse-flipflop-product-stock-matched"
+      "wh_g5_smoke": "catalog-warehouse-flipflop-product-stock-matched",
+      "supplier_reconciliation_endpoint": "enabled",
+      "supplier_reconciliation_idempotency": "enabled",
+      "supplier_reconciliation_conflicts": "reserved-stock-detected",
+      "wh_g6_tests": "passed"
     }
   }
 }

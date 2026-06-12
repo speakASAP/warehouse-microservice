@@ -23,7 +23,7 @@ Health: ok - HTTP health is up and RabbitMQ is reachable from the warehouse pod.
 
 ## Known Issues
 <!-- AI-maintained -->
-- Reservation reads exist, but reserve/unreserve writes do not maintain `stock_reservations` rows.
+- Production schema changes are currently applied operationally; there is no committed migration framework in this service yet.
 
 ## Recent Fixes
 <!-- AI-maintained -->
@@ -37,3 +37,7 @@ Health: ok - HTTP health is up and RabbitMQ is reachable from the warehouse pod.
 - 2026-06-12: WH-G3 wraps stock writes and movement inserts in one database transaction.
 - 2026-06-12: WH-G3 added unit coverage for missing reason, negative input, insufficient stock, and pessimistic write locking.
 - 2026-06-12: WH-G3 deployed image `localhost:5000/warehouse-microservice:0350b8e`; production health reported database and RabbitMQ up.
+- 2026-06-12: WH-G4 added transactional reservation lifecycle writes for reserve, release, fulfill, cancel, expire, and return.
+- 2026-06-12: WH-G5 added trusted catalog ingestion documentation and `POST /api/stock/availability/batch`.
+- 2026-06-12: WH-G6 added supplier dropship reconciliation at `POST /api/supplier-reconciliations`.
+- 2026-06-12: WH-G6 deployed image `localhost:5000/warehouse-microservice:wh-g6-supplier-reconciliation-20260612`; production health reported database and RabbitMQ up.
