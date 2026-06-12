@@ -2,8 +2,9 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { StockMovement } from '../movements/stock-movement.entity';
+import { OperationalMetricsService } from '../observability/operational-metrics.service';
 import { StockReservation } from '../reservations/stock-reservation.entity';
-import { StockEventsService } from '../stock/stock-events.service';
+import { StockEventsService, StockEventPublishResult } from '../stock/stock-events.service';
 import { Stock } from '../stock/stock.entity';
 import { Warehouse } from '../warehouses/warehouse.entity';
 import { LoggerService } from '../logger/logger.service';
@@ -18,6 +19,7 @@ export class SupplierReconciliationService {
     private readonly dataSource: DataSource,
     private readonly stockEvents: StockEventsService,
     private readonly logger: LoggerService,
+    private readonly operationalMetrics: OperationalMetricsService,
   ) {}
 
   async reconcile(body: SupplierStockReconciliationDto): Promise<SupplierStockReconciliation> {
@@ -31,7 +33,8 @@ export class SupplierReconciliationService {
       throw new BadRequestException('observedAt must be a valid date');
     }
 
-    const result = await this.dataSource.transaction(async (manager) => {
+    try {
+      const result = await this.dataSource.transaction(async (manager) => {
       const reconciliationRepository = manager.getRepository(SupplierStockReconciliation);
       const existing = await reconciliationRepository.findOne({
         where: {
@@ -141,24 +144,76 @@ export class SupplierReconciliationService {
         reconciliation: await reconciliationRepository.save(reconciliation),
         stock: savedStock,
       };
-    });
+      });
 
-    if (result.stock) {
-      await this.publishStockEvents(result.stock);
+      const eventResults = result.stock ? await this.publishStockEvents(result.stock) : [];
+      this.logReconciliationMutation(body, result.reconciliation.status, eventResults);
+      this.operationalMetrics.recordMutationSuccess({
+        operation: 'supplier_reconciliation',
+        productId: body.productId,
+        warehouseId: body.warehouseId,
+        actor: body.actor,
+        reasonCode: 'SUPPLIER_DROPSHIP_RECONCILIATION',
+        reference: body.externalReference,
+      });
+
+      return result.reconciliation;
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      this.logReconciliationMutation(body, 'failure', [], message);
+      this.operationalMetrics.recordMutationFailure({
+        operation: 'supplier_reconciliation',
+        productId: body.productId,
+        warehouseId: body.warehouseId,
+        actor: body.actor,
+        reasonCode: 'SUPPLIER_DROPSHIP_RECONCILIATION',
+        reference: body.externalReference,
+        error: message,
+      });
+      throw error;
     }
-
-    return result.reconciliation;
   }
 
-  private async publishStockEvents(stock: Stock): Promise<void> {
-    await this.stockEvents.publishStockUpdated(stock.productId, stock.warehouseId, stock.quantity, stock.available);
+  private async publishStockEvents(stock: Stock): Promise<StockEventPublishResult[]> {
+    const results: StockEventPublishResult[] = [];
+    results.push(await this.stockEvents.publishStockUpdated(stock.productId, stock.warehouseId, stock.quantity, stock.available));
 
     if (stock.available > 0 && stock.available <= stock.lowStockThreshold) {
-      await this.stockEvents.publishStockLow(stock.productId, stock.warehouseId, stock.available, stock.lowStockThreshold);
+      results.push(await this.stockEvents.publishStockLow(stock.productId, stock.warehouseId, stock.available, stock.lowStockThreshold));
     }
 
     if (stock.available <= 0) {
-      await this.stockEvents.publishStockOut(stock.productId, stock.warehouseId);
+      results.push(await this.stockEvents.publishStockOut(stock.productId, stock.warehouseId));
+    }
+
+    return results;
+  }
+
+  private logReconciliationMutation(
+    body: SupplierStockReconciliationDto,
+    status: string,
+    eventResults: StockEventPublishResult[],
+    error?: string,
+  ) {
+    const eventResult = eventResults.map((result) => `${result.type}:${result.status}`).join(',') || 'none';
+    const fields = [
+      `status=${status}`,
+      'operation=supplier_reconciliation',
+      `actor=${body.actor}`,
+      `supplierId=${body.supplierId}`,
+      `productId=${body.productId}`,
+      `warehouseId=${body.warehouseId}`,
+      `quantity=${body.quantity}`,
+      'reasonCode=SUPPLIER_DROPSHIP_RECONCILIATION',
+      `reference=${body.externalReference}`,
+      `eventResult=${eventResult}`,
+      error ? `error=${error}` : null,
+    ].filter(Boolean).join(' ');
+
+    if (status === 'failure') {
+      this.logger.error(`stock_mutation ${fields}`, '', 'SupplierReconciliationService');
+    } else {
+      this.logger.log(`stock_mutation ${fields}`, 'SupplierReconciliationService');
     }
   }
 }

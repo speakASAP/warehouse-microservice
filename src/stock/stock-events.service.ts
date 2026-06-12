@@ -12,6 +12,13 @@ type StockEventPayload = {
   timestamp: string;
 };
 
+export type StockEventPublishResult = {
+  type: StockEventPayload['type'];
+  status: 'published' | 'failed';
+  error?: string;
+  timestamp: string;
+};
+
 /**
  * Service for publishing stock events to RabbitMQ
  */
@@ -20,6 +27,9 @@ export class StockEventsService implements OnModuleInit, OnModuleDestroy {
   private connection: any = null;
   private channel: amqp.Channel | null = null;
   private lastConnectionError: string | null = null;
+  private publishAttempts = 0;
+  private publishFailures = 0;
+  private lastPublishResult: StockEventPublishResult | null = null;
   private readonly exchangeName = 'stock.events';
 
   constructor(private readonly logger: LoggerService) {}
@@ -90,10 +100,18 @@ export class StockEventsService implements OnModuleInit, OnModuleDestroy {
     };
   }
 
+  getPublishStatus() {
+    return {
+      attempts: this.publishAttempts,
+      failures: this.publishFailures,
+      lastResult: this.lastPublishResult,
+    };
+  }
+
   /**
    * Publish stock.updated event
    */
-  async publishStockUpdated(productId: string, warehouseId: string, quantity: number, available: number) {
+  async publishStockUpdated(productId: string, warehouseId: string, quantity: number, available: number): Promise<StockEventPublishResult> {
     const event: StockEventPayload = {
       type: 'stock.updated',
       productId,
@@ -103,14 +121,15 @@ export class StockEventsService implements OnModuleInit, OnModuleDestroy {
       timestamp: new Date().toISOString(),
     };
 
-    await this.publish('stock.updated', event);
-    this.logger.log(`Published stock.updated for product ${productId}: available=${available}`, 'StockEventsService');
+    const result = await this.publish('stock.updated', event);
+    this.logPublishResult(result, productId, warehouseId, available);
+    return result;
   }
 
   /**
    * Publish stock.low event when stock falls below threshold
    */
-  async publishStockLow(productId: string, warehouseId: string, available: number, threshold: number) {
+  async publishStockLow(productId: string, warehouseId: string, available: number, threshold: number): Promise<StockEventPublishResult> {
     const event: StockEventPayload = {
       type: 'stock.low',
       productId,
@@ -120,14 +139,15 @@ export class StockEventsService implements OnModuleInit, OnModuleDestroy {
       timestamp: new Date().toISOString(),
     };
 
-    await this.publish('stock.low', event);
-    this.logger.warn(`Published stock.low for product ${productId}: available=${available}, threshold=${threshold}`, 'StockEventsService');
+    const result = await this.publish('stock.low', event);
+    this.logPublishResult(result, productId, warehouseId, available, threshold);
+    return result;
   }
 
   /**
    * Publish stock.out event when stock reaches zero
    */
-  async publishStockOut(productId: string, warehouseId: string) {
+  async publishStockOut(productId: string, warehouseId: string): Promise<StockEventPublishResult> {
     const event: StockEventPayload = {
       type: 'stock.out',
       productId,
@@ -135,16 +155,17 @@ export class StockEventsService implements OnModuleInit, OnModuleDestroy {
       timestamp: new Date().toISOString(),
     };
 
-    await this.publish('stock.out', event);
-    this.logger.warn(`Published stock.out for product ${productId}`, 'StockEventsService');
+    const result = await this.publish('stock.out', event);
+    this.logPublishResult(result, productId, warehouseId);
+    return result;
   }
 
-  private async publish(routingKey: StockEventPayload['type'], event: StockEventPayload) {
+  private async publish(routingKey: StockEventPayload['type'], event: StockEventPayload): Promise<StockEventPublishResult> {
     this.validateEvent(routingKey, event);
+    this.publishAttempts += 1;
 
     if (!this.channel) {
-      this.logger.error('RabbitMQ channel not available', '', 'StockEventsService');
-      return;
+      return this.recordPublishFailure(routingKey, 'RabbitMQ channel not available');
     }
 
     try {
@@ -153,10 +174,60 @@ export class StockEventsService implements OnModuleInit, OnModuleDestroy {
         persistent: true,
         contentType: 'application/json',
       });
+      return this.recordPublishSuccess(routingKey);
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       const errorStack = error instanceof Error ? error.stack : undefined;
       this.logger.error(`Failed to publish event: ${errorMessage}`, errorStack, 'StockEventsService');
+      return this.recordPublishFailure(routingKey, errorMessage);
+    }
+  }
+
+  private recordPublishSuccess(type: StockEventPayload['type']): StockEventPublishResult {
+    const result: StockEventPublishResult = {
+      type,
+      status: 'published',
+      timestamp: new Date().toISOString(),
+    };
+    this.lastPublishResult = result;
+    return result;
+  }
+
+  private recordPublishFailure(type: StockEventPayload['type'], error: string): StockEventPublishResult {
+    this.publishFailures += 1;
+    this.lastConnectionError = error;
+    const result: StockEventPublishResult = {
+      type,
+      status: 'failed',
+      error,
+      timestamp: new Date().toISOString(),
+    };
+    this.lastPublishResult = result;
+    this.logger.error(`Stock event publish failed: type=${type} error=${error}`, '', 'StockEventsService');
+    return result;
+  }
+
+  private logPublishResult(
+    result: StockEventPublishResult,
+    productId: string,
+    warehouseId: string,
+    available?: number,
+    threshold?: number,
+  ) {
+    const fields = [
+      `event=${result.type}`,
+      `status=${result.status}`,
+      `productId=${productId}`,
+      `warehouseId=${warehouseId}`,
+      available === undefined ? null : `available=${available}`,
+      threshold === undefined ? null : `threshold=${threshold}`,
+      result.error ? `error=${result.error}` : null,
+    ].filter(Boolean).join(' ');
+
+    if (result.status === 'published') {
+      this.logger.log(`stock_event_publish ${fields}`, 'StockEventsService');
+    } else {
+      this.logger.error(`stock_event_publish ${fields}`, '', 'StockEventsService');
     }
   }
 

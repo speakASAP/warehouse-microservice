@@ -3,7 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, EntityManager, In, Repository } from 'typeorm';
 import { Stock } from './stock.entity';
 import { StockMovement } from '../movements/stock-movement.entity';
-import { StockEventsService } from './stock-events.service';
+import { OperationalMetricsService } from '../observability/operational-metrics.service';
+import { StockEventsService, StockEventPublishResult } from './stock-events.service';
 import { LoggerService } from '../logger/logger.service';
 import { ReservationStatus, StockReservation } from '../reservations/stock-reservation.entity';
 
@@ -23,6 +24,14 @@ interface ReservationLookup {
   warehouseId: string;
   orderId: string;
   channel?: string;
+}
+
+interface StockMutationLogDetails {
+  productId: string;
+  warehouseId: string;
+  quantity?: number;
+  orderId?: string;
+  context: StockMutationContext;
 }
 
 export interface WarehouseAvailability {
@@ -50,6 +59,7 @@ export class StockService {
     private readonly dataSource: DataSource,
     private readonly stockEvents: StockEventsService,
     private readonly logger: LoggerService,
+    private readonly operationalMetrics: OperationalMetricsService,
   ) {}
 
   /**
@@ -147,7 +157,7 @@ export class StockService {
     this.validateMutationContext(context);
     this.validateNonNegativeQuantity(quantity, 'quantity');
 
-    const stock = await this.dataSource.transaction(async (manager) => {
+    return this.runStockMutation('set', { productId, warehouseId, quantity, context }, async () => this.dataSource.transaction(async (manager) => {
       const stockRepository = manager.getRepository(Stock);
       let stock = await this.findStockForUpdate(manager, productId, warehouseId);
 
@@ -179,11 +189,7 @@ export class StockService {
       });
 
       return savedStock;
-    });
-
-    await this.publishStockEvents(stock);
-
-    return stock;
+    }));
   }
 
   /**
@@ -194,7 +200,7 @@ export class StockService {
     this.validateMutationContext(context);
     this.validatePositiveQuantity(quantity, 'quantity');
 
-    const stock = await this.dataSource.transaction(async (manager) => {
+    return this.runStockMutation('increment', { productId, warehouseId, quantity, context }, async () => this.dataSource.transaction(async (manager) => {
       const stockRepository = manager.getRepository(Stock);
       let stock = await this.findStockForUpdate(manager, productId, warehouseId);
 
@@ -225,11 +231,7 @@ export class StockService {
       });
 
       return savedStock;
-    });
-
-    await this.publishStockEvents(stock);
-
-    return stock;
+    }));
   }
 
   /**
@@ -240,7 +242,7 @@ export class StockService {
     this.validateMutationContext(context);
     this.validatePositiveQuantity(quantity, 'quantity');
 
-    const stock = await this.dataSource.transaction(async (manager) => {
+    return this.runStockMutation('decrement', { productId, warehouseId, quantity, context }, async () => this.dataSource.transaction(async (manager) => {
       const stockRepository = manager.getRepository(Stock);
       const stock = await this.findStockForUpdate(manager, productId, warehouseId);
 
@@ -269,11 +271,7 @@ export class StockService {
       });
 
       return savedStock;
-    });
-
-    await this.publishStockEvents(stock);
-
-    return stock;
+    }));
   }
 
   /**
@@ -294,7 +292,7 @@ export class StockService {
     this.validateRequiredString(options?.channel, 'channel');
     const expiresAt = this.resolveReservationExpiry(options.expiresAt);
 
-    const stock = await this.dataSource.transaction(async (manager) => {
+    return this.runStockMutation('reserve', { productId, warehouseId, quantity, orderId, context }, async () => this.dataSource.transaction(async (manager) => {
       const stockRepository = manager.getRepository(Stock);
       const stock = await this.findStockForUpdate(manager, productId, warehouseId);
 
@@ -353,11 +351,7 @@ export class StockService {
       }
 
       return savedStock;
-    });
-
-    await this.publishStockEvents(stock);
-
-    return stock;
+    }));
   }
 
   /**
@@ -369,7 +363,7 @@ export class StockService {
     this.validatePositiveQuantity(quantity, 'quantity');
     this.validateRequiredString(orderId, 'orderId');
 
-    const stock = await this.dataSource.transaction(async (manager) => {
+    return this.runStockMutation('unreserve', { productId, warehouseId, quantity, orderId, context }, async () => this.dataSource.transaction(async (manager) => {
       const stockRepository = manager.getRepository(Stock);
       const stock = await this.findStockForUpdate(manager, productId, warehouseId);
 
@@ -414,11 +408,7 @@ export class StockService {
       });
 
       return savedStock;
-    });
-
-    await this.publishStockEvents(stock);
-
-    return stock;
+    }));
   }
 
   /**
@@ -429,7 +419,7 @@ export class StockService {
     this.validateMutationContext(context);
     this.validateRequiredString(orderId, 'orderId');
 
-    const stock = await this.dataSource.transaction(async (manager) => {
+    return this.runStockMutation('fulfill', { productId, warehouseId, orderId, context }, async () => this.dataSource.transaction(async (manager) => {
       const reservation = await this.findReservationForUpdate(manager, { productId, warehouseId, orderId, channel }, ['active']);
       if (!reservation) {
         return this.assertIdempotentReservationTransition(manager, { productId, warehouseId, orderId, channel }, 'fulfilled');
@@ -463,11 +453,7 @@ export class StockService {
       });
 
       return savedStock;
-    });
-
-    await this.publishStockEvents(stock);
-
-    return stock;
+    }));
   }
 
   /**
@@ -478,7 +464,7 @@ export class StockService {
     this.validateMutationContext(context);
     this.validateRequiredString(orderId, 'orderId');
 
-    const stock = await this.dataSource.transaction(async (manager) => {
+    return this.runStockMutation('cancel', { productId, warehouseId, orderId, context }, async () => this.dataSource.transaction(async (manager) => {
       const reservation = await this.findReservationForUpdate(manager, { productId, warehouseId, orderId, channel }, ['active', 'fulfilled']);
       if (!reservation) {
         return this.assertIdempotentReservationTransition(manager, { productId, warehouseId, orderId, channel }, 'cancelled');
@@ -517,11 +503,7 @@ export class StockService {
       });
 
       return savedStock;
-    });
-
-    await this.publishStockEvents(stock);
-
-    return stock;
+    }));
   }
 
   /**
@@ -532,7 +514,7 @@ export class StockService {
     this.validateMutationContext(context);
     this.validateRequiredString(orderId, 'orderId');
 
-    const stock = await this.dataSource.transaction(async (manager) => {
+    return this.runStockMutation('expire', { productId, warehouseId, orderId, context }, async () => this.dataSource.transaction(async (manager) => {
       const reservation = await this.findReservationForUpdate(manager, { productId, warehouseId, orderId, channel }, ['active']);
       if (!reservation) {
         return this.assertIdempotentReservationTransition(manager, { productId, warehouseId, orderId, channel }, 'expired');
@@ -569,11 +551,7 @@ export class StockService {
       });
 
       return savedStock;
-    });
-
-    await this.publishStockEvents(stock);
-
-    return stock;
+    }));
   }
 
   /**
@@ -584,7 +562,7 @@ export class StockService {
     this.validateMutationContext(context);
     this.validateRequiredString(orderId, 'orderId');
 
-    const stock = await this.dataSource.transaction(async (manager) => {
+    return this.runStockMutation('return', { productId, warehouseId, orderId, context }, async () => this.dataSource.transaction(async (manager) => {
       const reservation = await this.findReservationForUpdate(manager, { productId, warehouseId, orderId, channel }, ['fulfilled']);
       if (!reservation) {
         return this.assertIdempotentReservationTransition(manager, { productId, warehouseId, orderId, channel }, 'returned');
@@ -613,11 +591,7 @@ export class StockService {
       });
 
       return savedStock;
-    });
-
-    await this.publishStockEvents(stock);
-
-    return stock;
+    }));
   }
 
   /**
@@ -746,31 +720,98 @@ export class StockService {
     }
   }
 
+  private async runStockMutation(
+    operation: string,
+    details: StockMutationLogDetails,
+    mutate: () => Promise<Stock>,
+  ): Promise<Stock> {
+    try {
+      const stock = await mutate();
+      const eventResults = await this.publishStockEvents(stock);
+      this.logStockMutation('success', operation, details, eventResults);
+      this.operationalMetrics.recordMutationSuccess({
+        operation,
+        productId: details.productId,
+        warehouseId: details.warehouseId,
+        actor: details.context.actor,
+        reasonCode: details.context.reasonCode,
+        reference: details.orderId || details.context.reference,
+      });
+      return stock;
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      this.logStockMutation('failure', operation, details, [], message);
+      this.operationalMetrics.recordMutationFailure({
+        operation,
+        productId: details.productId,
+        warehouseId: details.warehouseId,
+        actor: details.context.actor,
+        reasonCode: details.context.reasonCode,
+        reference: details.orderId || details.context.reference,
+        error: message,
+      });
+      throw error;
+    }
+  }
+
+  private logStockMutation(
+    status: 'success' | 'failure',
+    operation: string,
+    details: StockMutationLogDetails,
+    eventResults: StockEventPublishResult[],
+    error?: string,
+  ) {
+    const eventResult = eventResults.map((result) => `${result.type}:${result.status}`).join(',') || 'none';
+    const fields = [
+      `status=${status}`,
+      `operation=${operation}`,
+      `actor=${details.context.actor}`,
+      `productId=${details.productId}`,
+      `warehouseId=${details.warehouseId}`,
+      details.quantity === undefined ? null : `quantity=${details.quantity}`,
+      `reasonCode=${details.context.reasonCode}`,
+      details.orderId ? `orderId=${details.orderId}` : null,
+      details.context.reference ? `reference=${details.context.reference}` : null,
+      `eventResult=${eventResult}`,
+      error ? `error=${error}` : null,
+    ].filter(Boolean).join(' ');
+
+    if (status === 'success') {
+      this.logger.log(`stock_mutation ${fields}`, 'StockService');
+    } else {
+      this.logger.error(`stock_mutation ${fields}`, '', 'StockService');
+    }
+  }
+
   /**
    * Publish stock events based on current state
    */
-  private async publishStockEvents(stock: Stock): Promise<void> {
+  private async publishStockEvents(stock: Stock): Promise<StockEventPublishResult[]> {
+    const results: StockEventPublishResult[] = [];
+
     // Always publish stock.updated
-    await this.stockEvents.publishStockUpdated(
+    results.push(await this.stockEvents.publishStockUpdated(
       stock.productId,
       stock.warehouseId,
       stock.quantity,
       stock.available
-    );
+    ));
 
     // Check for low stock
     if (stock.available > 0 && stock.available <= stock.lowStockThreshold) {
-      await this.stockEvents.publishStockLow(
+      results.push(await this.stockEvents.publishStockLow(
         stock.productId,
         stock.warehouseId,
         stock.available,
         stock.lowStockThreshold
-      );
+      ));
     }
 
     // Check for out of stock
     if (stock.available <= 0) {
-      await this.stockEvents.publishStockOut(stock.productId, stock.warehouseId);
+      results.push(await this.stockEvents.publishStockOut(stock.productId, stock.warehouseId));
     }
+
+    return results;
   }
 }

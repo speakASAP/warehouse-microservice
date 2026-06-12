@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
+import { OperationalMetricsService } from '../observability/operational-metrics.service';
 import { StockEventsService } from '../stock/stock-events.service';
 
 @Injectable()
@@ -9,6 +10,7 @@ export class HealthService {
   constructor(
     private readonly dataSource: DataSource,
     private readonly stockEvents: StockEventsService,
+    private readonly operationalMetrics: OperationalMetricsService,
   ) {}
 
   async getHealth() {
@@ -22,6 +24,7 @@ export class HealthService {
       timestamp: new Date().toISOString(),
       environment: process.env.NODE_ENV || 'development',
       dependencies,
+      operations: this.getOperationsStatus(),
     };
   }
 
@@ -35,6 +38,7 @@ export class HealthService {
       service: process.env.SERVICE_NAME || 'warehouse-microservice',
       timestamp: new Date().toISOString(),
       dependencies,
+      operations: this.getOperationsStatus(),
     };
   }
 
@@ -42,6 +46,13 @@ export class HealthService {
     return {
       database: await this.getDatabaseStatus(),
       rabbitmq: this.stockEvents.getConnectionStatus(),
+    };
+  }
+
+  private getOperationsStatus() {
+    return {
+      mutations: this.operationalMetrics.getMutationStatus(),
+      stockEvents: this.stockEvents.getPublishStatus(),
     };
   }
 

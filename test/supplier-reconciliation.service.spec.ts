@@ -78,9 +78,9 @@ describe('SupplierReconciliationService', () => {
     };
 
     const stockEvents = {
-      publishStockUpdated: jest.fn().mockResolvedValue(undefined),
-      publishStockLow: jest.fn().mockResolvedValue(undefined),
-      publishStockOut: jest.fn().mockResolvedValue(undefined),
+      publishStockUpdated: jest.fn().mockResolvedValue({ type: 'stock.updated', status: 'published', timestamp: '2026-06-12T10:00:00.000Z' }),
+      publishStockLow: jest.fn().mockResolvedValue({ type: 'stock.low', status: 'published', timestamp: '2026-06-12T10:00:00.000Z' }),
+      publishStockOut: jest.fn().mockResolvedValue({ type: 'stock.out', status: 'published', timestamp: '2026-06-12T10:00:00.000Z' }),
     };
 
     const logger = {
@@ -89,12 +89,18 @@ describe('SupplierReconciliationService', () => {
       error: jest.fn(),
     };
 
+    const operationalMetrics = {
+      recordMutationSuccess: jest.fn(),
+      recordMutationFailure: jest.fn(),
+    };
+
     return {
-      service: new SupplierReconciliationService(reconciliationRepository as any, dataSource as any, stockEvents as any, logger as any),
+      service: new SupplierReconciliationService(reconciliationRepository as any, dataSource as any, stockEvents as any, logger as any, operationalMetrics as any),
       reconciliationRepository,
       stockRepository,
       movementRepository,
       stockEvents,
+      operationalMetrics,
     };
   }
 

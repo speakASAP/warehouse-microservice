@@ -11,6 +11,7 @@ import { LoggerModule } from './logger/logger.module';
 import { AuthModule } from './auth/auth.module';
 import { JwtRolesGuard } from './auth/jwt-roles.guard';
 import { SuppliersModule } from './suppliers/suppliers.module';
+import { ObservabilityModule } from './observability/observability.module';
 
 /**
  * Main application module for Warehouse Microservice
@@ -23,6 +24,7 @@ import { SuppliersModule } from './suppliers/suppliers.module';
       envFilePath: '.env',
     }),
     AuthModule,
+    ObservabilityModule,
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: process.env.DB_HOST || 'db-server-postgres',
