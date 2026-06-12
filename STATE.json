@@ -3,15 +3,13 @@
   "project": "warehouse-microservice",
   "stage": "production",
   "health": "ok",
-  "cycle": 6,
-  "last_cycle_at": "2026-06-12T07:40:52Z",
+  "cycle": 7,
+  "last_cycle_at": "2026-06-12T07:51:57Z",
   "tasks_active": 0,
   "tasks_failed_last_cycle": 0,
-  "open_task_ids": [
-    "WH-G7-T1"
-  ],
-  "last_milestone": "WH-G6 implemented - supplier dropship reconciliation endpoint deployed with idempotent evidence and reserved-stock conflict detection",
-  "next_focus": "WH-G7 - production observability and operations",
+  "open_task_ids": [],
+  "last_milestone": "WH-G7 implemented - production operations signals, structured mutation/event logs, and operator runbook deployed",
+  "next_focus": "All planned WH-G goals are complete; await owner-approved next goal",
   "blockers": [],
   "budget_units_used": 0,
   "metrics": {
@@ -22,7 +20,7 @@
       "database": "up",
       "rabbitmq": "up",
       "event_health": "up",
-      "deployed_image": "localhost:5000/warehouse-microservice:wh-g6-supplier-reconciliation-20260612",
+      "deployed_image": "localhost:5000/warehouse-microservice:wh-g7-ops-20260612",
       "stock_exchange": "stock.events",
       "stock_mutation_contracts": "dto-required",
       "stock_movement_transaction": "enabled",
@@ -39,7 +37,13 @@
       "supplier_reconciliation_endpoint": "enabled",
       "supplier_reconciliation_idempotency": "enabled",
       "supplier_reconciliation_conflicts": "reserved-stock-detected",
-      "wh_g6_tests": "passed"
+      "wh_g6_tests": "passed",
+      "operations_health": "enabled",
+      "stock_mutation_logging": "structured",
+      "stock_event_publish_metrics": "enabled",
+      "mutation_failure_health": "enabled",
+      "operations_runbook": "docs/runbooks/operations.md",
+      "wh_g7_tests": "passed"
     }
   }
 }

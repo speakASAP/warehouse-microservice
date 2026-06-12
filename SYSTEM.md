@@ -41,3 +41,5 @@ Health: ok - HTTP health is up and RabbitMQ is reachable from the warehouse pod.
 - 2026-06-12: WH-G5 added trusted catalog ingestion documentation and `POST /api/stock/availability/batch`.
 - 2026-06-12: WH-G6 added supplier dropship reconciliation at `POST /api/supplier-reconciliations`.
 - 2026-06-12: WH-G6 deployed image `localhost:5000/warehouse-microservice:wh-g6-supplier-reconciliation-20260612`; production health reported database and RabbitMQ up.
+- 2026-06-12: WH-G7 added production operations signals in `/api/health` and `/api/ready`, structured stock mutation/event logs, and `docs/runbooks/operations.md`.
+- 2026-06-12: WH-G7 deployed image `localhost:5000/warehouse-microservice:wh-g7-ops-20260612`; production health reported database, RabbitMQ, and operations fields.
