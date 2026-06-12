@@ -9,6 +9,8 @@ import {
 } from 'typeorm';
 import { Warehouse } from '../warehouses/warehouse.entity';
 
+export type ReservationStatus = 'active' | 'released' | 'fulfilled' | 'cancelled' | 'expired' | 'returned';
+
 /**
  * StockReservation Entity - Reserved for pending orders
  */
@@ -38,9 +40,9 @@ export class StockReservation {
   @Column({ length: 100 })
   channel: string;
 
-  // Status: active, fulfilled, cancelled, expired
+  // Status: active, released, fulfilled, cancelled, expired, returned
   @Column({ length: 50, default: 'active' })
-  status: string;
+  status: ReservationStatus;
 
   // Expiration time for the reservation
   @Column({ type: 'timestamp', nullable: true })
@@ -52,4 +54,3 @@ export class StockReservation {
   @UpdateDateColumn()
   updatedAt: Date;
 }
-

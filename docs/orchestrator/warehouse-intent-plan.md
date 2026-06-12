@@ -240,3 +240,6 @@ Each future session should:
 - 2026-06-12: WH-G3 added `test/stock.service.spec.ts`; `npm test` passed 4 tests covering missing reason, negative input, insufficient stock, and the lock/transaction write path.
 - 2026-06-12: WH-G3 `npm run build` passed after DTO, service, and test changes.
 - 2026-06-12: WH-G3 deployed image `localhost:5000/warehouse-microservice:0350b8e`; rollout completed and production `/api/health` returned `status: healthy` with database and RabbitMQ up.
+- 2026-06-12: WH-G4 added reservation row lifecycle writes for reserve, release, fulfill, cancel, expire, and return. Stock, reservation status, and movement records are updated inside the same TypeORM transaction.
+- 2026-06-12: WH-G4 reservation reserve is idempotent for repeated order/product/warehouse/channel holds by treating the request quantity as the desired held quantity instead of a blind increment.
+- 2026-06-12: WH-G4 `npm test -- --runInBand test/stock.service.spec.ts`, full `npm test -- --runInBand`, and `npm run build` passed.

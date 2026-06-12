@@ -3,19 +3,18 @@
   "project": "warehouse-microservice",
   "stage": "production",
   "health": "ok",
-  "cycle": 3,
-  "last_cycle_at": "2026-06-12T06:22:34Z",
+  "cycle": 4,
+  "last_cycle_at": "2026-06-12T06:50:34Z",
   "tasks_active": 0,
   "tasks_failed_last_cycle": 0,
   "open_task_ids": [
-    "WH-G4-T1",
     "WH-G5-T1",
     "WH-G5-T2",
     "WH-G6-T1",
     "WH-G7-T1"
   ],
-  "last_milestone": "WH-G3 implemented - stock mutations require reasonCode/actor and stock plus movement writes are transactional",
-  "next_focus": "WH-G4 - implement reservation lifecycle as stock authority",
+  "last_milestone": "WH-G4 implemented - reservation lifecycle is the stock authority for reserve, release, fulfill, cancel, expire, and return",
+  "next_focus": "WH-G5 - define catalog and consumer availability contracts",
   "blockers": [],
   "budget_units_used": 0,
   "metrics": {
@@ -31,7 +30,10 @@
       "stock_mutation_contracts": "dto-required",
       "stock_movement_transaction": "enabled",
       "wh_g3_tests": "passed",
-      "build": "passed"
+      "build": "passed",
+      "reservation_lifecycle": "enabled",
+      "reservation_idempotency": "enabled",
+      "wh_g4_tests": "passed"
     }
   }
 }

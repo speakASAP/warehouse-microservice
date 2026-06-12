@@ -19,7 +19,7 @@ export class StockMovement {
   @Column()
   productId: string;
 
-  // Type: in, out, transfer, adjustment, reserve, unreserve
+  // Type: in, out, transfer, adjustment, reserve, unreserve, fulfill, cancel, expire, return
   @Column({ length: 50 })
   type: string;
 
@@ -58,4 +58,3 @@ export class StockMovement {
   @CreateDateColumn()
   createdAt: Date;
 }
-

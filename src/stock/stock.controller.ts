@@ -93,6 +93,9 @@ export class StockController {
       reasonCode: body.reasonCode,
       actor: body.actor,
       reference: body.reference,
+    }, {
+      channel: body.channel,
+      expiresAt: body.expiresAt,
     });
     return { success: true, data: stock };
   }
@@ -108,7 +111,7 @@ export class StockController {
       reasonCode: body.reasonCode,
       actor: body.actor,
       reference: body.reference,
-    });
+    }, body.channel);
     return { success: true, data: stock };
   }
 }
