@@ -25,3 +25,4 @@
 - [x] 2026-06-12 WH-G3-T1 Added stock mutation DTOs for set, increment, decrement, reserve, and unreserve; each requires `reasonCode` and `actor`.
 - [x] 2026-06-12 WH-G3-T2 Wrapped stock row writes and stock movement inserts in TypeORM transactions with write locks on existing stock rows.
 - [x] 2026-06-12 WH-G3 verification passed: `npm test` and `npm run build`.
+- [x] 2026-06-12 WH-G3 deployed image `localhost:5000/warehouse-microservice:773c216`; rollout and production health check passed.

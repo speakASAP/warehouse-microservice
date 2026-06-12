@@ -26,7 +26,7 @@
       "database": "up",
       "rabbitmq": "up",
       "event_health": "up",
-      "deployed_image": "localhost:5000/warehouse-microservice:wh-g2-rabbitmq-20260612",
+      "deployed_image": "localhost:5000/warehouse-microservice:773c216",
       "stock_exchange": "stock.events",
       "stock_mutation_contracts": "dto-required",
       "stock_movement_transaction": "enabled",

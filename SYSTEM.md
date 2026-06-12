@@ -36,3 +36,4 @@ Health: ok - HTTP health is up and RabbitMQ is reachable from the warehouse pod.
 - 2026-06-12: WH-G3 added validated stock mutation DTOs requiring `reasonCode` and `actor`.
 - 2026-06-12: WH-G3 wraps stock writes and movement inserts in one database transaction.
 - 2026-06-12: WH-G3 added unit coverage for missing reason, negative input, insufficient stock, and pessimistic write locking.
+- 2026-06-12: WH-G3 deployed image `localhost:5000/warehouse-microservice:773c216`; production health reported database and RabbitMQ up.
