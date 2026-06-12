@@ -25,4 +25,4 @@ ENV NODE_ENV=production
 
 EXPOSE 3201
 
-CMD ["node", "dist/main"]
+CMD ["node", "dist/src/main"]

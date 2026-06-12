@@ -4,7 +4,7 @@
   "stage": "production",
   "health": "ok",
   "cycle": 4,
-  "last_cycle_at": "2026-06-12T06:50:34Z",
+  "last_cycle_at": "2026-06-12T07:05:11Z",
   "tasks_active": 0,
   "tasks_failed_last_cycle": 0,
   "open_task_ids": [
@@ -25,7 +25,7 @@
       "database": "up",
       "rabbitmq": "up",
       "event_health": "up",
-      "deployed_image": "localhost:5000/warehouse-microservice:0350b8e",
+      "deployed_image": "localhost:5000/warehouse-microservice:29f8c4f",
       "stock_exchange": "stock.events",
       "stock_mutation_contracts": "dto-required",
       "stock_movement_transaction": "enabled",
@@ -33,7 +33,8 @@
       "build": "passed",
       "reservation_lifecycle": "enabled",
       "reservation_idempotency": "enabled",
-      "wh_g4_tests": "passed"
+      "wh_g4_tests": "passed",
+      "docker_clean_build": "enabled"
     }
   }
 }
