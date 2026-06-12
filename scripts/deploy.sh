@@ -68,10 +68,16 @@ docker push "$IMAGE_LATEST"
 deploy_timing_phase_end "Push image"
 
 deploy_timing_phase_start "Apply Kubernetes manifests"
-for manifest in configmap.yaml external-secret.yaml deployment.yaml service.yaml ingress.yaml; do
+for manifest in rabbitmq.yaml configmap.yaml external-secret.yaml deployment.yaml service.yaml ingress.yaml; do
   [ -f "$K8S_DIR/$manifest" ] && kubectl apply -f "$K8S_DIR/$manifest" -n "$NAMESPACE"
 done
 deploy_timing_phase_end "Apply Kubernetes manifests"
+
+if [ -f "$K8S_DIR/rabbitmq.yaml" ]; then
+  deploy_timing_phase_start "Wait for RabbitMQ"
+  kubectl rollout status statefulset/rabbitmq -n "$NAMESPACE" --timeout=180s
+  deploy_timing_phase_end "Wait for RabbitMQ"
+fi
 
 deploy_timing_phase_start "Set deployment image"
 kubectl set image "deployment/${SERVICE_NAME}" app="$IMAGE" -n "$NAMESPACE"
