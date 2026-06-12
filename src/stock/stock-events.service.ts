@@ -2,6 +2,16 @@ import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import * as amqp from 'amqplib';
 import { LoggerService } from '../logger/logger.service';
 
+type StockEventPayload = {
+  type: 'stock.updated' | 'stock.low' | 'stock.out';
+  productId: string;
+  warehouseId: string;
+  quantity?: number;
+  available?: number;
+  threshold?: number;
+  timestamp: string;
+};
+
 /**
  * Service for publishing stock events to RabbitMQ
  */
@@ -84,7 +94,7 @@ export class StockEventsService implements OnModuleInit, OnModuleDestroy {
    * Publish stock.updated event
    */
   async publishStockUpdated(productId: string, warehouseId: string, quantity: number, available: number) {
-    const event = {
+    const event: StockEventPayload = {
       type: 'stock.updated',
       productId,
       warehouseId,
@@ -101,7 +111,7 @@ export class StockEventsService implements OnModuleInit, OnModuleDestroy {
    * Publish stock.low event when stock falls below threshold
    */
   async publishStockLow(productId: string, warehouseId: string, available: number, threshold: number) {
-    const event = {
+    const event: StockEventPayload = {
       type: 'stock.low',
       productId,
       warehouseId,
@@ -118,7 +128,7 @@ export class StockEventsService implements OnModuleInit, OnModuleDestroy {
    * Publish stock.out event when stock reaches zero
    */
   async publishStockOut(productId: string, warehouseId: string) {
-    const event = {
+    const event: StockEventPayload = {
       type: 'stock.out',
       productId,
       warehouseId,
@@ -129,7 +139,9 @@ export class StockEventsService implements OnModuleInit, OnModuleDestroy {
     this.logger.warn(`Published stock.out for product ${productId}`, 'StockEventsService');
   }
 
-  private async publish(routingKey: string, event: object) {
+  private async publish(routingKey: StockEventPayload['type'], event: StockEventPayload) {
+    this.validateEvent(routingKey, event);
+
     if (!this.channel) {
       this.logger.error('RabbitMQ channel not available', '', 'StockEventsService');
       return;
@@ -145,6 +157,32 @@ export class StockEventsService implements OnModuleInit, OnModuleDestroy {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       const errorStack = error instanceof Error ? error.stack : undefined;
       this.logger.error(`Failed to publish event: ${errorMessage}`, errorStack, 'StockEventsService');
+    }
+  }
+
+  private validateEvent(routingKey: StockEventPayload['type'], event: StockEventPayload) {
+    if (event.type !== routingKey) {
+      throw new Error(`Invalid stock event: routing key ${routingKey} does not match type ${event.type}`);
+    }
+    if (!event.productId || !event.warehouseId || !event.timestamp) {
+      throw new Error(`Invalid ${event.type} event: productId, warehouseId, and timestamp are required`);
+    }
+    if (Number.isNaN(Date.parse(event.timestamp))) {
+      throw new Error(`Invalid ${event.type} event: timestamp must be ISO-8601 parseable`);
+    }
+    if (event.type === 'stock.updated') {
+      this.assertNumber(event.quantity, 'quantity', event.type);
+      this.assertNumber(event.available, 'available', event.type);
+    }
+    if (event.type === 'stock.low') {
+      this.assertNumber(event.available, 'available', event.type);
+      this.assertNumber(event.threshold, 'threshold', event.type);
+    }
+  }
+
+  private assertNumber(value: number | undefined, field: string, eventType: string) {
+    if (typeof value !== 'number' || !Number.isFinite(value)) {
+      throw new Error(`Invalid ${eventType} event: ${field} must be a finite number`);
     }
   }
 }
