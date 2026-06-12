@@ -15,7 +15,6 @@ export class HealthController {
   @Public()
   @Get('ready')
   getReady() {
-    return { ready: true };
+    return this.healthService.getReady();
   }
 }
-

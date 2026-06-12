@@ -9,6 +9,7 @@ import { LoggerService } from '../logger/logger.service';
 export class StockEventsService implements OnModuleInit, OnModuleDestroy {
   private connection: any = null;
   private channel: amqp.Channel | null = null;
+  private lastConnectionError: string | null = null;
   private readonly exchangeName = 'stock.events';
 
   constructor(private readonly logger: LoggerService) {}
@@ -40,10 +41,12 @@ export class StockEventsService implements OnModuleInit, OnModuleDestroy {
       // Declare exchange for stock events
       await this.channel.assertExchange(this.exchangeName, 'topic', { durable: true });
 
+      this.lastConnectionError = null;
       this.logger.log('Connected to RabbitMQ', 'StockEventsService');
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       const errorStack = error instanceof Error ? error.stack : undefined;
+      this.lastConnectionError = errorMessage;
       this.logger.error(`Failed to connect to RabbitMQ: ${errorMessage}`, errorStack, 'StockEventsService');
     }
   }
@@ -64,6 +67,17 @@ export class StockEventsService implements OnModuleInit, OnModuleDestroy {
       const errorStack = error instanceof Error ? error.stack : undefined;
       this.logger.error(`Error disconnecting from RabbitMQ: ${errorMessage}`, errorStack, 'StockEventsService');
     }
+  }
+
+  /**
+   * Current RabbitMQ publishing dependency state for health/readiness.
+   */
+  getConnectionStatus() {
+    return {
+      status: this.channel ? 'up' : 'down',
+      exchange: this.exchangeName,
+      lastError: this.lastConnectionError,
+    };
   }
 
   /**
@@ -134,4 +148,3 @@ export class StockEventsService implements OnModuleInit, OnModuleDestroy {
     }
   }
 }
-
