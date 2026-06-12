@@ -2,6 +2,7 @@ import { Controller, Get, Post, Body, Param } from '@nestjs/common';
 import { StockService } from './stock.service';
 import { LoggerService } from '../logger/logger.service';
 import {
+  BatchAvailabilityDto,
   PositiveStockMutationDto,
   ReserveStockDto,
   SetStockDto,
@@ -35,6 +36,17 @@ export class StockController {
     this.logger.log(`GET /api/stock/${productId}/total`, 'StockController');
     const total = await this.stockService.getTotalAvailable(productId);
     return { success: true, data: { productId, totalAvailable: total } };
+  }
+
+  /**
+   * Get availability for multiple products
+   * POST /api/stock/availability/batch
+   */
+  @Post('availability/batch')
+  async getBatchAvailability(@Body() body: BatchAvailabilityDto) {
+    this.logger.log('POST /api/stock/availability/batch', 'StockController');
+    const availability = await this.stockService.getBatchAvailability(body.productIds, body.warehouseIds);
+    return { success: true, data: availability };
   }
 
   /**

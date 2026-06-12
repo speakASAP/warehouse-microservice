@@ -25,6 +25,21 @@ interface ReservationLookup {
   channel?: string;
 }
 
+export interface WarehouseAvailability {
+  warehouseId: string;
+  quantity: number;
+  reserved: number;
+  available: number;
+}
+
+export interface ProductAvailability {
+  productId: string;
+  totalQuantity: number;
+  totalReserved: number;
+  totalAvailable: number;
+  warehouses: WarehouseAvailability[];
+}
+
 const DEFAULT_RESERVATION_TTL_MS = 15 * 60 * 1000;
 
 @Injectable()
@@ -58,6 +73,60 @@ export class StockService {
       .getRawOne();
 
     return parseInt(result?.total || '0', 10);
+  }
+
+  /**
+   * Get availability for multiple catalog product IDs in one call.
+   */
+  async getBatchAvailability(productIds: string[], warehouseIds?: string[]): Promise<ProductAvailability[]> {
+    const normalizedProductIds = this.normalizeUniqueIds(productIds, 'productIds');
+    const normalizedWarehouseIds = warehouseIds?.length ? this.normalizeUniqueIds(warehouseIds, 'warehouseIds') : [];
+
+    const where: Record<string, unknown> = {
+      productId: In(normalizedProductIds),
+    };
+
+    if (normalizedWarehouseIds.length > 0) {
+      where.warehouseId = In(normalizedWarehouseIds);
+    }
+
+    const stocks = await this.stockRepository.find({
+      where,
+      order: {
+        productId: 'ASC',
+        warehouseId: 'ASC',
+      },
+    } as any);
+
+    const availability = new Map<string, ProductAvailability>();
+    for (const productId of normalizedProductIds) {
+      availability.set(productId, {
+        productId,
+        totalQuantity: 0,
+        totalReserved: 0,
+        totalAvailable: 0,
+        warehouses: [],
+      });
+    }
+
+    for (const stock of stocks) {
+      const productAvailability = availability.get(stock.productId);
+      if (!productAvailability) {
+        continue;
+      }
+
+      productAvailability.totalQuantity += stock.quantity;
+      productAvailability.totalReserved += stock.reserved;
+      productAvailability.totalAvailable += stock.available;
+      productAvailability.warehouses.push({
+        warehouseId: stock.warehouseId,
+        quantity: stock.quantity,
+        reserved: stock.reserved,
+        available: stock.available,
+      });
+    }
+
+    return normalizedProductIds.map((productId) => availability.get(productId));
   }
 
   /**
@@ -648,6 +717,19 @@ export class StockService {
     if (!Number.isInteger(quantity) || quantity <= 0) {
       throw new BadRequestException(`${fieldName} must be a positive integer`);
     }
+  }
+
+  private normalizeUniqueIds(ids: string[], fieldName: string): string[] {
+    if (!Array.isArray(ids) || ids.length === 0) {
+      throw new BadRequestException(`${fieldName} must contain at least one ID`);
+    }
+
+    const normalized = ids.map((id) => {
+      this.validateRequiredString(id, fieldName);
+      return id.trim();
+    });
+
+    return [...new Set(normalized)];
   }
 
   private assertValidStockState(stock: Stock): void {

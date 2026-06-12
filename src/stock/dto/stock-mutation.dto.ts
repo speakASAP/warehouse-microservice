@@ -1,5 +1,16 @@
 import { Type } from 'class-transformer';
-import { IsDateString, IsInt, IsNotEmpty, IsOptional, IsString, MaxLength, Min } from 'class-validator';
+import {
+  ArrayMaxSize,
+  ArrayNotEmpty,
+  IsArray,
+  IsDateString,
+  IsInt,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  MaxLength,
+  Min,
+} from 'class-validator';
 
 export class StockMutationAuditDto {
   @IsString()
@@ -82,4 +93,22 @@ export class ReservationLifecycleDto extends StockMutationAuditDto {
   @IsString()
   @MaxLength(100)
   channel?: string;
+}
+
+export class BatchAvailabilityDto {
+  @IsArray()
+  @ArrayNotEmpty()
+  @ArrayMaxSize(200)
+  @IsString({ each: true })
+  @IsNotEmpty({ each: true })
+  @MaxLength(200, { each: true })
+  productIds: string[];
+
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(100)
+  @IsString({ each: true })
+  @IsNotEmpty({ each: true })
+  @MaxLength(200, { each: true })
+  warehouseIds?: string[];
 }

@@ -376,4 +376,86 @@ describe('StockService mutation invariants', () => {
       toWarehouseId: 'warehouse-1',
     }));
   });
+
+  it('returns batch availability totals for requested product IDs without N+1 reads', async () => {
+    const { service, stockRepository } = createService();
+    stockRepository.find.mockResolvedValue([
+      {
+        productId: 'product-1',
+        warehouseId: 'warehouse-1',
+        quantity: 10,
+        reserved: 3,
+        available: 7,
+      },
+      {
+        productId: 'product-1',
+        warehouseId: 'warehouse-2',
+        quantity: 4,
+        reserved: 1,
+        available: 3,
+      },
+      {
+        productId: 'product-2',
+        warehouseId: 'warehouse-1',
+        quantity: 2,
+        reserved: 0,
+        available: 2,
+      },
+    ]);
+
+    const availability = await service.getBatchAvailability(['product-1', 'product-2', 'product-1', 'product-3']);
+
+    expect(stockRepository.find).toHaveBeenCalledTimes(1);
+    expect(availability).toEqual([
+      {
+        productId: 'product-1',
+        totalQuantity: 14,
+        totalReserved: 4,
+        totalAvailable: 10,
+        warehouses: [
+          { warehouseId: 'warehouse-1', quantity: 10, reserved: 3, available: 7 },
+          { warehouseId: 'warehouse-2', quantity: 4, reserved: 1, available: 3 },
+        ],
+      },
+      {
+        productId: 'product-2',
+        totalQuantity: 2,
+        totalReserved: 0,
+        totalAvailable: 2,
+        warehouses: [
+          { warehouseId: 'warehouse-1', quantity: 2, reserved: 0, available: 2 },
+        ],
+      },
+      {
+        productId: 'product-3',
+        totalQuantity: 0,
+        totalReserved: 0,
+        totalAvailable: 0,
+        warehouses: [],
+      },
+    ]);
+  });
+
+  it('supports warehouse filters for batch availability', async () => {
+    const { service, stockRepository } = createService();
+    stockRepository.find.mockResolvedValue([]);
+
+    await service.getBatchAvailability(['product-1'], ['warehouse-1', 'warehouse-1']);
+
+    expect(stockRepository.find).toHaveBeenCalledTimes(1);
+    expect(stockRepository.find).toHaveBeenCalledWith(expect.objectContaining({
+      where: expect.objectContaining({
+        productId: expect.any(Object),
+        warehouseId: expect.any(Object),
+      }),
+    }));
+  });
+
+  it('rejects empty batch availability product lists', async () => {
+    const { service, stockRepository } = createService();
+
+    await expect(service.getBatchAvailability([])).rejects.toBeInstanceOf(BadRequestException);
+
+    expect(stockRepository.find).not.toHaveBeenCalled();
+  });
 });
