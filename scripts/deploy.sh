@@ -82,9 +82,9 @@ deploy_timing_k8s_rollout_wait kubectl "$SERVICE_NAME" "$NAMESPACE"
 deploy_timing_phase_end "Wait for rollout"
 
 deploy_timing_phase_start "Health check"
-POD=$(kubectl get pod -n "$NAMESPACE" -l app=${SERVICE_NAME} -o jsonpath='{.items[0].metadata.name}')
+POD=$(kubectl get pod -n "$NAMESPACE" -l app=${SERVICE_NAME} --field-selector=status.phase=Running --sort-by=.metadata.creationTimestamp -o jsonpath='{.items[-1].metadata.name}')
 [ -n "$POD" ] || { echo -e "${RED}No pod found${NC}"; exit 1; }
-kubectl exec -n "$NAMESPACE" "$POD" -- wget -qO- "http://localhost:3201/api/health" || exit 1
+kubectl exec -n "$NAMESPACE" "$POD" -- curl -fsS "http://localhost:3201/api/health" || exit 1
 deploy_timing_phase_end "Health check"
 
 deploy_timing_finish_success "warehouse-microservice"

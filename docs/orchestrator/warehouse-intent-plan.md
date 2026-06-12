@@ -226,3 +226,7 @@ Each future session should:
 - 2026-06-12: unauthenticated `https://warehouse.alfares.cz/api/stock/test-product` returned `401`.
 - 2026-06-12: pod logs showed RabbitMQ DNS failure for `host.k3s.internal`.
 - 2026-06-12: Kubernetes service list showed warehouse, catalog, auth, logging, suppliers, orders, and FlipFlop services, but no RabbitMQ service.
+- 2026-06-12: WH-G1 deployed image `localhost:5000/warehouse-microservice:wh-g1-health-20260612c`.
+- 2026-06-12: WH-G1 fixed Dockerfile `node:24-slim` package installation by replacing `apk` with `apt-get`; Docker image build passed.
+- 2026-06-12: WH-G1 fixed deploy script to check `http://localhost:3201/api/health`, use the unique build tag for rollout, select the newest running pod, and run `curl -fsS` inside the container.
+- 2026-06-12: Production `/api/health` returned `status: healthy` with `database: up` and `rabbitmq: down`; production `/api/ready` returned `ready: false`, preserving the RabbitMQ failure as WH-G2 evidence.

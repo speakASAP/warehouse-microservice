@@ -3,14 +3,11 @@
   "project": "warehouse-microservice",
   "stage": "production",
   "health": "degraded",
-  "cycle": 1,
-  "last_cycle_at": "2026-06-12T00:00:00Z",
+  "cycle": 2,
+  "last_cycle_at": "2026-06-12T06:12:22Z",
   "tasks_active": 0,
   "tasks_failed_last_cycle": 0,
   "open_task_ids": [
-    "WH-G1-T1",
-    "WH-G1-T2",
-    "WH-G1-T3",
     "WH-G2-T1",
     "WH-G2-T2",
     "WH-G3-T1",
@@ -21,19 +18,20 @@
     "WH-G6-T1",
     "WH-G7-T1"
   ],
-  "last_milestone": "warehouse-intent-plan-created",
-  "next_focus": "WH-G1 - make deployment and health truthful before implementation work",
+  "last_milestone": "WH-G1 deployed - deployment and health are truthful",
+  "next_focus": "WH-G2 - restore RabbitMQ stock event publishing",
   "blockers": [
-    "RabbitMQ is not reachable from warehouse pod: getaddrinfo ENOTFOUND host.k3s.internal",
-    "Deploy health check uses /health but app serves /api/health",
-    "Dockerfile uses node:24-slim with apk add"
+    "RabbitMQ is not reachable from warehouse pod: getaddrinfo ENOTFOUND host.k3s.internal"
   ],
   "budget_units_used": 0,
   "metrics": {
     "custom": {
       "intent_plan": "docs/orchestrator/warehouse-intent-plan.md",
       "http_health": "up",
-      "event_health": "degraded"
+      "readiness": "not_ready",
+      "database": "up",
+      "event_health": "degraded",
+      "deployed_image": "localhost:5000/warehouse-microservice:wh-g1-health-20260612c"
     }
   }
 }

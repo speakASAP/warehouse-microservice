@@ -5,9 +5,6 @@
 
 ## Backlog
 
-- [ ] WH-G1-T1 Fix production deploy health path mismatch (`/health` vs `/api/health`) (goal_id: WH-G1, priority: 1)
-- [ ] WH-G1-T2 Fix Dockerfile package-manager mismatch before next image rebuild (goal_id: WH-G1, priority: 1)
-- [ ] WH-G1-T3 Split health/readiness evidence for database and RabbitMQ availability (goal_id: WH-G1, priority: 1)
 - [ ] WH-G2-T1 Restore RabbitMQ broker reachability from the warehouse pod (goal_id: WH-G2, priority: 1)
 - [ ] WH-G2-T2 Document and validate `stock.updated`, `stock.low`, and `stock.out` event payloads (goal_id: WH-G2, priority: 1)
 - [ ] WH-G3-T1 Require validated stock mutation DTOs/contracts with reason code and actor (goal_id: WH-G3, priority: 1)
@@ -22,3 +19,6 @@
 <!-- AI appends here. Never modifies previous entries. -->
 - [x] 2026-04-05 Documentation standard applied
 - [x] 2026-06-12 WH-DOC-T1 Created `docs/orchestrator/warehouse-intent-plan.md` to preserve warehouse intent, ecosystem ownership boundaries, goal sequence, and evidence log.
+- [x] 2026-06-12 WH-G1-T1 Fixed deploy health path to `http://localhost:3201/api/health` and verified deploy health check during rollout.
+- [x] 2026-06-12 WH-G1-T2 Fixed Dockerfile package-manager mismatch by using Debian `apt-get` in `node:24-slim`; verified Docker image build.
+- [x] 2026-06-12 WH-G1-T3 Split health/readiness evidence: `/api/health` reports DB/RabbitMQ dependencies and `/api/ready` reports `not_ready` while RabbitMQ is unreachable.

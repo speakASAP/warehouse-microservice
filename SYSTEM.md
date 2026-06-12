@@ -25,7 +25,11 @@ Health: degraded - HTTP health is up, but RabbitMQ event publishing is not curre
 <!-- AI-maintained -->
 - RabbitMQ connection fails in production logs: `getaddrinfo ENOTFOUND host.k3s.internal`.
 - No RabbitMQ service or pod was visible in Kubernetes during the 2026-06-12 inspection.
-- `scripts/deploy.sh` checks `http://localhost:3201/health`, while the app serves `http://localhost:3201/api/health`.
-- `Dockerfile` uses Debian `node:24-slim` with Alpine `apk add`.
 - Stock mutation request bodies use inline TypeScript types, so the configured `ValidationPipe` cannot enforce DTO validation.
 - Reservation reads exist, but reserve/unreserve writes do not maintain `stock_reservations` rows.
+
+## Recent Fixes
+<!-- AI-maintained -->
+- 2026-06-12: WH-G1 fixed Dockerfile package installation for `node:24-slim`.
+- 2026-06-12: WH-G1 fixed deploy health check path and changed rollout image updates to use the unique build tag.
+- 2026-06-12: WH-G1 added dependency-aware `/api/health` and `/api/ready` output for database and RabbitMQ.
