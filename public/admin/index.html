@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Warehouse Admin</title>
+    <link rel="stylesheet" href="/admin/style.css?v=admin-20260612-0716">
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="Sections">
+        <div class="brand">
+          <span class="brand-mark">W</span>
+          <div>
+            <strong>Warehouse</strong>
+            <span>Admin Console</span>
+          </div>
+        </div>
+        <nav class="nav-list" id="navList">
+          <button class="nav-item active" type="button" data-panel="overview">Overview</button>
+          <button class="nav-item" type="button" data-panel="warehouses">Warehouses</button>
+          <button class="nav-item" type="button" data-panel="stock">Stock</button>
+          <button class="nav-item" type="button" data-panel="reservations">Reservations</button>
+          <button class="nav-item" type="button" data-panel="movements">Movements</button>
+          <button class="nav-item" type="button" data-panel="actions">Actions</button>
+        </nav>
+      </aside>
+
+      <main class="workspace">
+        <header class="topbar">
+          <div>
+            <h1>Warehouse Admin</h1>
+            <p>Live stock, reservation, movement, and warehouse controls.</p>
+          </div>
+          <form class="connection" id="connectionForm">
+            <label>
+              API base
+              <input id="apiBaseInput" name="apiBase" autocomplete="url" spellcheck="false">
+            </label>
+            <label>
+              Bearer token
+              <input id="tokenInput" name="token" type="password" autocomplete="off" spellcheck="false">
+            </label>
+            <button class="button primary" type="submit">Save</button>
+          </form>
+        </header>
+
+        <section class="status-strip" aria-label="Service status">
+          <div class="status-card">
+            <span class="label">Health</span>
+            <strong id="healthStatus">Checking</strong>
+            <small id="healthDetail">/api/health</small>
+          </div>
+          <div class="status-card">
+            <span class="label">Readiness</span>
+            <strong id="readyStatus">Checking</strong>
+            <small id="readyDetail">/api/ready</small>
+          </div>
+          <div class="status-card">
+            <span class="label">Warehouses</span>
+            <strong id="warehouseCount">-</strong>
+            <small id="warehouseDetail">authorized</small>
+          </div>
+          <div class="status-card">
+            <span class="label">Active reservations</span>
+            <strong id="reservationCount">-</strong>
+            <small id="reservationDetail">authorized</small>
+          </div>
+        </section>
+
+        <div class="message hidden" id="message" role="status"></div>
+
+        <section class="panel active" id="overview" aria-labelledby="overviewTitle">
+          <div class="section-head">
+            <div>
+              <h2 id="overviewTitle">Overview</h2>
+              <p>Current service status and recent authorized data.</p>
+            </div>
+            <button class="button" type="button" data-action="refresh-all">Refresh</button>
+          </div>
+          <div class="grid two">
+            <article class="surface">
+              <div class="surface-head">
+                <h3>Warehouse mix</h3>
+                <button class="link-button" type="button" data-panel-link="warehouses">Open</button>
+              </div>
+              <div id="warehouseMix" class="metric-list"></div>
+            </article>
+            <article class="surface">
+              <div class="surface-head">
+                <h3>Reservation queue</h3>
+                <button class="link-button" type="button" data-panel-link="reservations">Open</button>
+              </div>
+              <div id="reservationMix" class="metric-list"></div>
+            </article>
+          </div>
+        </section>
+
+        <section class="panel" id="warehouses" aria-labelledby="warehousesTitle">
+          <div class="section-head">
+            <div>
+              <h2 id="warehousesTitle">Warehouses</h2>
+              <p>Own warehouses, supplier locations, and dropship sources.</p>
+            </div>
+            <button class="button" type="button" data-action="load-warehouses">Reload</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Code</th>
+                  <th>Type</th>
+                  <th>Location</th>
+                  <th>Priority</th>
+                  <th>Status</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="warehousesTable"></tbody>
+            </table>
+          </div>
+          <form class="surface form-grid" id="warehouseForm">
+            <input type="hidden" name="id">
+            <label>Name<input name="name" required maxlength="200"></label>
+            <label>Code<input name="code" required maxlength="100"></label>
+            <label>Type
+              <select name="type" required>
+                <option value="own">own</option>
+                <option value="supplier">supplier</option>
+                <option value="dropship">dropship</option>
+              </select>
+            </label>
+            <label>City<input name="city" maxlength="100"></label>
+            <label>Country<input name="country" maxlength="2" placeholder="CZ"></label>
+            <label>Priority<input name="priority" type="number" min="0" step="1" value="0"></label>
+            <label class="span-2">Address<input name="address"></label>
+            <label>Contact email<input name="contactEmail" type="email"></label>
+            <label>Contact phone<input name="contactPhone"></label>
+            <label>Supplier ID<input name="supplierId"></label>
+            <label class="check"><input name="isActive" type="checkbox" checked> Active</label>
+            <div class="form-actions span-2">
+              <button class="button primary" type="submit">Save warehouse</button>
+              <button class="button" type="reset" data-action="reset-warehouse">Clear</button>
+            </div>
+          </form>
+        </section>
+
+        <section class="panel" id="stock" aria-labelledby="stockTitle">
+          <div class="section-head">
+            <div>
+              <h2 id="stockTitle">Stock</h2>
+              <p>Lookup product inventory across warehouses.</p>
+            </div>
+          </div>
+          <form class="toolbar" id="stockLookupForm">
+            <label>Product ID<input name="productId" required placeholder="catalog-product-id"></label>
+            <button class="button primary" type="submit">Load stock</button>
+          </form>
+          <div class="grid two">
+            <article class="surface">
+              <span class="label">Total available</span>
+              <strong class="big-number" id="totalAvailable">-</strong>
+            </article>
+            <article class="surface">
+              <span class="label">Selected product</span>
+              <strong class="big-number text-fit" id="selectedProduct">-</strong>
+            </article>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Warehouse</th>
+                  <th>Quantity</th>
+                  <th>Reserved</th>
+                  <th>Available</th>
+                  <th>Low threshold</th>
+                  <th>Location</th>
+                  <th>Updated</th>
+                </tr>
+              </thead>
+              <tbody id="stockTable"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="panel" id="reservations" aria-labelledby="reservationsTitle">
+          <div class="section-head">
+            <div>
+              <h2 id="reservationsTitle">Reservations</h2>
+              <p>Active holds and order/product reservation lookup.</p>
+            </div>
+            <button class="button" type="button" data-action="load-reservations">Active</button>
+          </div>
+          <form class="toolbar" id="reservationLookupForm">
+            <label>Lookup type
+              <select name="type">
+                <option value="order">order</option>
+                <option value="product">product</option>
+              </select>
+            </label>
+            <label>ID<input name="id" required></label>
+            <button class="button primary" type="submit">Search</button>
+          </form>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Order</th>
+                  <th>Product</th>
+                  <th>Warehouse</th>
+                  <th>Qty</th>
+                  <th>Channel</th>
+                  <th>Status</th>
+                  <th>Expires</th>
+                </tr>
+              </thead>
+              <tbody id="reservationsTable"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="panel" id="movements" aria-labelledby="movementsTitle">
+          <div class="section-head">
+            <div>
+              <h2 id="movementsTitle">Movements</h2>
+              <p>Stock movement history by product or warehouse.</p>
+            </div>
+          </div>
+          <form class="toolbar" id="movementLookupForm">
+            <label>Lookup type
+              <select name="type">
+                <option value="product">product</option>
+                <option value="warehouse">warehouse</option>
+              </select>
+            </label>
+            <label>ID<input name="id" required></label>
+            <label>Limit<input name="limit" type="number" min="1" max="200" value="50"></label>
+            <button class="button primary" type="submit">Load movements</button>
+          </form>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>When</th>
+                  <th>Type</th>
+                  <th>Product</th>
+                  <th>Qty</th>
+                  <th>From</th>
+                  <th>To</th>
+                  <th>Reference</th>
+                  <th>Reason</th>
+                  <th>Actor</th>
+                </tr>
+              </thead>
+              <tbody id="movementsTable"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="panel" id="actions" aria-labelledby="actionsTitle">
+          <div class="section-head">
+            <div>
+              <h2 id="actionsTitle">Actions</h2>
+              <p>Authenticated stock and reservation operations.</p>
+            </div>
+          </div>
+          <div class="grid two">
+            <form class="surface form-grid compact" id="stockActionForm">
+              <h3 class="span-2">Stock mutation</h3>
+              <label>Operation
+                <select name="operation">
+                  <option value="set">set</option>
+                  <option value="increment">increment</option>
+                  <option value="decrement">decrement</option>
+                  <option value="reserve">reserve</option>
+                  <option value="unreserve">unreserve</option>
+                </select>
+              </label>
+              <label>Quantity<input name="quantity" type="number" min="0" step="1" required></label>
+              <label>Product ID<input name="productId" required></label>
+              <label>Warehouse ID<input name="warehouseId" required></label>
+              <label>Order ID<input name="orderId"></label>
+              <label>Channel<input name="channel" value="admin"></label>
+              <label>Expires at<input name="expiresAt" type="datetime-local"></label>
+              <label>Reference<input name="reference"></label>
+              <label>Reason code<input name="reasonCode" required placeholder="cycle-count"></label>
+              <label>Actor<input name="actor" required placeholder="admin@example.com"></label>
+              <div class="form-actions span-2">
+                <button class="button primary" type="submit">Run stock action</button>
+              </div>
+            </form>
+
+            <form class="surface form-grid compact" id="reservationActionForm">
+              <h3 class="span-2">Reservation lifecycle</h3>
+              <label>Operation
+                <select name="operation">
+                  <option value="fulfill">fulfill</option>
+                  <option value="cancel">cancel</option>
+                  <option value="expire">expire</option>
+                  <option value="return">return</option>
+                </select>
+              </label>
+              <label>Product ID<input name="productId" required></label>
+              <label>Warehouse ID<input name="warehouseId" required></label>
+              <label>Order ID<input name="orderId" required></label>
+              <label>Channel<input name="channel"></label>
+              <label>Reason code<input name="reasonCode" required></label>
+              <label>Actor<input name="actor" required></label>
+              <label class="span-2">Reference<input name="reference"></label>
+              <div class="form-actions span-2">
+                <button class="button primary" type="submit">Run reservation action</button>
+              </div>
+            </form>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <template id="emptyRowTemplate">
+      <tr><td colspan="9" class="empty">No data loaded.</td></tr>
+    </template>
+
+    <script src="/admin/app.js?v=admin-20260612-0716" defer></script>
+  </body>
+</html>
