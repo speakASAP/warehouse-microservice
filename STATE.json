@@ -3,18 +3,16 @@
   "project": "warehouse-microservice",
   "stage": "production",
   "health": "ok",
-  "cycle": 4,
-  "last_cycle_at": "2026-06-12T07:07:25Z",
+  "cycle": 5,
+  "last_cycle_at": "2026-06-12T07:25:46Z",
   "tasks_active": 0,
   "tasks_failed_last_cycle": 0,
   "open_task_ids": [
-    "WH-G5-T1",
-    "WH-G5-T2",
     "WH-G6-T1",
     "WH-G7-T1"
   ],
-  "last_milestone": "WH-G4 implemented - reservation lifecycle is the stock authority for reserve, release, fulfill, cancel, expire, and return",
-  "next_focus": "WH-G5 - define catalog and consumer availability contracts",
+  "last_milestone": "WH-G5 implemented - catalog identity ingestion contract documented and batch availability endpoint deployed",
+  "next_focus": "WH-G6 - supplier dropship reconciliation",
   "blockers": [],
   "budget_units_used": 0,
   "metrics": {
@@ -25,7 +23,7 @@
       "database": "up",
       "rabbitmq": "up",
       "event_health": "up",
-      "deployed_image": "localhost:5000/warehouse-microservice:6a8e166",
+      "deployed_image": "localhost:5000/warehouse-microservice:ee192be",
       "stock_exchange": "stock.events",
       "stock_mutation_contracts": "dto-required",
       "stock_movement_transaction": "enabled",
@@ -34,7 +32,11 @@
       "reservation_lifecycle": "enabled",
       "reservation_idempotency": "enabled",
       "wh_g4_tests": "passed",
-      "docker_clean_build": "enabled"
+      "docker_clean_build": "enabled",
+      "trusted_catalog_ingestion_contract": "documented",
+      "batch_availability_endpoint": "enabled",
+      "wh_g5_tests": "passed",
+      "wh_g5_smoke": "catalog-warehouse-flipflop-product-stock-matched"
     }
   }
 }

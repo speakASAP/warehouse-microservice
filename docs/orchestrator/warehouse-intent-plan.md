@@ -245,3 +245,8 @@ Each future session should:
 - 2026-06-12: WH-G4 `npm test -- --runInBand test/stock.service.spec.ts`, full `npm test -- --runInBand`, and `npm run build` passed.
 - 2026-06-12: WH-G4 fixed production Docker build hygiene by excluding `dist` and `node_modules` from the build context, cleaning `dist` before `nest build`, and running the real clean-build entrypoint `dist/src/main`.
 - 2026-06-12: WH-G4 deployed image `localhost:5000/warehouse-microservice:6a8e166`; rollout completed and production `/api/health` returned `status: healthy` with database and RabbitMQ up.
+- 2026-06-12: WH-G5 documented the trusted catalog product identity ingestion path, service-to-service availability examples, and consumer responsibilities in `docs/contracts/availability-contracts.md`.
+- 2026-06-12: WH-G5 added `POST /api/stock/availability/batch`, returning aggregate quantity/reserved/available totals plus per-warehouse rows for up to 200 catalog product IDs.
+- 2026-06-12: WH-G5 `npm test -- --runInBand test/stock.service.spec.ts`, full `npm test -- --runInBand`, and `npm run build` passed.
+- 2026-06-12: WH-G5 deployed image `localhost:5000/warehouse-microservice:ee192be`; rollout completed and production `/api/health` returned `status: healthy` with database and RabbitMQ up.
+- 2026-06-12: WH-G5 smoke verified catalog product `aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa4` (`FF-BOTTLE-SPORT-004`) exists in catalog, warehouse batch availability returns `totalAvailable: 55`, and FlipFlop API returns the same product with `stockQuantity: 55`.
