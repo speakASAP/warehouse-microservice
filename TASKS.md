@@ -12,6 +12,7 @@
 - [x] WH-G5-T2 Add batch availability contract for storefront and channel consumers (goal_id: WH-G5, priority: 2)
 - [x] WH-G6-T1 Audit stock levels vs supplier data (goal_id: WH-G6, priority: 2)
 - [x] WH-G7-T1 Add operator runbook for deploy, rollback, auth-token testing, and event verification (goal_id: WH-G7, priority: 2)
+- [x] WH-G8-T1 Add committed TypeORM migration workflow and baseline schema migration (goal_id: WH-G8, priority: 1)
 
 ## Completed
 <!-- AI appends here. Never modifies previous entries. -->
@@ -37,3 +38,5 @@
 - [x] 2026-06-12 WH-G5 verification passed: focused stock service tests, full `npm test -- --runInBand`, `npm run build`, rollout, production health, authenticated batch endpoint smoke, and catalog/FlipFlop product availability smoke.
 - [x] 2026-06-12 WH-G7-T1 Added operational mutation metrics in health/readiness, stock event publish counters, structured `stock_mutation` and `stock_event_publish` logs, and `docs/runbooks/operations.md`.
 - [x] 2026-06-12 WH-G7 verification passed: `npm test -- --runInBand`, `npm run build`, rollout image `localhost:5000/warehouse-microservice:wh-g7-ops-20260612`, production health with `operations`, unauthenticated `401`, authenticated dry failure, and log/health mutation failure evidence.
+- [x] 2026-06-12 WH-G8-T1 Added shared TypeORM data source, migration npm scripts, Kubernetes migration Job template, and deploy-time migration execution.
+- [x] 2026-06-12 WH-G8 verification passed: `npm test -- --runInBand`, `npm run build`, migration Job executed `InitialWarehouseSchema1781200000000`, rollout image `localhost:5000/warehouse-microservice:wh-g8-migrations-20260612`, production `/api/health`, and running pod `migration:show:prod` reported `[X] 1 InitialWarehouseSchema1781200000000`.
