@@ -102,8 +102,9 @@ There are no visible test files or contract tests in the warehouse repo.
    - No smoke test proves catalog product ID plus warehouse availability reaches FlipFlop.
 
 8. Intent preservation docs
-   - Warehouse has `BUSINESS.md`, `SYSTEM.md`, `AGENTS.md`, `TASKS.md`, and `STATE.json`, but no warehouse-owned orchestrator intent plan before this file.
-   - `GOALS.md`, `SPEC.md`, and `PLAN.md` are absent. Per the shared documentation standard, goals and specs are human-owned or human-approved; agents should not silently invent them as authoritative files.
+   - Warehouse has `BUSINESS.md`, `SYSTEM.md`, `AGENTS.md`, `TASKS.md`, and `STATE.json`.
+   - Owner approval was given on 2026-06-12 to adopt the GoalKeeper-style master orchestrator model in this project.
+   - Authoritative goal and plan files now live in `docs/orchestrator/GOALS.md`, `docs/orchestrator/PLAN.md`, `docs/IMPLEMENTATION_STATE.md`, and `implementation-goals/`.
 
 ## Goal Sequence For Future Sessions
 
@@ -215,9 +216,9 @@ Acceptance criteria:
 
 ## First Next Step
 
-Implement WH-G1 first. Do not start with catalog integration, reservation redesign, or UI. The current deploy and Dockerfile issues can block any production-grade change from rolling out, and health currently does not prove the event path is available.
+Historical first next step was WH-G1. WH-G1 through WH-G9 are now complete in production.
 
-After WH-G1, implement WH-G2 because RabbitMQ failure directly violates the immutable business intent that warehouse publishes stock events.
+Future work should start only after the owner approves the next goal and the orchestrator records it in `implementation-goals/`, `docs/IMPLEMENTATION_STATE.md`, `TASKS.md`, and `STATE.json`.
 
 ## Future Session Protocol
 
@@ -239,8 +240,9 @@ Each future session should:
    - Orders owns order state.
    - FlipFlop owns storefront and checkout UX.
    - Channel services own channel-specific compliance and publication behavior.
-6. Do not edit `BUSINESS.md` or create authoritative `GOALS.md` entries without owner approval.
-7. Update this file only by appending evidence/status notes or tightening acceptance criteria. Do not silently change the preserved intent.
+6. Do not edit `BUSINESS.md`.
+7. Use the owner-approved authoritative goal and plan files created on 2026-06-12; do not replace them without owner approval.
+8. Update this file only by appending evidence/status notes or tightening acceptance criteria. Do not silently change the preserved intent.
 
 ## Evidence Log
 
@@ -278,6 +280,7 @@ Each future session should:
 - 2026-06-12: WH-G5 `npm test -- --runInBand test/stock.service.spec.ts`, full `npm test -- --runInBand`, and `npm run build` passed.
 - 2026-06-12: WH-G5 deployed image `localhost:5000/warehouse-microservice:ee192be`; rollout completed and production `/api/health` returned `status: healthy` with database and RabbitMQ up.
 - 2026-06-12: WH-G5 smoke verified catalog product `aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa4` (`FF-BOTTLE-SPORT-004`) exists in catalog, warehouse batch availability returns `totalAvailable: 55`, and FlipFlop API returns the same product with `stockQuantity: 55`.
+- 2026-06-12: Owner approved adopting the GoalKeeper-style orchestration approach for Warehouse on the remote repository. Added master orchestrator, implementation state, authoritative goals and plan, process gates, per-goal briefs, templates, and `scripts/next_goal.sh` while preserving WH-G1 through WH-G9 completion state.
 - 2026-06-12: WH-G8 added shared TypeORM data source `src/database/typeorm-data-source.ts`, migration scripts, Kubernetes migration Job template, and deploy-time migration execution.
 - 2026-06-12: WH-G8 deployed image `localhost:5000/warehouse-microservice:wh-g8-migrations-20260612`; migration Job executed `InitialWarehouseSchema1781200000000`, production `/api/health` returned healthy, and running pod `migration:show:prod` reported `[X] 1 InitialWarehouseSchema1781200000000`.
 - 2026-06-12: WH-G9 added production admin console updates for supplier reconciliation, RabbitMQ event-bus status, dependency health, and operations counters.

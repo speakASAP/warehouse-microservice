@@ -8,13 +8,16 @@
   "tasks_active": 0,
   "tasks_failed_last_cycle": 0,
   "open_task_ids": [],
-  "last_milestone": "WH-G9 implemented - production warehouse admin console deployed with supplier reconciliation and operations status",
+  "last_milestone": "GoalKeeper-style orchestrator structure adopted on remote after WH-G9 completion",
   "next_focus": "All planned WH-G goals are complete after WH-G9; await owner-approved next goal",
   "blockers": [],
   "budget_units_used": 0,
   "metrics": {
     "custom": {
       "intent_plan": "docs/orchestrator/warehouse-intent-plan.md",
+      "implementation_state": "docs/IMPLEMENTATION_STATE.md",
+      "implementation_orchestrator": "docs/IMPLEMENTATION_ORCHESTRATOR.md",
+      "next_goal_helper": "scripts/next_goal.sh",
       "http_health": "up",
       "readiness": "ready",
       "database": "up",

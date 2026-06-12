@@ -1,7 +1,7 @@
 # Tasks: warehouse-microservice
 
-> Coordinator-maintained. Tasks must stay aligned with `docs/orchestrator/warehouse-intent-plan.md`.
-> `GOALS.md`, `SPEC.md`, and `PLAN.md` are absent and should be created only after owner approval.
+> Coordinator-maintained. Tasks must stay aligned with `docs/orchestrator/warehouse-intent-plan.md`, `docs/IMPLEMENTATION_STATE.md`, and `implementation-goals/`.
+> Owner approval to organize work using the GoalKeeper orchestrator model was given on 2026-06-12.
 
 ## Backlog
 
@@ -43,3 +43,4 @@
 - [x] 2026-06-12 WH-G8 verification passed: `npm test -- --runInBand`, `npm run build`, migration Job executed `InitialWarehouseSchema1781200000000`, rollout image `localhost:5000/warehouse-microservice:wh-g8-migrations-20260612`, production `/api/health`, and running pod `migration:show:prod` reported `[X] 1 InitialWarehouseSchema1781200000000`.
 - [x] 2026-06-12 WH-G9-T1 Added production admin console supplier reconciliation workflow, RabbitMQ/event-bus status, operation counters, and dependency/operations overview panels.
 - [x] 2026-06-12 WH-G9 verification passed: `node --check public/admin/app.js`, `npm test -- --runInBand`, `npm run build`, rollout image `localhost:5000/warehouse-microservice:wh-g9-admin-console-20260612`, production `/api/health`, `/admin` HTTP 200, unauthenticated supplier reconciliation API `401`, and browser smoke checks with no console warnings.
+- [x] 2026-06-12 WH-ORCH-T1 Adopted GoalKeeper-style orchestration on the remote Warehouse repo: master orchestrator, implementation state, process gates, goal briefs, templates, and next-goal helper while preserving WH-G1 through WH-G9 completion state.
