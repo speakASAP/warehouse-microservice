@@ -1,18 +1,55 @@
-# Context Package
+# CP-WH-GX: Context Package Title
 
-Goal:
+```yaml
+id: CP-WH-GX
+status: draft
+owner: warehouse-owner
+created: YYYY-MM-DD
+last_updated: YYYY-MM-DD
+completeness_level: skeletal
+upstream:
+  - docs/intent-preservation/execution-plans/EP-WH-GX.md
+downstream:
+  - docs/intent-preservation/coding-prompts/PROMPT-WH-GX.md
+related_adrs: []
+```
 
-Source Documents:
+## Task Summary
 
-Relevant Files:
+Summarize the task in one or two paragraphs.
 
-Current Behavior:
+## Source Documents
 
-Required Behavior:
+- `docs/orchestrator/warehouse-intent-plan.md`
+- `docs/governance/PROJECT_INVARIANTS.md`
+- selected goal file
+- selected task file
+- selected execution plan
 
-Constraints:
+## Relevant Files
 
-Known Risks:
+- path
 
-Validation Commands:
+## Current Behavior
 
+Describe observed current behavior and cite source documents or files.
+
+## Required Behavior
+
+Describe required behavior without changing original intent.
+
+## Constraints
+
+- owner approval requirements
+- protected boundaries
+- forbidden production operations
+
+## Known Risks
+
+- risk
+
+## Validation Commands
+
+```bash
+command
+```

@@ -8,10 +8,10 @@ Last updated: 2026-06-12.
 WAREHOUSE ORCHESTRATOR: continue implementation
 ```
 
-To start a specific goal:
+To define the next owner-approved goal:
 
 ```text
-WAREHOUSE ORCHESTRATOR: implement goal number 3
+WAREHOUSE ORCHESTRATOR: define next goal
 ```
 
 ## Current Status
@@ -25,6 +25,8 @@ WAREHOUSE ORCHESTRATOR: implement goal number 3
 - Intent source: `docs/orchestrator/warehouse-intent-plan.md`
 - Agent entrypoint: `AGENTS.md`
 - Process gates: `docs/process/OPERATIONAL_GATES.md`
+- IPS gate: `docs/intent-preservation/PRE_CODING_GATE.md`
+- IPS traceability: `docs/intent-preservation/TRACEABILITY_MATRIX.md`
 - Project invariants: `docs/governance/PROJECT_INVARIANTS.md`
 - Remote repository: `/home/ssf/Documents/Github/warehouse-microservice`
 - Production URL: `https://warehouse.alfares.cz/api/health`
@@ -80,6 +82,7 @@ Changed files:
 Append newest entries at the top.
 
 ```text
+2026-06-12: Intent Preservation System documentation overlay added. WH-G3 has retrospective IPS task docs, execution plan, context package, coding prompt, and validation report tied to existing completion evidence. Future owner-approved goals must complete the IPS pre-coding gate before source edits. Documentation-only change; no service validation required.
 2026-06-12: Orchestrator structure adopted from GoalKeeper on the remote Warehouse repo. Added master orchestrator, implementation state, process gates, goal prompts, templates, and next-goal helper while preserving actual WH-G1 through WH-G9 completion state. Documentation-only change; no service validation required.
 2026-06-12: WH-G9 completed. Production admin console deployed at https://warehouse.alfares.cz/admin with supplier reconciliation and operations status. Verification passed: node --check public/admin/app.js, npm test -- --runInBand, npm run build, production /api/health, /admin HTTP 200, unauthenticated supplier reconciliation API 401, and browser smoke checks with no console warnings.
 2026-06-12: WH-G8 completed. Added shared TypeORM data source, migration scripts, Kubernetes migration Job template, deploy-time migration execution, and baseline schema migration. Verification passed: npm test -- --runInBand, npm run build, migration Job, production health, and migration status.
@@ -138,6 +141,9 @@ docs/orchestrator/warehouse-intent-plan.md
 docs/IMPLEMENTATION_ORCHESTRATOR.md
 docs/governance/PROJECT_INVARIANTS.md
 docs/process/OPERATIONAL_GATES.md
+docs/intent-preservation/README.md
+docs/intent-preservation/TRACEABILITY_MATRIX.md
+docs/intent-preservation/PRE_CODING_GATE.md
 TASKS.md
 STATE.json
 ```

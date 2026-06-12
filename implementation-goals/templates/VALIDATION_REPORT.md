@@ -1,20 +1,61 @@
-# Validation Report
+# VAL-WH-GX: Validation Report Title
 
-Goal:
+```yaml
+id: VAL-WH-GX
+status: draft
+owner: warehouse-owner
+created: YYYY-MM-DD
+last_updated: YYYY-MM-DD
+completeness_level: skeletal
+upstream:
+  - docs/intent-preservation/execution-plans/EP-WH-GX.md
+downstream:
+  - docs/IMPLEMENTATION_STATE.md
+  - TASKS.md
+  - STATE.json
+related_adrs: []
+```
 
-Summary:
+## Artifact Validated
 
-Commands Run:
+State the goal, task, branch, commit, or deployment artifact.
 
-Results:
+## Validation Scope
 
-Acceptance Criteria Coverage:
+List behavior, contracts, invariants, and files covered.
 
-Failures:
+## Evidence
 
-Risks:
+Record command summaries, commit IDs, deployment IDs, URLs, or screenshots where relevant.
 
-Changed Files:
+## Gate Evidence
 
-Next Action:
+Record pre-coding, integration, deployment, and completion gate evidence.
 
+## Invariant Evidence
+
+Map evidence to `docs/governance/PROJECT_INVARIANTS.md`.
+
+## Sensitive-Data Scan Evidence
+
+State whether validation artifacts contain only synthetic or approved data.
+
+## Replay And Determinism Evidence
+
+State idempotency, retry, transaction, ordering, or deterministic validation evidence.
+
+## Passed Criteria
+
+- criterion
+
+## Failed Criteria
+
+- criterion or `none`
+
+## Deviations
+
+- deviation or `none`
+
+## Recommendation
+
+State whether to proceed, block, split, rollback, or request owner input.

@@ -1411,3 +1411,23 @@ For issues or questions:
 - ✅ All .env files updated and synced to production
 
 **Maintained by**: Statex Development Team
+
+---
+
+## Warehouse Intent Preservation
+
+Warehouse implementation work now follows the project-local Intent Preservation System overlay under `docs/intent-preservation/`. Before future coding, agents must preserve this chain:
+
+```text
+Intent -> Invariants -> Goal -> Task -> Execution Plan -> Context Package -> Coding Prompt -> Code -> Validation Report -> State Update
+```
+
+Start future owner-approved warehouse goals with:
+
+- `docs/intent-preservation/PRE_CODING_GATE.md`
+- `docs/intent-preservation/TRACEABILITY_MATRIX.md`
+- task docs under `docs/intent-preservation/tasks/`
+- execution plans under `docs/intent-preservation/execution-plans/`
+- context packages under `docs/intent-preservation/context-packages/`
+- coding prompts under `docs/intent-preservation/coding-prompts/`
+- validation reports under `docs/intent-preservation/validation-reports/`
