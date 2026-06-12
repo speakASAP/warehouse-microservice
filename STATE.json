@@ -4,7 +4,7 @@
   "stage": "production",
   "health": "ok",
   "cycle": 4,
-  "last_cycle_at": "2026-06-12T07:05:11Z",
+  "last_cycle_at": "2026-06-12T07:07:25Z",
   "tasks_active": 0,
   "tasks_failed_last_cycle": 0,
   "open_task_ids": [
@@ -25,7 +25,7 @@
       "database": "up",
       "rabbitmq": "up",
       "event_health": "up",
-      "deployed_image": "localhost:5000/warehouse-microservice:29f8c4f",
+      "deployed_image": "localhost:5000/warehouse-microservice:6a8e166",
       "stock_exchange": "stock.events",
       "stock_mutation_contracts": "dto-required",
       "stock_movement_transaction": "enabled",

@@ -244,4 +244,4 @@ Each future session should:
 - 2026-06-12: WH-G4 reservation reserve is idempotent for repeated order/product/warehouse/channel holds by treating the request quantity as the desired held quantity instead of a blind increment.
 - 2026-06-12: WH-G4 `npm test -- --runInBand test/stock.service.spec.ts`, full `npm test -- --runInBand`, and `npm run build` passed.
 - 2026-06-12: WH-G4 fixed production Docker build hygiene by excluding `dist` and `node_modules` from the build context, cleaning `dist` before `nest build`, and running the real clean-build entrypoint `dist/src/main`.
-- 2026-06-12: WH-G4 deployed image `localhost:5000/warehouse-microservice:29f8c4f`; rollout completed and production `/api/health` returned `status: healthy` with database and RabbitMQ up.
+- 2026-06-12: WH-G4 deployed image `localhost:5000/warehouse-microservice:6a8e166`; rollout completed and production `/api/health` returned `status: healthy` with database and RabbitMQ up.

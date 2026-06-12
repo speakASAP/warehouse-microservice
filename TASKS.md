@@ -28,5 +28,5 @@
 - [x] 2026-06-12 WH-G3 deployed image `localhost:5000/warehouse-microservice:0350b8e`; rollout and production health check passed.
 - [x] 2026-06-12 WH-G4-T1 Added reservation lifecycle writes for reserve, release, fulfill, cancel, expire, and return with stock, reservation, and movement changes kept transactional.
 - [x] 2026-06-12 WH-G4 verification passed: `npm test -- --runInBand`, `npm test -- --runInBand test/stock.service.spec.ts`, and `npm run build`.
-- [x] 2026-06-12 WH-G4 deployed image `localhost:5000/warehouse-microservice:29f8c4f`; rollout and production health check passed.
+- [x] 2026-06-12 WH-G4 deployed image `localhost:5000/warehouse-microservice:6a8e166`; rollout and production health check passed.
 - [x] 2026-06-12 WH-G4 fixed Docker production build hygiene by excluding stale `dist` from context and using `dist/src/main` as the runtime entrypoint.
