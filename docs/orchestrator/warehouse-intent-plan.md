@@ -239,4 +239,4 @@ Each future session should:
 - 2026-06-12: WH-G3 wraps stock row writes and stock movement inserts in a single TypeORM transaction, with pessimistic write locks for existing stock rows.
 - 2026-06-12: WH-G3 added `test/stock.service.spec.ts`; `npm test` passed 4 tests covering missing reason, negative input, insufficient stock, and the lock/transaction write path.
 - 2026-06-12: WH-G3 `npm run build` passed after DTO, service, and test changes.
-- 2026-06-12: WH-G3 deployed image `localhost:5000/warehouse-microservice:773c216`; rollout completed and production `/api/health` returned `status: healthy` with database and RabbitMQ up.
+- 2026-06-12: WH-G3 deployed image `localhost:5000/warehouse-microservice:0350b8e`; rollout completed and production `/api/health` returned `status: healthy` with database and RabbitMQ up.
