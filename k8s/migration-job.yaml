@@ -1,0 +1,27 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: warehouse-microservice-migrations
+  namespace: statex-apps
+  labels:
+    app: warehouse-microservice
+    job-role: migration
+spec:
+  backoffLimit: 1
+  template:
+    metadata:
+      labels:
+        app: warehouse-microservice
+        job-role: migration
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: migrate
+          image: __IMAGE__
+          imagePullPolicy: Always
+          command: ["npm", "run", "migration:run:prod"]
+          envFrom:
+            - configMapRef:
+                name: warehouse-microservice-config
+            - secretRef:
+                name: warehouse-microservice-secret

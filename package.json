@@ -6,6 +6,12 @@
   "scripts": {
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
+    "typeorm": "typeorm-ts-node-commonjs -d src/database/typeorm-data-source.ts",
+    "migration:show": "npm run typeorm -- migration:show",
+    "migration:run": "npm run typeorm -- migration:run",
+    "migration:revert": "npm run typeorm -- migration:revert",
+    "migration:run:prod": "node ./node_modules/typeorm/cli.js -d dist/src/database/typeorm-data-source.js migration:run",
+    "migration:show:prod": "node ./node_modules/typeorm/cli.js -d dist/src/database/typeorm-data-source.js migration:show",
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",

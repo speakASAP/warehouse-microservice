@@ -79,6 +79,20 @@ if [ -f "$K8S_DIR/rabbitmq.yaml" ]; then
   deploy_timing_phase_end "Wait for RabbitMQ"
 fi
 
+run_database_migrations() {
+  echo -e "${YELLOW}Running database migrations with image ${IMAGE}...${NC}"
+  kubectl delete job "${SERVICE_NAME}-migrations" -n "$NAMESPACE" --ignore-not-found=true --wait=true >/dev/null
+  sed "s|__IMAGE__|${IMAGE}|g" "$K8S_DIR/migration-job.yaml" | kubectl apply -f - -n "$NAMESPACE" >/dev/null
+  kubectl wait --for=condition=complete job/"${SERVICE_NAME}-migrations" -n "$NAMESPACE" --timeout=180s || {
+    echo -e "${RED}Migration job failed or timed out:${NC}"
+    kubectl logs job/"${SERVICE_NAME}-migrations" -n "$NAMESPACE" || true
+    exit 1
+  }
+  kubectl logs job/"${SERVICE_NAME}-migrations" -n "$NAMESPACE"
+}
+
+deploy_timing_run_phase "Database migrations" run_database_migrations
+
 deploy_timing_phase_start "Set deployment image"
 kubectl set image "deployment/${SERVICE_NAME}" app="$IMAGE" -n "$NAMESPACE"
 deploy_timing_phase_end "Set deployment image"
