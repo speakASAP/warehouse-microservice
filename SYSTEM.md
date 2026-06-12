@@ -14,18 +14,15 @@ NestJS + PostgreSQL. Real-time stock events via RabbitMQ.
 |-----------|-----|
 | database-server | db-server-postgres:5432 |
 | logging-microservice | logging-microservice:3367 |
-| RabbitMQ | stock.updated events |
+| RabbitMQ | rabbitmq:5672 (`stock.events` exchange) |
 
 ## Current State
 <!-- AI-maintained -->
 Stage: production
-Health: degraded - HTTP health is up, but RabbitMQ event publishing is not currently reachable from the pod.
+Health: ok - HTTP health is up and RabbitMQ is reachable from the warehouse pod.
 
 ## Known Issues
 <!-- AI-maintained -->
-- RabbitMQ connection fails in production logs: `getaddrinfo ENOTFOUND host.k3s.internal`.
-- No RabbitMQ service or pod was visible in Kubernetes during the 2026-06-12 inspection.
-- Stock mutation request bodies use inline TypeScript types, so the configured `ValidationPipe` cannot enforce DTO validation.
 - Reservation reads exist, but reserve/unreserve writes do not maintain `stock_reservations` rows.
 
 ## Recent Fixes
@@ -33,3 +30,9 @@ Health: degraded - HTTP health is up, but RabbitMQ event publishing is not curre
 - 2026-06-12: WH-G1 fixed Dockerfile package installation for `node:24-slim`.
 - 2026-06-12: WH-G1 fixed deploy health check path and changed rollout image updates to use the unique build tag.
 - 2026-06-12: WH-G1 added dependency-aware `/api/health` and `/api/ready` output for database and RabbitMQ.
+- 2026-06-12: WH-G2 provisioned Kubernetes RabbitMQ as `service/rabbitmq` and `statefulset/rabbitmq`.
+- 2026-06-12: WH-G2 changed warehouse `RABBITMQ_URL` to `amqp://guest:guest@rabbitmq:5672`.
+- 2026-06-12: WH-G2 documented and validates stock event payloads before publishing.
+- 2026-06-12: WH-G3 added validated stock mutation DTOs requiring `reasonCode` and `actor`.
+- 2026-06-12: WH-G3 wraps stock writes and movement inserts in one database transaction.
+- 2026-06-12: WH-G3 added unit coverage for missing reason, negative input, insufficient stock, and pessimistic write locking.

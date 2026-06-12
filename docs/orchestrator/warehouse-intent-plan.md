@@ -230,3 +230,12 @@ Each future session should:
 - 2026-06-12: WH-G1 fixed Dockerfile `node:24-slim` package installation by replacing `apk` with `apt-get`; Docker image build passed.
 - 2026-06-12: WH-G1 fixed deploy script to check `http://localhost:3201/api/health`, use the unique build tag for rollout, select the newest running pod, and run `curl -fsS` inside the container.
 - 2026-06-12: Production `/api/health` returned `status: healthy` with `database: up` and `rabbitmq: down`; production `/api/ready` returned `ready: false`, preserving the RabbitMQ failure as WH-G2 evidence.
+- 2026-06-12: WH-G2 provisioned RabbitMQ in Kubernetes as `service/rabbitmq` and `statefulset/rabbitmq` in `statex-apps`; pod `rabbitmq-0` reached `1/1 Running`.
+- 2026-06-12: WH-G2 changed warehouse `RABBITMQ_URL` to `amqp://guest:guest@rabbitmq:5672`; warehouse logs showed `Connected to RabbitMQ`.
+- 2026-06-12: WH-G2 verified production `/api/health` returned `database: up`, `rabbitmq: up`, and `lastError: null`; `/api/ready` returned `ready: true`.
+- 2026-06-12: WH-G2 verified RabbitMQ exchange `stock.events` exists with type `topic` and durable `true`.
+- 2026-06-12: WH-G3 added DTO contracts for stock set, increment, decrement, reserve, and unreserve request bodies; mutation requests now require `reasonCode` and `actor`.
+- 2026-06-12: WH-G3 changed stock mutation service methods to validate audit context and quantity invariants before writing.
+- 2026-06-12: WH-G3 wraps stock row writes and stock movement inserts in a single TypeORM transaction, with pessimistic write locks for existing stock rows.
+- 2026-06-12: WH-G3 added `test/stock.service.spec.ts`; `npm test` passed 4 tests covering missing reason, negative input, insufficient stock, and the lock/transaction write path.
+- 2026-06-12: WH-G3 `npm run build` passed after DTO, service, and test changes.

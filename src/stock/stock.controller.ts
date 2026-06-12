@@ -1,6 +1,12 @@
-import { Controller, Get, Post, Body, Param, Query, ParseUUIDPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param } from '@nestjs/common';
 import { StockService } from './stock.service';
 import { LoggerService } from '../logger/logger.service';
+import {
+  PositiveStockMutationDto,
+  ReserveStockDto,
+  SetStockDto,
+  UnreserveStockDto,
+} from './dto/stock-mutation.dto';
 
 @Controller('stock')
 export class StockController {
@@ -36,9 +42,13 @@ export class StockController {
    * POST /api/stock/set
    */
   @Post('set')
-  async setStock(@Body() body: { productId: string; warehouseId: string; quantity: number; reason?: string }) {
+  async setStock(@Body() body: SetStockDto) {
     this.logger.log(`POST /api/stock/set`, 'StockController');
-    const stock = await this.stockService.setStock(body.productId, body.warehouseId, body.quantity, body.reason);
+    const stock = await this.stockService.setStock(body.productId, body.warehouseId, body.quantity, {
+      reasonCode: body.reasonCode,
+      actor: body.actor,
+      reference: body.reference,
+    });
     return { success: true, data: stock };
   }
 
@@ -47,9 +57,13 @@ export class StockController {
    * POST /api/stock/increment
    */
   @Post('increment')
-  async incrementStock(@Body() body: { productId: string; warehouseId: string; quantity: number; reason?: string }) {
+  async incrementStock(@Body() body: PositiveStockMutationDto) {
     this.logger.log(`POST /api/stock/increment`, 'StockController');
-    const stock = await this.stockService.incrementStock(body.productId, body.warehouseId, body.quantity, body.reason);
+    const stock = await this.stockService.incrementStock(body.productId, body.warehouseId, body.quantity, {
+      reasonCode: body.reasonCode,
+      actor: body.actor,
+      reference: body.reference,
+    });
     return { success: true, data: stock };
   }
 
@@ -58,9 +72,13 @@ export class StockController {
    * POST /api/stock/decrement
    */
   @Post('decrement')
-  async decrementStock(@Body() body: { productId: string; warehouseId: string; quantity: number; reason?: string }) {
+  async decrementStock(@Body() body: PositiveStockMutationDto) {
     this.logger.log(`POST /api/stock/decrement`, 'StockController');
-    const stock = await this.stockService.decrementStock(body.productId, body.warehouseId, body.quantity, body.reason);
+    const stock = await this.stockService.decrementStock(body.productId, body.warehouseId, body.quantity, {
+      reasonCode: body.reasonCode,
+      actor: body.actor,
+      reference: body.reference,
+    });
     return { success: true, data: stock };
   }
 
@@ -69,9 +87,13 @@ export class StockController {
    * POST /api/stock/reserve
    */
   @Post('reserve')
-  async reserveStock(@Body() body: { productId: string; warehouseId: string; quantity: number; orderId: string }) {
+  async reserveStock(@Body() body: ReserveStockDto) {
     this.logger.log(`POST /api/stock/reserve`, 'StockController');
-    const stock = await this.stockService.reserveStock(body.productId, body.warehouseId, body.quantity, body.orderId);
+    const stock = await this.stockService.reserveStock(body.productId, body.warehouseId, body.quantity, body.orderId, {
+      reasonCode: body.reasonCode,
+      actor: body.actor,
+      reference: body.reference,
+    });
     return { success: true, data: stock };
   }
 
@@ -80,10 +102,13 @@ export class StockController {
    * POST /api/stock/unreserve
    */
   @Post('unreserve')
-  async unreserveStock(@Body() body: { productId: string; warehouseId: string; quantity: number; orderId: string }) {
+  async unreserveStock(@Body() body: UnreserveStockDto) {
     this.logger.log(`POST /api/stock/unreserve`, 'StockController');
-    const stock = await this.stockService.unreserveStock(body.productId, body.warehouseId, body.quantity, body.orderId);
+    const stock = await this.stockService.unreserveStock(body.productId, body.warehouseId, body.quantity, body.orderId, {
+      reasonCode: body.reasonCode,
+      actor: body.actor,
+      reference: body.reference,
+    });
     return { success: true, data: stock };
   }
 }
-
