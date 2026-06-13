@@ -240,6 +240,7 @@ describe('WarehousesService inventory topology', () => {
       routeCount: 1,
       supplierAvailable: 0,
     });
+    expect(plan.preferredRoute).toBeNull();
     expect(plan.options[0]).toEqual(expect.objectContaining({
       routeType: 'supplier_replenishment',
       available: 0,
@@ -263,6 +264,7 @@ describe('WarehousesService inventory topology', () => {
 
     const plan = await service.getProductLogistics('product-1');
 
+    expect(plan.preferredRoute).toBeNull();
     expect(plan.options).toEqual([
       expect.objectContaining({
         warehouseId: 'warehouse-supplier',
@@ -286,6 +288,24 @@ describe('WarehousesService inventory topology', () => {
         legs: [{ sequence: 1, from: 'DROP-MISSING', to: 'customer', responsibility: 'supplier' }],
       }),
     ]);
+  });
+
+  it('prefers the first reservable route instead of an earlier diagnostic route', async () => {
+    const { service } = createService([
+      { id: 'warehouse-diagnostic', code: 'SUP-MISSING', name: 'Unlinked Supplier Warehouse', type: 'supplier', priority: 50, supplierId: null },
+      { id: 'warehouse-dropship', code: 'DROP-ACME', name: 'Acme Dropship Warehouse', type: 'dropship', priority: 5, supplierId: 'supplier-acme' },
+    ], [
+      { productId: 'product-1', warehouseId: 'warehouse-diagnostic', quantity: 9, reserved: 0, available: 9 },
+      { productId: 'product-1', warehouseId: 'warehouse-dropship', quantity: 3, reserved: 0, available: 3 },
+    ]);
+
+    const plan = await service.getProductLogistics('product-1');
+
+    expect(plan.options.map((option) => [option.routeType, option.canReserveFromWarehouse])).toEqual([
+      ['supplier_replenishment', false],
+      ['supplier_dropship', true],
+    ]);
+    expect(plan.preferredRoute).toBe('supplier_dropship');
   });
 
   it('returns batch product logistics in request order', async () => {

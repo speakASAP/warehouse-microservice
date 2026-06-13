@@ -208,11 +208,13 @@ export class WarehousesService {
       { totalQuantity: 0, totalReserved: 0, totalAvailable: 0, routeCount: options.length, ownAvailable: 0, supplierAvailable: 0, dropshipAvailable: 0 },
     );
 
+    const preferredOption = options.find((option) => option.canReserveFromWarehouse);
+
     return {
       generatedAt: new Date().toISOString(),
       productId: normalizedProductId,
       totals,
-      preferredRoute: options[0]?.routeType ?? null,
+      preferredRoute: preferredOption?.routeType ?? null,
       options,
     };
   }

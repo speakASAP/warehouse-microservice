@@ -18,6 +18,14 @@ WAREHOUSE ORCHESTRATOR: define next goal
 ```
 
 
+## 2026-06-13 - Preferred Route Requires Reservability
+
+Change: tightened Warehouse product logistics so preferredRoute is selected from the first route with canReserveFromWarehouse=true instead of the first visible diagnostic option. Reserved-only and supplier-managed routes missing supplier linkage still remain visible in options, but they no longer advertise a preferred fulfillment path.
+
+Validation evidence: npm test -- --runInBand test/warehouses.service.spec.ts passed, npm run build passed, and git diff --check passed. Added focused coverage for a reserved-only supplier route, supplier-managed routes missing supplier linkage, and a later reservable dropship route that becomes preferred when an earlier supplier diagnostic route cannot be reserved.
+
+Boundary decision: no deployment, runtime token inspection, live fixture creation, production supplier import, Warehouse stock mutation, or cleanup mutation was performed. Current-head runtime completion remains unproven until owner-approved guarded runtime evidence regeneration.
+
 ## 2026-06-13 - Logistics Route Reservability Gate
 
 Change: tightened Warehouse product logistics so route options remain visible for reserved-only stock diagnostics but canReserveFromWarehouse is true only when the route has positive available stock. This keeps Warehouse as the source of truth for whether a local, supplier replenishment, or dropship route is actually reservable.
