@@ -1,10 +1,11 @@
 # Warehouse Implementation State
 
-Last updated: 2026-06-12.
+Last updated: 2026-06-13.
 
 ## Orchestrator Command
 
 ```text
+2026-06-13: WH-G15 completed in source. Added read-only POST /api/warehouses/logistics/batch so Catalog and channel projections can consume Warehouse-owned logistics routes without deriving route semantics. No stock mutation or deployment was performed. Validation passed: npm test -- --runInBand (3 suites / 23 tests), npm run build, and git diff --check. Next recommended slice: deploy or smoke the cross-service logistics projection after owner approval.
 WAREHOUSE ORCHESTRATOR: continue implementation
 ```
 
@@ -17,8 +18,8 @@ WAREHOUSE ORCHESTRATOR: define next goal
 ## Current Status
 
 - Active goal: none
-- Current wave: Wave 9 - Production admin console complete
-- Completed goals: WH-G1 Deployment And Truthful Health, WH-G2 RabbitMQ Stock Events, WH-G3 Stock Mutation Invariants, WH-G4 Reservation Lifecycle, WH-G5 Catalog And Availability Contracts, WH-G6 Supplier Reconciliation, WH-G7 Production Observability, WH-G8 Database Migration Discipline, WH-G9 Production Admin Console
+- Current wave: Wave 10 - Landing page and authenticated admin entry complete
+- Completed goals: WH-G1 Deployment And Truthful Health, WH-G2 RabbitMQ Stock Events, WH-G3 Stock Mutation Invariants, WH-G4 Reservation Lifecycle, WH-G5 Catalog And Availability Contracts, WH-G6 Supplier Reconciliation, WH-G7 Production Observability, WH-G8 Database Migration Discipline, WH-G9 Production Admin Console, WH-G10 Landing Page And Authenticated Admin Entry, WH-G11 Stock Origin Visibility, WH-G12 Inventory Topology Read Model, WH-G13 Admin Inventory Topology Visibility, WH-G14 Product Logistics Route Read Model, WH-G15 Batch Product Logistics Contract
 - Running goals: none
 - Blocked goals: none
 - Worker threads: none
@@ -30,7 +31,7 @@ WAREHOUSE ORCHESTRATOR: define next goal
 - Project invariants: `docs/governance/PROJECT_INVARIANTS.md`
 - Remote repository: `/home/ssf/Documents/Github/warehouse-microservice`
 - Production URL: `https://warehouse.alfares.cz/api/health`
-- Production stage: deployed, RabbitMQ ready, admin console available at `https://warehouse.alfares.cz/admin`
+- Production stage: deployed, RabbitMQ ready, landing page available at https://warehouse.alfares.cz/, admin auth gate available at https://warehouse.alfares.cz/admin
 
 ## Goal Roadmap
 
@@ -45,6 +46,12 @@ WAREHOUSE ORCHESTRATOR: define next goal
 | WH-G7 | `implementation-goals/GOAL-07-production-observability.md` | done | WH-G4, WH-G6 | Operators can verify deploy, rollback, auth, events, and mutation evidence. |
 | WH-G8 | `implementation-goals/GOAL-08-database-migration-discipline.md` | done | WH-G7 | Schema changes are committed as repeatable TypeORM migrations and run during deploy. |
 | WH-G9 | `implementation-goals/GOAL-09-production-admin-console.md` | done | WH-G8 | Production admin console exposes operator workflows and operations status. |
+| WH-G10 | `implementation-goals/GOAL-10-landing-auth-admin-gate.md` | done | WH-G9 | Public landing page and Auth-backed admin login/register gate for warehouse admins. |
+| WH-G11 | `implementation-goals/GOAL-11-stock-origin-visibility.md` | done | WH-G6, WH-G10 | Availability rows expose Warehouse-owned stock origin metadata. |
+| WH-G12 | `implementation-goals/GOAL-12-inventory-topology-read-model.md` | done | WH-G11 | Operators can read local and supplier-managed warehouse topology with stock totals. |
+| WH-G13 | `implementation-goals/GOAL-13-admin-inventory-topology.md` | done | WH-G12 | Admin console displays topology totals and origin rows for operators. |
+| WH-G14 | `implementation-goals/GOAL-14-product-logistics-route-read-model.md` | done | WH-G12 | Warehouse explains product logistics route options by stock origin. |
+| WH-G15 | `implementation-goals/GOAL-15-batch-logistics-contract.md` | done | WH-G14 | Catalog can consume Warehouse-owned logistics routes in one batch call. |
 
 ## Execution Waves
 
@@ -82,6 +89,12 @@ Changed files:
 Append newest entries at the top.
 
 ```text
+2026-06-13: WH-G15 completed in source. Added batch product logistics contract for Catalog/channel consumers. Verification passed: npm test -- --runInBand, npm run build, and git diff --check. No production deployment performed.
+2026-06-13: WH-G14 completed in source. Added product logistics route read model for local fulfillment, supplier replenishment, and supplier dropship/direct routes. Verification passed: npm test -- --runInBand, npm run build, and git diff --check. No production deployment performed.
+2026-06-13: WH-G13 completed in source. Added admin console inventory topology visibility with optional productId filtering. Verification passed: node --check public/admin/app.js, npm run build, and git diff --check. No production deployment performed.
+2026-06-13: WH-G12 completed in source. Added GET /api/warehouses/topology read model with optional productId filtering, origin groups, stock totals, and supplier linkage visibility. Verification passed: npm test -- --runInBand, npm run build, and git diff --check. No production deployment performed.
+2026-06-13: WH-G10 deployed successfully with image localhost:5000/warehouse-microservice:a99e270. Deploy phases passed: build, push, manifests, RabbitMQ wait, migration job with no pending migrations, rollout, and health check. Production smoke passed for root landing page, admin page, warehouse hero image, API health, and unauthenticated API warehouses returned 401. A repeated same-image deployment was accidentally triggered while recording evidence and also completed deploy phases successfully.
+2026-06-13: WH-G10 completed in repo. Added public `/` landing page, generated warehouse hero asset, Auth-backed `/admin` login/register gate, and client-side warehouse-admin role gating before the admin workspace is shown. Verification passed: `node --check public/admin/app.js`, `node --check public/landing.js`, `npm run build`, `npm test -- --runInBand`, and Playwright fallback screenshots for desktop/mobile landing plus admin auth gate. No production deployment performed without owner approval.
 2026-06-12: Intent Preservation System documentation overlay added. WH-G3 has retrospective IPS task docs, execution plan, context package, coding prompt, and validation report tied to existing completion evidence. Future owner-approved goals must complete the IPS pre-coding gate before source edits. Documentation-only change; no service validation required.
 2026-06-12: Orchestrator structure adopted from GoalKeeper on the remote Warehouse repo. Added master orchestrator, implementation state, process gates, goal prompts, templates, and next-goal helper while preserving actual WH-G1 through WH-G9 completion state. Documentation-only change; no service validation required.
 2026-06-12: WH-G9 completed. Production admin console deployed at https://warehouse.alfares.cz/admin with supplier reconciliation and operations status. Verification passed: node --check public/admin/app.js, npm test -- --runInBand, npm run build, production /api/health, /admin HTTP 200, unauthenticated supplier reconciliation API 401, and browser smoke checks with no console warnings.
@@ -128,7 +141,7 @@ Next command:
 
 ## Next Action
 
-All planned WH-G goals are complete through WH-G9. Await an owner-approved next goal:
+Warehouse source goals are complete through WH-G15. WH-G10 is deployed; WH-G11 through WH-G15 are validated in source only. Await an owner-approved next goal or deployment approval:
 
 ```text
 WAREHOUSE ORCHESTRATOR: define next goal

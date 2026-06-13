@@ -85,6 +85,76 @@ describe('StockService mutation invariants', () => {
     };
   }
 
+  it('includes warehouse origin metadata in batch availability rows', async () => {
+    const { service, stockRepository } = createService();
+    stockRepository.find.mockResolvedValue([
+      {
+        productId: 'product-1',
+        warehouseId: 'warehouse-own',
+        quantity: 8,
+        reserved: 2,
+        available: 6,
+        warehouse: {
+          id: 'warehouse-own',
+          code: 'OWN-PRG',
+          name: 'Prague Main Warehouse',
+          type: 'own',
+          supplierId: null,
+        },
+      },
+      {
+        productId: 'product-1',
+        warehouseId: 'warehouse-supplier',
+        quantity: 5,
+        reserved: 0,
+        available: 5,
+        warehouse: {
+          id: 'warehouse-supplier',
+          code: 'SUP-ACME',
+          name: 'Acme Dropship Warehouse',
+          type: 'dropship',
+          supplierId: 'supplier-acme',
+        },
+      },
+    ]);
+
+    const availability = await service.getBatchAvailability(['product-1']);
+
+    expect(stockRepository.find).toHaveBeenCalledWith(expect.objectContaining({
+      relations: ['warehouse'],
+    }));
+    expect(availability).toEqual([
+      {
+        productId: 'product-1',
+        totalQuantity: 13,
+        totalReserved: 2,
+        totalAvailable: 11,
+        warehouses: [
+          {
+            warehouseId: 'warehouse-own',
+            warehouseCode: 'OWN-PRG',
+            warehouseName: 'Prague Main Warehouse',
+            warehouseType: 'own',
+            supplierId: null,
+            quantity: 8,
+            reserved: 2,
+            available: 6,
+          },
+          {
+            warehouseId: 'warehouse-supplier',
+            warehouseCode: 'SUP-ACME',
+            warehouseName: 'Acme Dropship Warehouse',
+            warehouseType: 'dropship',
+            supplierId: 'supplier-acme',
+            quantity: 5,
+            reserved: 0,
+            available: 5,
+          },
+        ],
+      },
+    ]);
+  });
+
   it('rejects a missing reason code before opening a transaction', async () => {
     const { service, dataSource } = createService();
 

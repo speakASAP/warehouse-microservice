@@ -25,6 +25,11 @@ To print the current checkpoint:
 7. `GOAL-07-production-observability.md` - logs, metrics, runbook, smoke checks.
 8. `GOAL-08-database-migration-discipline.md` - TypeORM migrations and deploy-time migration execution.
 9. `GOAL-09-production-admin-console.md` - production admin console for operators.
+10. `GOAL-10-landing-auth-admin-gate.md` - public landing and authenticated admin gate.
+11. `GOAL-11-stock-origin-visibility.md` - availability origin metadata.
+12. `GOAL-12-inventory-topology-read-model.md` - operator inventory topology read model.
+13. `GOAL-13-admin-inventory-topology.md` - admin console topology visibility.
+14. `GOAL-14-product-logistics-route-read-model.md` - product logistics route read model.
 
 ## Safe Sequence
 

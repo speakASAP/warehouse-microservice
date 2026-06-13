@@ -1,0 +1,3 @@
+# PROMPT-WH-G11-T1 - Coding Prompt
+
+Implement WH-G11-T1 in warehouse-microservice. Enrich POST /api/stock/availability/batch so each warehouses[] row still returns warehouseId, quantity, reserved, and available, and additionally returns Warehouse-owned origin metadata: warehouseCode, warehouseName, warehouseType, and supplierId. Load the warehouse relation in the batch query, preserve existing totals and product ordering, and keep the change additive. Update docs/contracts/availability-contracts.md, add focused Jest coverage, and validate with npm test -- --runInBand, npm run build, and git diff --check. Do not deploy or mutate production stock.

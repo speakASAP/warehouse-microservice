@@ -14,9 +14,14 @@
 - [x] WH-G7-T1 Add operator runbook for deploy, rollback, auth-token testing, and event verification (goal_id: WH-G7, priority: 2)
 - [x] WH-G8-T1 Add committed TypeORM migration workflow and baseline schema migration (goal_id: WH-G8, priority: 1)
 - [x] WH-G9-T1 Deploy production warehouse admin console for operators (goal_id: WH-G9, priority: 2)
+- [x] WH-G10-T1 Public landing page and Auth-backed warehouse admin login/register gate (goal_id: WH-G10, priority: 2)
 
 ## Completed
 <!-- AI appends here. Never modifies previous entries. -->
+- [x] 2026-06-13 WH-G14-T1 Added product logistics route read model; validation passed with npm test, npm run build, and git diff --check.
+- [x] 2026-06-13 WH-G13-T1 Added admin inventory topology visibility; validation passed with node --check, npm run build, and git diff --check.
+- [x] 2026-06-13 WH-G12-T1 Added Warehouse inventory topology read model; validation passed with npm test, npm run build, and git diff --check.
+- [x] 2026-06-13 WH-G11-T1 Added Warehouse origin metadata to batch availability rows; validation passed with npm test, npm run build, and git diff --check.
 - [x] 2026-04-05 Documentation standard applied
 - [x] 2026-06-12 WH-DOC-T1 Created `docs/orchestrator/warehouse-intent-plan.md` to preserve warehouse intent, ecosystem ownership boundaries, goal sequence, and evidence log.
 - [x] 2026-06-12 WH-G1-T1 Fixed deploy health path to `http://localhost:3201/api/health` and verified deploy health check during rollout.
@@ -45,3 +50,5 @@
 - [x] 2026-06-12 WH-G9 verification passed: `node --check public/admin/app.js`, `npm test -- --runInBand`, `npm run build`, rollout image `localhost:5000/warehouse-microservice:wh-g9-admin-console-20260612`, production `/api/health`, `/admin` HTTP 200, unauthenticated supplier reconciliation API `401`, and browser smoke checks with no console warnings.
 - [x] 2026-06-12 WH-IPS-T1 Added Intent Preservation System overlay with traceability, pre-coding gate, WH-G3 retrospective task docs, execution plan, context package, coding prompt, and validation report.
 - [x] 2026-06-12 WH-ORCH-T1 Adopted GoalKeeper-style orchestration on the remote Warehouse repo: master orchestrator, implementation state, process gates, goal briefs, templates, and next-goal helper while preserving WH-G1 through WH-G9 completion state.
+
+- [x] 2026-06-13 WH-G10-T1 Added public landing page, generated warehouse hero asset, Auth-backed login/register gate, and warehouse-admin role gate before showing `/admin`; validation passed without production deployment.

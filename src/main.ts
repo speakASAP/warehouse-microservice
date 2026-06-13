@@ -15,11 +15,17 @@ async function bootstrap() {
 
   const logger = app.get(LoggerService);
 
+  const landingIndexPath = join(process.cwd(), 'public', 'index.html');
   const adminIndexPath = join(process.cwd(), 'public', 'admin', 'index.html');
+  const sendLandingIndex = (_request, response) => {
+    response.type('html').send(readFileSync(landingIndexPath, 'utf8'));
+  };
   const sendAdminIndex = (_request, response) => {
     response.type('html').send(readFileSync(adminIndexPath, 'utf8'));
   };
   const httpAdapter = app.getHttpAdapter();
+  httpAdapter.get('/', sendLandingIndex);
+  httpAdapter.get('/landing', sendLandingIndex);
   httpAdapter.get('/admin', sendAdminIndex);
   httpAdapter.get('/admin/', sendAdminIndex);
   httpAdapter.get('/admin/index.html', sendAdminIndex);

@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Warehouse</title>
+    <meta name="description" content="Warehouse service for stock authority, reservation control, supplier reconciliation, and operations visibility.">
+    <link rel="stylesheet" href="/landing.css?v=wh-g10-hero-fix">
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="/" aria-label="Warehouse home"><span class="brand-mark">W</span><span>Warehouse</span></a>
+      <nav class="site-nav" aria-label="Primary">
+        <a href="#product">Product</a><a href="#operations">Operations</a><a href="#security">Security</a><a href="#pricing">Pricing</a>
+      </nav>
+      <a class="button primary" href="/admin">Sign in</a>
+    </header>
+    <main>
+      <section class="hero" id="product">
+        <div class="hero-copy">
+          <h1>Warehouse</h1>
+          <p class="hero-lede">A stock authority for multi-channel commerce: inventory, reservations, supplier dropship reconciliation, and operational readiness in one service.</p>
+          <div class="hero-actions"><a class="button primary" href="/admin">Sign in</a><a class="button" href="/admin#register">Request access</a></div>
+        </div>
+        <div class="hero-visual" aria-label="Warehouse operations dashboard preview">
+          <img class="warehouse-photo" src="/warehouse-operations.png" alt="Warehouse operator scanning inventory">
+          <div class="dashboard-card stock"><div><small>Available stock</small><strong>98.7%</strong></div><div class="bars"><i></i><i></i><i></i><i></i></div></div>
+          <div class="dashboard-card scan"><small>Barcode scan</small><code>SKU-4812-CZ</code><b>reserved</b></div>
+          <div class="dashboard-card route"><small>Event bus</small><strong>stock.events</strong><span>RabbitMQ ready</span></div>
+        </div>
+      </section>
+      <section class="value-grid" id="operations">
+        <article><h2>Operate from one stock truth</h2><p>Keep own warehouses, supplier locations, reservations, and movement history aligned across storefront and channel services.</p></article>
+        <article><h3>Reservations</h3><p>Hold stock for pending orders and release, fulfill, cancel, expire, or return it through auditable workflows.</p></article>
+        <article><h3>Supplier reconciliation</h3><p>Bring dropship quantities into the warehouse authority with conflict evidence when supplier stock falls below reserved stock.</p></article>
+        <article><h3>Readiness signals</h3><p>Expose database, RabbitMQ, event publishing, and mutation health so operations teams know when the service is safe to use.</p></article>
+      </section>
+      <section class="security-section" id="security">
+        <div><h2>Admin access is role-gated</h2><p>Warehouse uses the shared Auth service for registration, login, JWTs, and RBAC. The admin console opens only for users with a warehouse admin role, and every protected API call still requires bearer authorization.</p></div>
+        <div class="security-panel"><div class="lock-row"><span></span><strong>Auth-owned identity</strong></div><div class="lock-row"><span></span><strong>Warehouse admin role</strong></div><div class="lock-row"><span></span><strong>Server-side API guard</strong></div></div>
+      </section>
+      <section class="pricing-section" id="pricing"><div><h2>Built for internal commerce operations</h2><p>Access is provisioned for approved operators and service administrators.</p></div><a class="button primary" href="/admin#register">Request access</a></section>
+    </main>
+    <script src="/landing.js?v=wh-g10" defer></script>
+  </body>
+</html>

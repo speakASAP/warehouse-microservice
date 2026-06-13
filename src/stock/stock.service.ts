@@ -36,6 +36,10 @@ interface StockMutationLogDetails {
 
 export interface WarehouseAvailability {
   warehouseId: string;
+  warehouseCode?: string | null;
+  warehouseName?: string | null;
+  warehouseType?: string | null;
+  supplierId?: string | null;
   quantity: number;
   reserved: number;
   available: number;
@@ -102,6 +106,7 @@ export class StockService {
 
     const stocks = await this.stockRepository.find({
       where,
+      relations: ['warehouse'],
       order: {
         productId: 'ASC',
         warehouseId: 'ASC',
@@ -128,12 +133,21 @@ export class StockService {
       productAvailability.totalQuantity += stock.quantity;
       productAvailability.totalReserved += stock.reserved;
       productAvailability.totalAvailable += stock.available;
-      productAvailability.warehouses.push({
+      const warehouseRow: WarehouseAvailability = {
         warehouseId: stock.warehouseId,
         quantity: stock.quantity,
         reserved: stock.reserved,
         available: stock.available,
-      });
+      };
+
+      if (stock.warehouse) {
+        warehouseRow.warehouseCode = stock.warehouse.code ?? null;
+        warehouseRow.warehouseName = stock.warehouse.name ?? null;
+        warehouseRow.warehouseType = stock.warehouse.type ?? null;
+        warehouseRow.supplierId = stock.warehouse.supplierId ?? null;
+      }
+
+      productAvailability.warehouses.push(warehouseRow);
     }
 
     return normalizedProductIds.map((productId) => availability.get(productId));

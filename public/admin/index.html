@@ -4,10 +4,49 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Warehouse Admin</title>
-    <link rel="stylesheet" href="/admin/style.css?v=admin-20260612-whg9">
+    <link rel="stylesheet" href="/admin/style.css?v=wh-g10">
   </head>
   <body>
-    <div class="app-shell">
+    <section class="auth-gate" id="authGate">
+      <div class="auth-brand">
+        <a class="landing-link" href="/">Warehouse</a>
+        <h1>Admin access</h1>
+        <p>Sign in or register through Auth. The console opens only when your JWT includes a warehouse admin role.</p>
+        <div class="auth-proof">
+          <span>Auth login</span>
+          <span>Warehouse admin role</span>
+          <span>Protected API guard</span>
+        </div>
+      </div>
+      <div class="auth-panel">
+        <div class="auth-tabs" role="tablist" aria-label="Authentication mode">
+          <button class="auth-tab active" type="button" data-auth-tab="login">Login</button>
+          <button class="auth-tab" type="button" data-auth-tab="register">Register</button>
+        </div>
+        <form class="auth-form active" id="loginForm">
+          <label>Email<input name="email" type="email" autocomplete="email" required></label>
+          <label>Password<input name="password" type="password" autocomplete="current-password" required></label>
+          <button class="button primary" type="submit">Sign in</button>
+        </form>
+        <form class="auth-form" id="registerForm">
+          <div class="auth-name-row">
+            <label>First name<input name="firstName" autocomplete="given-name"></label>
+            <label>Last name<input name="lastName" autocomplete="family-name"></label>
+          </div>
+          <label>Email<input name="email" type="email" autocomplete="email" required></label>
+          <label>Password<input name="password" type="password" autocomplete="new-password" minlength="6" required></label>
+          <button class="button primary" type="submit">Request access</button>
+        </form>
+        <div class="auth-message hidden" id="authMessage" role="status"></div>
+        <div class="access-denied hidden" id="accessDenied">
+          <strong>Warehouse admin role required</strong>
+          <p>Your Auth account is valid, but the token does not include <code>global:superadmin</code> or <code>internal:warehouse-microservice:admin</code>.</p>
+          <button class="button" type="button" data-action="logout">Use another account</button>
+        </div>
+      </div>
+    </section>
+
+    <div class="app-shell hidden" id="adminShell">
       <aside class="sidebar" aria-label="Sections">
         <div class="brand">
           <span class="brand-mark">W</span>
@@ -33,17 +72,12 @@
             <h1>Warehouse Admin</h1>
             <p>Live stock, reservation, movement, and warehouse controls.</p>
           </div>
-          <form class="connection" id="connectionForm">
-            <label>
-              API base
-              <input id="apiBaseInput" name="apiBase" autocomplete="url" spellcheck="false">
-            </label>
-            <label>
-              Bearer token
-              <input id="tokenInput" name="token" type="password" autocomplete="off" spellcheck="false">
-            </label>
-            <button class="button primary" type="submit">Save</button>
-          </form>
+          <div class="connection session-only">
+            <div class="session-card">
+              <span id="sessionEmail">Authenticated</span>
+              <button class="link-button" type="button" data-action="logout">Logout</button>
+            </div>
+          </div>
         </header>
 
         <section class="status-strip" aria-label="Service status">
@@ -129,6 +163,36 @@
             </div>
             <button class="button" type="button" data-action="load-warehouses">Reload</button>
           </div>
+          <div class="grid two topology-grid">
+            <article class="surface">
+              <div class="surface-head">
+                <h3>Inventory topology</h3>
+                <button class="link-button" type="button" data-action="load-inventory-topology">Refresh</button>
+              </div>
+              <div id="topologySummary" class="metric-list"></div>
+            </article>
+            <form class="surface topology-filter" id="topologyFilterForm">
+              <label>Catalog product ID<input id="topologyProductId" name="productId" placeholder="optional product filter"></label>
+              <button class="button primary" type="submit">Filter topology</button>
+            </form>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Warehouse</th>
+                  <th>Code</th>
+                  <th>Origin</th>
+                  <th>Supplier</th>
+                  <th>Quantity</th>
+                  <th>Reserved</th>
+                  <th>Available</th>
+                  <th>Products</th>
+                </tr>
+              </thead>
+              <tbody id="topologyTable"></tbody>
+            </table>
+          </div>
           <div class="table-wrap">
             <table>
               <thead>
@@ -157,6 +221,7 @@
               </select>
             </label>
             <label>City<input name="city" maxlength="100"></label>
+            <label>PSČ<input name="postalCode" inputmode="numeric" autocomplete="postal-code" maxlength="20" placeholder="110 00"></label>
             <label>Country<input name="country" maxlength="2" placeholder="CZ"></label>
             <label>Priority<input name="priority" type="number" min="0" step="1" value="0"></label>
             <label class="span-2">Address<input name="address"></label>
@@ -386,6 +451,6 @@
       <tr><td colspan="9" class="empty">No data loaded.</td></tr>
     </template>
 
-    <script src="/admin/app.js?v=admin-20260612-whg9" defer></script>
+    <script src="/admin/app.js?v=wh-g10-validation-messages" defer></script>
   </body>
 </html>

@@ -2,13 +2,22 @@
   const storage = {
     apiBase: 'warehouse-admin-api-base',
     token: 'warehouse-admin-token',
+    refreshToken: 'warehouse-admin-refresh-token',
+    authBase: 'warehouse-admin-auth-base',
+    user: 'warehouse-admin-user',
   };
 
   const defaultApiBase = `${window.location.origin}/api`;
+  const defaultAuthBase = 'https://auth.alfares.cz/auth';
+  const adminRoles = new Set(['global:superadmin', 'internal:warehouse-microservice:admin']);
   const state = {
     apiBase: localStorage.getItem(storage.apiBase) || defaultApiBase,
     token: localStorage.getItem(storage.token) || '',
+    refreshToken: localStorage.getItem(storage.refreshToken) || '',
+    authBase: localStorage.getItem(storage.authBase) || defaultAuthBase,
+    user: parseStoredUser(),
     warehouses: [],
+    inventoryTopology: null,
     reservations: [],
     supplierReconciliation: null,
     selectedProductId: '',
@@ -22,14 +31,151 @@
       event.preventDefault();
       showMessage(event.reason?.message || 'Request failed.', true);
     });
-    $('#apiBaseInput').value = state.apiBase;
-    $('#tokenInput').value = state.token;
+    bindAuth();
     bindNavigation();
     bindForms();
     bindActions();
     setEmptyRows();
     refreshPublicStatus();
-    loadAuthorizedSummaries();
+    enforceAdminGate();
+  }
+
+
+  function bindAuth() {
+    $$('[data-auth-tab]').forEach((button) => {
+      button.addEventListener('click', () => showAuthTab(button.dataset.authTab));
+    });
+    $('#loginForm').addEventListener('submit', (event) => submitAuthForm(event, 'login'));
+    $('#registerForm').addEventListener('submit', (event) => submitAuthForm(event, 'register'));
+    $$('[data-action="logout"]').forEach((button) => {
+      button.addEventListener('click', logout);
+    });
+    if (window.location.hash === '#register') showAuthTab('register');
+  }
+
+  function showAuthTab(tab) {
+    $$('[data-auth-tab]').forEach((button) => button.classList.toggle('active', button.dataset.authTab === tab));
+    $('#loginForm').classList.toggle('active', tab === 'login');
+    $('#registerForm').classList.toggle('active', tab === 'register');
+    $('#accessDenied').classList.add('hidden');
+  }
+
+  async function submitAuthForm(event, mode) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    state.authBase = state.authBase || defaultAuthBase;
+    localStorage.setItem(storage.authBase, state.authBase);
+    const data = formData(form);
+    const path = mode === 'register' ? 'register' : 'login';
+    try {
+      const payload = await authRequest(path, data);
+      applyAuthPayload(payload);
+      if (hasWarehouseAdminRole()) {
+        showAuthMessage('Access confirmed. Loading admin console.');
+        revealAdminShell();
+        await loadAuthorizedSummaries(true);
+      } else {
+        lockAdminShell(true);
+      }
+    } catch (error) {
+      showAuthMessage(error.message || 'Authentication failed.', true);
+    }
+  }
+
+  async function authRequest(path, body) {
+    const response = await fetch(`${state.authBase}/${path}`, {
+      method: 'POST',
+      headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      const message = payload.message || payload.error || `Auth request failed with ${response.status}`;
+      throw new Error(Array.isArray(message) ? message.join(', ') : message);
+    }
+    return payload;
+  }
+
+  function applyAuthPayload(payload) {
+    state.token = payload.accessToken || '';
+    state.refreshToken = payload.refreshToken || '';
+    const tokenUser = decodeJwtPayload(state.token);
+    state.user = {
+      ...(payload.user || {}),
+      roles: Array.isArray(tokenUser.roles) ? tokenUser.roles : payload.user?.roles || [],
+      email: payload.user?.email || tokenUser.email || '',
+      sub: tokenUser.sub || payload.user?.id || '',
+    };
+    localStorage.setItem(storage.token, state.token);
+    localStorage.setItem(storage.refreshToken, state.refreshToken);
+    localStorage.setItem(storage.user, JSON.stringify(state.user));
+  }
+
+  function enforceAdminGate() {
+    if (hasWarehouseAdminRole()) {
+      revealAdminShell();
+      loadAuthorizedSummaries();
+    } else {
+      lockAdminShell(Boolean(state.token));
+    }
+  }
+
+  function revealAdminShell() {
+    $('#authGate').classList.add('hidden');
+    $('#adminShell').classList.remove('hidden');
+    $('#sessionEmail').textContent = state.user?.email || 'Authenticated admin';
+  }
+
+  function lockAdminShell(showDenied) {
+    $('#adminShell').classList.add('hidden');
+    $('#authGate').classList.remove('hidden');
+    $('#accessDenied').classList.toggle('hidden', !showDenied);
+    if (showDenied) {
+      showAuthMessage('Authenticated, but warehouse admin rights are required.', true);
+    }
+  }
+
+  function hasWarehouseAdminRole() {
+    const roles = Array.isArray(state.user?.roles) ? state.user.roles : decodeJwtPayload(state.token).roles || [];
+    return roles.some((role) => adminRoles.has(role));
+  }
+
+  function logout() {
+    state.token = '';
+    state.refreshToken = '';
+    state.user = null;
+    localStorage.removeItem(storage.token);
+    localStorage.removeItem(storage.refreshToken);
+    localStorage.removeItem(storage.user);
+    setEmptyRows();
+    lockAdminShell(false);
+    showAuthMessage('Signed out.');
+  }
+
+  function parseStoredUser() {
+    try {
+      const user = JSON.parse(localStorage.getItem(storage.user) || 'null');
+      if (user && typeof user === 'object') return user;
+    } catch (_error) {}
+    return null;
+  }
+
+  function decodeJwtPayload(token) {
+    if (!token || token.split('.').length < 2) return {};
+    try {
+      const payload = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+      const padded = payload.padEnd(payload.length + ((4 - payload.length % 4) % 4), '=');
+      return JSON.parse(decodeURIComponent(escape(window.atob(padded))));
+    } catch (_error) {
+      return {};
+    }
+  }
+
+  function showAuthMessage(text, isError) {
+    const node = $('#authMessage');
+    node.textContent = text;
+    node.classList.toggle('error', Boolean(isError));
+    node.classList.remove('hidden');
   }
 
   function bindNavigation() {
@@ -50,27 +196,18 @@
       button.addEventListener('click', () => refreshPublicStatus());
     });
     $('[data-action="load-warehouses"]').addEventListener('click', () => loadWarehouses(true));
+    $('[data-action="load-inventory-topology"]').addEventListener('click', () => loadInventoryTopology(true));
     $('[data-action="load-reservations"]').addEventListener('click', () => loadReservations(true));
     $('[data-action="reset-warehouse"]').addEventListener('click', () => resetWarehouseForm());
   }
 
   function bindForms() {
-    $('#connectionForm').addEventListener('submit', (event) => {
-      event.preventDefault();
-      state.apiBase = $('#apiBaseInput').value.trim().replace(/\/$/, '') || defaultApiBase;
-      state.token = $('#tokenInput').value.trim();
-      localStorage.setItem(storage.apiBase, state.apiBase);
-      localStorage.setItem(storage.token, state.token);
-      showMessage('Connection settings saved.');
-      refreshPublicStatus();
-      loadAuthorizedSummaries(true);
-    });
-
     $('#warehouseForm').addEventListener('submit', submitWarehouseForm);
     $('#warehouseForm').addEventListener('reset', () => {
       window.setTimeout(resetWarehouseForm, 0);
     });
     $('#stockLookupForm').addEventListener('submit', submitStockLookup);
+    $('#topologyFilterForm').addEventListener('submit', submitTopologyFilter);
     $('#reservationLookupForm').addEventListener('submit', submitReservationLookup);
     $('#movementLookupForm').addEventListener('submit', submitMovementLookup);
     $('#stockActionForm').addEventListener('submit', submitStockAction);
@@ -88,6 +225,9 @@
 
     if (panelId === 'warehouses' && !state.warehouses.length) {
       loadWarehouses().catch((error) => showMessage(error.message, true));
+    }
+    if (panelId === 'warehouses' && !state.inventoryTopology) {
+      loadInventoryTopology().catch((error) => showMessage(error.message, true));
     }
     if (panelId === 'reservations' && !state.reservations.length) {
       loadReservations().catch((error) => showMessage(error.message, true));
@@ -128,12 +268,14 @@
       $('#warehouseDetail').textContent = 'token required';
       $('#reservationDetail').textContent = 'token required';
       renderMetrics('#warehouseMix', []);
+      renderMetrics('#topologySummary', []);
       renderMetrics('#reservationMix', []);
       return;
     }
 
     await Promise.all([
       loadWarehouses(force).catch((error) => showMessage(error.message, true)),
+      loadInventoryTopology(force).catch((error) => showMessage(error.message, true)),
       loadReservations(force).catch((error) => showMessage(error.message, true)),
     ]);
   }
@@ -144,6 +286,18 @@
     renderWarehouses();
     renderWarehouseSummary();
     if (showToast) showMessage('Warehouses loaded.');
+  }
+
+  async function loadInventoryTopology(showToast, productId) {
+    const input = $('#topologyProductId');
+    const filter = String(productId ?? input?.value ?? '').trim();
+    const query = filter ? '?productId=' + encodeURIComponent(filter) : '';
+    const response = await request('warehouses/topology' + query);
+    state.inventoryTopology = response.data || null;
+    if (input && productId !== undefined) input.value = filter;
+    renderInventoryTopology();
+    renderWarehouseSummary();
+    if (showToast) showMessage('Inventory topology loaded.');
   }
 
   async function loadReservations(showToast) {
@@ -158,6 +312,11 @@
     event.preventDefault();
     const form = event.currentTarget;
     const data = formData(form);
+    const validationError = validateWarehouseForm(data, form);
+    if (validationError) {
+      showMessage(validationError, true);
+      return;
+    }
     const id = data.id;
     delete data.id;
     data.priority = Number(data.priority || 0);
@@ -172,7 +331,28 @@
     await request(path, { method, body: data });
     resetWarehouseForm();
     await loadWarehouses();
+    await loadInventoryTopology();
     showMessage(id ? 'Warehouse updated.' : 'Warehouse created.');
+  }
+
+  function validateWarehouseForm(data, form) {
+    if (!data.name?.trim()) return 'Warehouse name is required.';
+    if (data.name.length > 200) return 'Warehouse name must be 200 characters or less.';
+    if (!data.code?.trim()) return 'Warehouse code is required.';
+    if (data.code.length > 100) return 'Warehouse code must be 100 characters or less.';
+    if (!['own', 'supplier', 'dropship'].includes(data.type)) return 'Warehouse type must be own, supplier, or dropship.';
+    if (data.country && !/^[A-Za-z]{2}$/.test(data.country.trim())) return 'Country must be a 2-letter code, for example CZ.';
+    if (data.postalCode && data.postalCode.length > 20) return 'PSČ must be 20 characters or less.';
+    if (data.contactEmail && !form.elements.contactEmail.checkValidity()) return 'Contact email must be a valid email address.';
+    const priority = Number(data.priority || 0);
+    if (!Number.isInteger(priority) || priority < 0) return 'Priority must be a whole number 0 or higher.';
+    return '';
+  }
+
+  async function submitTopologyFilter(event) {
+    event.preventDefault();
+    const productId = formData(event.currentTarget).productId.trim();
+    await loadInventoryTopology(true, productId);
   }
 
   async function submitStockLookup(event) {
@@ -186,6 +366,8 @@
     ]);
     renderStock(asArray(stockResponse.data));
     $('#totalAvailable').textContent = totalResponse?.data?.totalAvailable ?? '-';
+    $('#topologyProductId').value = productId;
+    await loadInventoryTopology(false, productId);
     showMessage('Stock loaded.');
   }
 
@@ -268,12 +450,14 @@
     showMessage(`Supplier reconciliation ${state.supplierReconciliation?.status || 'completed'}.`);
     if (data.productId) {
       $('#stockLookupForm').elements.productId.value = data.productId;
+      $('#topologyProductId').value = data.productId;
+      loadInventoryTopology(false, data.productId).catch((error) => showMessage(error.message, true));
     }
   }
 
   function renderWarehouses() {
     const rows = state.warehouses.map((warehouse) => {
-      const location = [warehouse.city, warehouse.country].filter(Boolean).join(', ') || warehouse.address || '-';
+      const location = formatWarehouseLocation(warehouse);
       return `
         <tr>
           <td><strong>${escapeHtml(warehouse.name)}</strong><br><code>${escapeHtml(warehouse.id)}</code></td>
@@ -304,6 +488,10 @@
   function renderWarehouseSummary() {
     $('#warehouseCount').textContent = state.warehouses.length;
     $('#warehouseDetail').textContent = state.token ? 'loaded' : 'token required';
+    const topologyTotals = state.inventoryTopology?.totals;
+    if (topologyTotals) {
+      $('#warehouseDetail').textContent = 'available ' + (topologyTotals.totalAvailable ?? 0);
+    }
     const counts = state.warehouses.reduce((acc, warehouse) => {
       const key = warehouse.type || 'unknown';
       acc[key] = (acc[key] || 0) + 1;
@@ -325,6 +513,29 @@
       </tr>
     `).join('');
     $('#reservationsTable').innerHTML = rows || emptyRow(7);
+  }
+
+  function renderInventoryTopology() {
+    const topology = state.inventoryTopology;
+    if (!topology) {
+      renderMetrics('#topologySummary', []);
+      $('#topologyTable').innerHTML = emptyRow(8);
+      return;
+    }
+
+    const totals = topology.totals || {};
+    renderMetrics('#topologySummary', [
+      { label: 'total available', value: totals.totalAvailable ?? 0 },
+      { label: 'own warehouses', value: totals.ownWarehouseCount ?? 0 },
+      { label: 'supplier managed', value: totals.supplierWarehouseCount ?? 0 },
+      { label: 'products with stock', value: totals.productsWithStock ?? 0 },
+    ]);
+
+    const rows = asArray(topology.warehouses).map((warehouse) => {
+      const supplier = warehouse.supplierId ? '<code>' + escapeHtml(warehouse.supplierId) + '</code>' : '-';
+      return '\n        <tr>\n          <td><strong>' + escapeHtml(warehouse.warehouseName) + '</strong><br><code>' + escapeHtml(warehouse.warehouseId) + '</code></td>\n          <td>' + escapeHtml(warehouse.warehouseCode) + '</td>\n          <td>' + statusPill(warehouse.originType || warehouse.warehouseType) + '</td>\n          <td>' + supplier + '</td>\n          <td>' + (warehouse.totalQuantity ?? 0) + '</td>\n          <td>' + (warehouse.totalReserved ?? 0) + '</td>\n          <td>' + stockPill(warehouse.totalAvailable, 0) + '</td>\n          <td>' + (warehouse.productsWithStock ?? 0) + '</td>\n        </tr>\n      ';
+    }).join('');
+    $('#topologyTable').innerHTML = rows || emptyRow(8);
   }
 
   function renderReservationSummary(reservations) {
@@ -373,6 +584,7 @@
   function renderSupplierReconciliation(reconciliation) {
     if (!reconciliation) {
       $('#supplierResultTable').innerHTML = emptyRow(9);
+    renderMetrics('#topologySummary', []);
       return;
     }
 
@@ -442,6 +654,13 @@
       : '<div class="metric-row"><span>No data loaded</span><strong>-</strong></div>';
   }
 
+
+  function formatWarehouseLocation(warehouse) {
+    const cityLine = [warehouse.postalCode, warehouse.city].filter(Boolean).join(' ');
+    const parts = [warehouse.address, cityLine, warehouse.country].filter(Boolean);
+    return parts.length ? parts.join(', ') : '-';
+  }
+
   function editWarehouse(id) {
     const warehouse = state.warehouses.find((item) => item.id === id);
     if (!warehouse) return;
@@ -452,6 +671,7 @@
       'code',
       'type',
       'city',
+      'postalCode',
       'country',
       'priority',
       'address',
@@ -470,6 +690,7 @@
     if (!window.confirm(`Delete warehouse ${warehouse?.name || id}?`)) return;
     await request(`warehouses/${encodeURIComponent(id)}`, { method: 'DELETE' });
     await loadWarehouses();
+    await loadInventoryTopology();
     showMessage('Warehouse deleted.');
   }
 
@@ -537,10 +758,12 @@
 
   function setEmptyRows() {
     $('#warehousesTable').innerHTML = emptyRow(7);
+    $('#topologyTable').innerHTML = emptyRow(8);
     $('#stockTable').innerHTML = emptyRow(7);
     $('#reservationsTable').innerHTML = emptyRow(7);
     $('#movementsTable').innerHTML = emptyRow(9);
     $('#supplierResultTable').innerHTML = emptyRow(9);
+    renderMetrics('#topologySummary', []);
   }
 
   function emptyRow(colspan) {
