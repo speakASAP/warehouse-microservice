@@ -271,6 +271,7 @@ export class WarehousesService {
       reserved: warehouse.totalReserved,
       available: warehouse.totalAvailable,
       ...route,
+      canReserveFromWarehouse: route.canReserveFromWarehouse && warehouse.totalAvailable > 0,
     };
   }
 

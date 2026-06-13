@@ -224,6 +224,34 @@ describe('WarehousesService inventory topology', () => {
   });
 
 
+  it('keeps reserved-only supplier routes visible but not reservable', async () => {
+    const { service } = createService([
+      { id: 'warehouse-supplier', code: 'SUP-BETA', name: 'Beta Supplier Warehouse', type: 'supplier', priority: 10, supplierId: 'supplier-beta' },
+    ], [
+      { productId: 'product-1', warehouseId: 'warehouse-supplier', quantity: 4, reserved: 4, available: 0 },
+    ]);
+
+    const plan = await service.getProductLogistics('product-1');
+
+    expect(plan.totals).toMatchObject({
+      totalQuantity: 4,
+      totalReserved: 4,
+      totalAvailable: 0,
+      routeCount: 1,
+      supplierAvailable: 0,
+    });
+    expect(plan.options[0]).toEqual(expect.objectContaining({
+      routeType: 'supplier_replenishment',
+      available: 0,
+      canReserveFromWarehouse: false,
+      requiresSupplierCoordination: true,
+      legs: [
+        { sequence: 1, from: 'SUP-BETA', to: 'alfares_receiving_or_handoff', responsibility: 'supplier' },
+        { sequence: 2, from: 'alfares_receiving_or_handoff', to: 'customer', responsibility: 'warehouse' },
+      ],
+    }));
+  });
+
   it('returns batch product logistics in request order', async () => {
     const { service } = createService([
       { id: 'warehouse-own', code: 'OWN-PRG', name: 'Prague Main Warehouse', type: 'own', priority: 20 },
