@@ -27,7 +27,7 @@ Rules:
 - `quantity` is the supplier's absolute available-to-sell quantity for that product/location.
 - `externalReference` is required and idempotent per `supplierId`, `warehouseId`, and `productId`.
 - `warehouseId` must point to an active warehouse modeled as `supplier` or `dropship`.
-- If the warehouse has `supplierId`, it must match the request supplier.
+- Supplier-managed warehouses must have a Warehouse-owned `supplierId`, and it must match the request supplier.
 
 ## Response
 

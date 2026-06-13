@@ -62,7 +62,11 @@ export class SupplierReconciliationService {
         throw new BadRequestException(`Warehouse ${body.warehouseId} is not a supplier dropship location`);
       }
 
-      if (warehouse.supplierId && warehouse.supplierId !== body.supplierId) {
+      if (!warehouse.supplierId) {
+        throw new BadRequestException(`Warehouse ${body.warehouseId} is supplier-managed but is not linked to a supplier`);
+      }
+
+      if (warehouse.supplierId !== body.supplierId) {
         throw new BadRequestException(`Warehouse ${body.warehouseId} belongs to supplier ${warehouse.supplierId}`);
       }
 

@@ -177,6 +177,35 @@ describe('SupplierReconciliationService', () => {
     expect(reconciliation.status).toBe('conflict');
   });
 
+
+  it('rejects supplier-managed warehouses that are not linked to a supplier', async () => {
+    const { service, stockRepository } = createService({
+      warehouse: {
+        id: 'warehouse-1',
+        type: 'supplier',
+        supplierId: null,
+      },
+    });
+
+    await expect(service.reconcile(request)).rejects.toThrow('is supplier-managed but is not linked to a supplier');
+
+    expect(stockRepository.save).not.toHaveBeenCalled();
+  });
+
+  it('rejects supplier reconciliation when the warehouse belongs to another supplier', async () => {
+    const { service, stockRepository } = createService({
+      warehouse: {
+        id: 'warehouse-1',
+        type: 'dropship',
+        supplierId: 'supplier-2',
+      },
+    });
+
+    await expect(service.reconcile(request)).rejects.toThrow('belongs to supplier supplier-2');
+
+    expect(stockRepository.save).not.toHaveBeenCalled();
+  });
+
   it('rejects reconciliation into an own warehouse', async () => {
     const { service, stockRepository } = createService({
       warehouse: {
