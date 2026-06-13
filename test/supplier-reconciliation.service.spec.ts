@@ -133,7 +133,7 @@ describe('SupplierReconciliationService', () => {
     expect(reconciliation.status).toBe('applied');
   });
 
-  it('returns the existing reconciliation when a supplier reference is replayed', async () => {
+  it('returns the existing reconciliation when a supplier reference is replayed after validating warehouse ownership', async () => {
     const existingReconciliation = {
       supplierId: 'supplier-1',
       warehouseId: 'warehouse-1',
@@ -146,6 +146,30 @@ describe('SupplierReconciliationService', () => {
     const reconciliation = await service.reconcile(request);
 
     expect(reconciliation).toBe(existingReconciliation);
+    expect(stockRepository.save).not.toHaveBeenCalled();
+    expect(movementRepository.save).not.toHaveBeenCalled();
+    expect(reconciliationRepository.save).not.toHaveBeenCalled();
+  });
+
+  it('rejects replayed reconciliation when the warehouse is no longer linked to the request supplier', async () => {
+    const existingReconciliation = {
+      supplierId: 'supplier-1',
+      warehouseId: 'warehouse-1',
+      productId: 'product-1',
+      externalReference: 'feed-123',
+      status: 'applied' as const,
+    };
+    const { service, stockRepository, movementRepository, reconciliationRepository } = createService({
+      existingReconciliation,
+      warehouse: {
+        id: 'warehouse-1',
+        type: 'dropship',
+        supplierId: 'supplier-2',
+      },
+    });
+
+    await expect(service.reconcile(request)).rejects.toThrow('belongs to supplier supplier-2');
+
     expect(stockRepository.save).not.toHaveBeenCalled();
     expect(movementRepository.save).not.toHaveBeenCalled();
     expect(reconciliationRepository.save).not.toHaveBeenCalled();

@@ -36,20 +36,6 @@ export class SupplierReconciliationService {
     try {
       const result = await this.dataSource.transaction(async (manager) => {
       const reconciliationRepository = manager.getRepository(SupplierStockReconciliation);
-      const existing = await reconciliationRepository.findOne({
-        where: {
-          supplierId: body.supplierId,
-          warehouseId: body.warehouseId,
-          productId: body.productId,
-          externalReference: body.externalReference,
-        },
-        lock: { mode: 'pessimistic_write' },
-      });
-
-      if (existing) {
-        return { reconciliation: existing, stock: null as Stock | null };
-      }
-
       const warehouse = await manager.getRepository(Warehouse).findOne({
         where: { id: body.warehouseId },
         lock: { mode: 'pessimistic_read' },
@@ -68,6 +54,20 @@ export class SupplierReconciliationService {
 
       if (warehouse.supplierId !== body.supplierId) {
         throw new BadRequestException(`Warehouse ${body.warehouseId} belongs to supplier ${warehouse.supplierId}`);
+      }
+
+      const existing = await reconciliationRepository.findOne({
+        where: {
+          supplierId: body.supplierId,
+          warehouseId: body.warehouseId,
+          productId: body.productId,
+          externalReference: body.externalReference,
+        },
+        lock: { mode: 'pessimistic_write' },
+      });
+
+      if (existing) {
+        return { reconciliation: existing, stock: null as Stock | null };
       }
 
       const stockRepository = manager.getRepository(Stock);
