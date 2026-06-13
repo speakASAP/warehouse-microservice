@@ -621,11 +621,13 @@ export class StockService {
   }
 
   private async findStockForUpdate(manager: EntityManager, productId: string, warehouseId: string): Promise<Stock | null> {
-    return manager.getRepository(Stock).findOne({
-      where: { productId, warehouseId },
-      relations: ['warehouse'],
-      lock: { mode: 'pessimistic_write' },
-    });
+    return manager.getRepository(Stock)
+      .createQueryBuilder("stock")
+      .leftJoinAndSelect("stock.warehouse", "warehouse")
+      .where("stock.productId = :productId", { productId })
+      .andWhere("stock.warehouseId = :warehouseId", { warehouseId })
+      .setLock("pessimistic_write", undefined, ["stock"])
+      .getOne();
   }
 
   private async findStockForUpdateOrThrow(manager: EntityManager, productId: string, warehouseId: string): Promise<Stock> {

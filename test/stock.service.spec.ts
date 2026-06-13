@@ -11,10 +11,18 @@ describe('StockService mutation invariants', () => {
   };
 
   function createService(existingStock?: Partial<Stock>, reservations: Partial<StockReservation>[] = []) {
+    const stockQueryBuilder = {
+      leftJoinAndSelect: jest.fn().mockReturnThis(),
+      where: jest.fn().mockReturnThis(),
+      andWhere: jest.fn().mockReturnThis(),
+      setLock: jest.fn().mockReturnThis(),
+      getOne: jest.fn().mockResolvedValue(existingStock ?? null),
+    };
+
     const stockRepository = {
       find: jest.fn(),
       findOne: jest.fn().mockResolvedValue(existingStock ?? null),
-      createQueryBuilder: jest.fn(),
+      createQueryBuilder: jest.fn().mockReturnValue(stockQueryBuilder),
       create: jest.fn((data) => data),
       save: jest.fn(async (stock) => stock),
     };
@@ -77,6 +85,7 @@ describe('StockService mutation invariants', () => {
     return {
       service: new StockService(stockRepository as any, dataSource as any, stockEvents as any, logger as any, operationalMetrics as any),
       stockRepository,
+      stockQueryBuilder,
       movementRepository,
       reservationRepository,
       dataSource,
@@ -193,7 +202,7 @@ describe('StockService mutation invariants', () => {
   });
 
   it('locks the stock row and writes stock plus movement in the same transaction', async () => {
-    const { service, stockRepository, movementRepository, dataSource, stockEvents } = createService({
+    const { service, stockRepository, stockQueryBuilder, movementRepository, dataSource, stockEvents } = createService({
       productId: 'product-1',
       warehouseId: 'warehouse-1',
       quantity: 10,
@@ -205,11 +214,12 @@ describe('StockService mutation invariants', () => {
     await service.decrementStock('product-1', 'warehouse-1', 4, context);
 
     expect(dataSource.transaction).toHaveBeenCalledTimes(1);
-    expect(stockRepository.findOne).toHaveBeenCalledWith({
-      where: { productId: 'product-1', warehouseId: 'warehouse-1' },
-      relations: ['warehouse'],
-      lock: { mode: 'pessimistic_write' },
-    });
+    expect(stockRepository.createQueryBuilder).toHaveBeenCalledWith('stock');
+    expect(stockQueryBuilder.leftJoinAndSelect).toHaveBeenCalledWith('stock.warehouse', 'warehouse');
+    expect(stockQueryBuilder.where).toHaveBeenCalledWith('stock.productId = :productId', { productId: 'product-1' });
+    expect(stockQueryBuilder.andWhere).toHaveBeenCalledWith('stock.warehouseId = :warehouseId', { warehouseId: 'warehouse-1' });
+    expect(stockQueryBuilder.setLock).toHaveBeenCalledWith('pessimistic_write', undefined, ['stock']);
+    expect(stockQueryBuilder.getOne).toHaveBeenCalled();
     expect(stockRepository.save).toHaveBeenCalledWith(
       expect.objectContaining({
         quantity: 6,
