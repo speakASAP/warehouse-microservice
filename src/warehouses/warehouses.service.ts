@@ -286,19 +286,21 @@ export class WarehousesService {
       };
     }
     if (warehouse.originType === 'dropship') {
+      const hasSupplierLink = Boolean(warehouse.supplierId);
       return {
         routeType: 'supplier_dropship',
-        routeLabel: 'Supplier or dropship warehouse ships directly to customer',
-        canReserveFromWarehouse: true,
+        routeLabel: hasSupplierLink ? 'Supplier or dropship warehouse ships directly to customer' : 'Supplier dropship warehouse is missing supplier linkage',
+        canReserveFromWarehouse: hasSupplierLink,
         requiresSupplierCoordination: true,
         legs: [{ sequence: 1, from: warehouse.warehouseCode, to: 'customer', responsibility: 'supplier' }],
       };
     }
     if (warehouse.originType === 'supplier') {
+      const hasSupplierLink = Boolean(warehouse.supplierId);
       return {
         routeType: 'supplier_replenishment',
-        routeLabel: 'Supplier warehouse replenishes Alfares flow before customer fulfillment',
-        canReserveFromWarehouse: true,
+        routeLabel: hasSupplierLink ? 'Supplier warehouse replenishes Alfares flow before customer fulfillment' : 'Supplier warehouse is missing supplier linkage',
+        canReserveFromWarehouse: hasSupplierLink,
         requiresSupplierCoordination: true,
         legs: [
           { sequence: 1, from: warehouse.warehouseCode, to: 'alfares_receiving_or_handoff', responsibility: 'supplier' },

@@ -252,6 +252,42 @@ describe('WarehousesService inventory topology', () => {
     }));
   });
 
+  it('keeps supplier-managed routes without supplier linkage visible but not reservable', async () => {
+    const { service } = createService([
+      { id: 'warehouse-supplier', code: 'SUP-MISSING', name: 'Unlinked Supplier Warehouse', type: 'supplier', priority: 10, supplierId: null },
+      { id: 'warehouse-dropship', code: 'DROP-MISSING', name: 'Unlinked Dropship Warehouse', type: 'dropship', priority: 8, supplierId: null },
+    ], [
+      { productId: 'product-1', warehouseId: 'warehouse-supplier', quantity: 5, reserved: 1, available: 4 },
+      { productId: 'product-1', warehouseId: 'warehouse-dropship', quantity: 3, reserved: 0, available: 3 },
+    ]);
+
+    const plan = await service.getProductLogistics('product-1');
+
+    expect(plan.options).toEqual([
+      expect.objectContaining({
+        warehouseId: 'warehouse-supplier',
+        routeType: 'supplier_replenishment',
+        supplierId: null,
+        available: 4,
+        canReserveFromWarehouse: false,
+        requiresSupplierCoordination: true,
+        legs: [
+          { sequence: 1, from: 'SUP-MISSING', to: 'alfares_receiving_or_handoff', responsibility: 'supplier' },
+          { sequence: 2, from: 'alfares_receiving_or_handoff', to: 'customer', responsibility: 'warehouse' },
+        ],
+      }),
+      expect.objectContaining({
+        warehouseId: 'warehouse-dropship',
+        routeType: 'supplier_dropship',
+        supplierId: null,
+        available: 3,
+        canReserveFromWarehouse: false,
+        requiresSupplierCoordination: true,
+        legs: [{ sequence: 1, from: 'DROP-MISSING', to: 'customer', responsibility: 'supplier' }],
+      }),
+    ]);
+  });
+
   it('returns batch product logistics in request order', async () => {
     const { service } = createService([
       { id: 'warehouse-own', code: 'OWN-PRG', name: 'Prague Main Warehouse', type: 'own', priority: 20 },
