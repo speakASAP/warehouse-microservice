@@ -443,6 +443,7 @@ export class StockService {
 
       const stockRepository = manager.getRepository(Stock);
       const stock = await this.findStockForUpdateOrThrow(manager, productId, warehouseId);
+      this.assertReservableWarehouseOrigin(stock);
       const quantity = reservation.quantity;
 
       if (stock.reserved < quantity || stock.quantity < quantity) {

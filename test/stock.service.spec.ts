@@ -349,6 +349,37 @@ describe('StockService mutation invariants', () => {
     }));
   });
 
+  it('rejects fulfillment from supplier-managed stock without supplier linkage', async () => {
+    const reservation: Partial<StockReservation> = {
+      productId: 'product-1',
+      warehouseId: 'warehouse-supplier',
+      orderId: 'order-1',
+      channel: 'flipflop',
+      quantity: 3,
+      status: 'active',
+    };
+    const { service, stockRepository, reservationRepository, movementRepository } = createService({
+      productId: 'product-1',
+      warehouseId: 'warehouse-supplier',
+      quantity: 10,
+      reserved: 3,
+      available: 7,
+      lowStockThreshold: 5,
+      warehouse: {
+        id: 'warehouse-supplier',
+        type: 'supplier',
+        supplierId: null,
+      },
+    } as any, [reservation]);
+
+    await expect(service.fulfillReservation('product-1', 'warehouse-supplier', 'order-1', context, 'flipflop'))
+      .rejects.toThrow('is supplier-managed but is not linked to a supplier');
+
+    expect(stockRepository.save).not.toHaveBeenCalled();
+    expect(reservationRepository.save).not.toHaveBeenCalled();
+    expect(movementRepository.save).not.toHaveBeenCalled();
+  });
+
   it('deducts stock and clears the hold on payment success', async () => {
     const reservation: Partial<StockReservation> = {
       productId: 'product-1',

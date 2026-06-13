@@ -1,5 +1,13 @@
 # Warehouse Orchestrator Status
 
+## 2026-06-13 - Fulfillment Supplier Linkage Gate
+
+Change: tightened Warehouse fulfillment so a legacy active reservation cannot be fulfilled from supplier-managed stock when the Warehouse origin metadata is missing supplier linkage. Reservation release, expiry, cancellation, and return remain available for cleanup, but completed order fulfillment now requires traceable supplier ownership.
+
+Validation evidence: npm test -- --runInBand test/stock.service.spec.ts test/warehouses.service.spec.ts passed, npm run build passed, and git diff --check passed. Added focused coverage proving fulfillment from supplier-managed stock without supplier linkage rejects before saving stock, reservation, or movement rows.
+
+Boundary decision: no deployment, runtime token inspection, live fixture creation, production supplier import, Warehouse stock mutation, or cleanup mutation was performed. Current-head runtime completion remains unproven until owner-approved guarded runtime evidence regeneration.
+
 ## 2026-06-13 - Reservation Supplier Linkage Gate
 
 Change: tightened Warehouse checkout reservation behavior so supplier-managed stock rows cannot be reserved when their Warehouse origin metadata shows missing supplier linkage. This aligns the stock mutation path with the logistics canReserveFromWarehouse contract and keeps unlinked supplier or dropship stock visible only as diagnostics.

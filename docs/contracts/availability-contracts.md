@@ -136,7 +136,7 @@ Response shape:
 - productId: normalized Catalog product identifier.
 - totals: totalQuantity, totalReserved, totalAvailable, routeCount, ownAvailable, supplierAvailable, dropshipAvailable.
 - preferredRoute: first reservable route after Warehouse allocation ordering, or null when every visible route is diagnostic-only. Local fulfillment is preferred before supplier replenishment and dropship when it has positive available stock.
-- options: per-origin route options containing warehouse identity, originType, supplierId, quantity/reserved/available, routeType, routeLabel, canReserveFromWarehouse, requiresSupplierCoordination, and logistics legs. Supplier and dropship options remain visible for diagnostics when supplierId is missing, but they are not reservable until the Warehouse-owned supplier linkage is present. Checkout reservation also rejects supplier-managed stock rows with missing supplier linkage, so the mutation path matches logistics reservability.
+- options: per-origin route options containing warehouse identity, originType, supplierId, quantity/reserved/available, routeType, routeLabel, canReserveFromWarehouse, requiresSupplierCoordination, and logistics legs. Supplier and dropship options remain visible for diagnostics when supplierId is missing, but they are not reservable until the Warehouse-owned supplier linkage is present. Checkout reservation and fulfillment also reject supplier-managed stock rows with missing supplier linkage, so the mutation path matches logistics reservability while still allowing release, expiry, cancellation, and return flows to clean up legacy holds.
 
 Route types:
 
