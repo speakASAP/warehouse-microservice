@@ -314,6 +314,8 @@ export class StockService {
         throw new NotFoundException(`Stock not found for product ${productId} in warehouse ${warehouseId}`);
       }
 
+      this.assertReservableWarehouseOrigin(stock);
+
       const reservationRepository = manager.getRepository(StockReservation);
       let reservation = await this.findReservationForUpdate(manager, {
         productId,
@@ -620,6 +622,7 @@ export class StockService {
   private async findStockForUpdate(manager: EntityManager, productId: string, warehouseId: string): Promise<Stock | null> {
     return manager.getRepository(Stock).findOne({
       where: { productId, warehouseId },
+      relations: ['warehouse'],
       lock: { mode: 'pessimistic_write' },
     });
   }
@@ -718,6 +721,13 @@ export class StockService {
     });
 
     return [...new Set(normalized)];
+  }
+
+  private assertReservableWarehouseOrigin(stock: Stock): void {
+    const warehouseType = stock.warehouse?.type;
+    if ((warehouseType === 'supplier' || warehouseType === 'dropship') && !stock.warehouse?.supplierId) {
+      throw new BadRequestException(`Warehouse ${stock.warehouseId} is supplier-managed but is not linked to a supplier`);
+    }
   }
 
   private assertValidStockState(stock: Stock): void {

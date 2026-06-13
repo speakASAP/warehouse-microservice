@@ -207,6 +207,7 @@ describe('StockService mutation invariants', () => {
     expect(dataSource.transaction).toHaveBeenCalledTimes(1);
     expect(stockRepository.findOne).toHaveBeenCalledWith({
       where: { productId: 'product-1', warehouseId: 'warehouse-1' },
+      relations: ['warehouse'],
       lock: { mode: 'pessimistic_write' },
     });
     expect(stockRepository.save).toHaveBeenCalledWith(
@@ -261,6 +262,31 @@ describe('StockService mutation invariants', () => {
       quantity: 3,
       reference: 'order-1',
     }));
+  });
+
+  it('rejects reservation from supplier-managed stock without supplier linkage', async () => {
+    const { service, stockRepository, reservationRepository, movementRepository } = createService({
+      productId: 'product-1',
+      warehouseId: 'warehouse-supplier',
+      quantity: 10,
+      reserved: 0,
+      available: 10,
+      lowStockThreshold: 5,
+      warehouse: {
+        id: 'warehouse-supplier',
+        type: 'supplier',
+        supplierId: null,
+      },
+    } as any);
+
+    await expect(service.reserveStock('product-1', 'warehouse-supplier', 3, 'order-1', context, {
+      channel: 'flipflop',
+      expiresAt: '2026-06-12T10:00:00.000Z',
+    })).rejects.toThrow('is supplier-managed but is not linked to a supplier');
+
+    expect(stockRepository.save).not.toHaveBeenCalled();
+    expect(reservationRepository.save).not.toHaveBeenCalled();
+    expect(movementRepository.save).not.toHaveBeenCalled();
   });
 
   it('does not double-count reserved stock when a reservation webhook is replayed', async () => {
