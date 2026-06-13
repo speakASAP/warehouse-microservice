@@ -127,6 +127,7 @@ Request:
 { "productIds": ["catalog-product-id"] }
 ```
 
+Batch logistics requests require a non-empty `productIds` array, accept at most 200 product IDs per call, and require each product ID to be a non-empty string of at most 200 characters. The endpoint preserves request order and rejects duplicate product IDs so Catalog can map route plans back to requested goods without ambiguity.
 
 The productId path parameter is the Catalog-owned product identifier stored on Warehouse stock rows.
 
