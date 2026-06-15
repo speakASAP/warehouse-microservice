@@ -9,6 +9,7 @@ Current state:
 - Owner-approved parallel wave WH-G10-CATALOG, WH-G11-OUTBOX, WH-G12, WH-G13-CONFLICTS, and WH-G14-AUTH has been collected, committed, and deployed.
 - Source validation passed before deploy on 2026-06-15: `git diff --check`, `npm test -- --runInBand` (8 suites / 50 tests), and `npm run build`.
 - Deployment passed on 2026-06-15 with image `localhost:5000/warehouse-microservice:fab5bee`.
+- Natural scheduled reservation-expiry CronJob monitoring passed on 2026-06-15: last three scheduled jobs completed with `success:true`, `examined=0`, `expired=0`, and `failed=0`.
 - Process debt: WH-G13 supplier-conflict operations code existed without dedicated IPS artifacts; artifacts were added during collection on 2026-06-14.
 - Numbering debt: the repository already has completed historical WH-G10 through WH-G15 goals, so the new approved parallel wave uses suffixed IDs where needed to avoid overwriting completed evidence.
 
@@ -22,8 +23,7 @@ Deployment evidence:
 
 What is left from the current plan:
 
-1. Monitor scheduled reservation-expiry CronJob history after the next natural schedule.
-2. Define the next owner-approved source goal with full IPS artifacts before coding.
+1. Define the next owner-approved source goal with full IPS artifacts before coding.
 
 Next command:
 

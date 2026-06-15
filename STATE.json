@@ -3,12 +3,12 @@
   "project": "warehouse-microservice",
   "stage": "production",
   "health": "ok",
-  "cycle": 18,
-  "last_cycle_at": "2026-06-15T05:23:00Z",
+  "cycle": 19,
+  "last_cycle_at": "2026-06-15T10:20:00Z",
   "tasks_active": 0,
   "tasks_failed_last_cycle": 0,
   "open_task_ids": [],
-  "last_milestone": "Integrated WH-G10+ parallel wave deployed successfully",
+  "last_milestone": "Integrated WH-G10+ wave deployed and scheduled reservation-expiry CronJob monitoring passed",
   "next_focus": "Define next owner-approved source goal",
   "blockers": [],
   "budget_units_used": 0,
@@ -89,9 +89,12 @@
       "next_orchestrator_command": "define next goal",
       "wh_g10_plus_deployed": "true",
       "wh_g10_plus_deployment_validation": "health_ready_admin_cronjob_smoke_passed",
-      "reservation_expiry_cronjob": "enabled_and_manual_smoke_passed",
+      "reservation_expiry_cronjob": "enabled_manual_and_scheduled_smoke_passed",
       "stock_event_outbox_migration": "applied",
-      "supplier_conflict_review_migration": "applied"
+      "supplier_conflict_review_migration": "applied",
+      "reservation_expiry_cronjob_scheduled_jobs": "warehouse-reservation-expiry-29691965,warehouse-reservation-expiry-29691970,warehouse-reservation-expiry-29691975",
+      "reservation_expiry_cronjob_scheduled_validation": "success_true_examined_0_expired_0_failed_0",
+      "final_validation_2026_06_15": "git_diff_check_passed_full_jest_50_passed_build_passed"
     }
   }
 }

@@ -60,3 +60,5 @@
 - [x] 2026-06-14 WH-G14-AUTH-T1 Collected authenticated actor enforcement worker output; combined validation passed with full Jest, build, and diff check.
 
 - [x] 2026-06-15 WH-G10+ integrated wave deployed from commit fab5bee; production health, readiness, admin, and manual reservation-expiry CronJob smoke passed.
+
+- [x] 2026-06-15 WH-G12-CRON-MONITOR Natural reservation-expiry CronJob monitoring passed for three scheduled jobs; each completed with `success:true`, `expired=0`, and `failed=0`.

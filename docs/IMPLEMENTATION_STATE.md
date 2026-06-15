@@ -90,6 +90,7 @@ Changed files:
 Append newest entries at the top.
 
 ```text
+2026-06-15: Natural reservation-expiry CronJob monitoring passed. Scheduled jobs `warehouse-reservation-expiry-29691965`, `warehouse-reservation-expiry-29691970`, and `warehouse-reservation-expiry-29691975` completed successfully; each returned `success:true`, `examined=0`, `expired=0`, and `failed=0`. Final source validation also passed: `git diff --check`, `npm test -- --runInBand` (8 suites / 50 tests), and `npm run build`.
 2026-06-13: WH-G15 completed in source. Added batch product logistics contract for Catalog/channel consumers. Verification passed: npm test -- --runInBand, npm run build, and git diff --check. No production deployment performed.
 2026-06-13: WH-G14 completed in source. Added product logistics route read model for local fulfillment, supplier replenishment, and supplier dropship/direct routes. Verification passed: npm test -- --runInBand, npm run build, and git diff --check. No production deployment performed.
 2026-06-13: WH-G13 completed in source. Added admin console inventory topology visibility with optional productId filtering. Verification passed: node --check public/admin/app.js, npm run build, and git diff --check. No production deployment performed.
@@ -142,7 +143,7 @@ Next command:
 
 ## Next Action
 
-Warehouse source goals are complete through the historical WH-G15 sequence, and the newer owner-approved WH-G10+ parallel wave is deployed. Await owner approval for a new source-only goal:
+Warehouse source goals are complete through the historical WH-G15 sequence, the newer owner-approved WH-G10+ parallel wave is deployed, and scheduled reservation-expiry CronJob monitoring passed. Await owner approval for a new source-only goal:
 
 ```text
 WAREHOUSE ORCHESTRATOR: define next goal
