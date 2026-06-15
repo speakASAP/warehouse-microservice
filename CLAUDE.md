@@ -1,3 +1,18 @@
+# Claude Instructions
+
+Shared rules live here:
+
+- Claude profile: `/home/ssf/.claude/CLAUDE.md`
+- Shared ecosystem instructions: `/home/ssf/Documents/Github/CLAUDE.md`
+- Codex profile: `/home/ssf/.codex/AGENTS.md`
+- Cross-agent standard: `/home/ssf/.ai-agent-standards/CROSS_AGENT_AUTOMATION_STANDARD.md`
+- Repository operations: `AGENT_OPERATIONS.md`
+
+Read those first, then follow the repository-specific notes below and the current planning/status files.
+
+
+## Repository-Specific Notes
+
 # CLAUDE.md (warehouse-microservice)
 
 → Ecosystem: [../shared/CLAUDE.md](../shared/CLAUDE.md) | Reading order: `BUSINESS.md` → `SYSTEM.md` → `AGENTS.md` → `TASKS.md` → `STATE.json`
@@ -36,7 +51,3 @@ kubectl -n statex-apps exec deployment/warehouse-microservice -- curl -s -X POST
 flipflop-service, allegro-service, aukro-service, bazos-service, heureka-service.
 
 **Ops**: `curl http://warehouse-microservice:3201/health` · `kubectl logs -n statex-apps -l app=warehouse-microservice -f` · `./scripts/deploy.sh`
-
-## Central Instruction Source
-
-Shared agent rules now live in `/home/ssf/.claude/CLAUDE.md`, `/home/ssf/Documents/Github/CLAUDE.md`, `/home/ssf/.codex/AGENTS.md`, and `/home/ssf/.ai-agent-standards/CROSS_AGENT_AUTOMATION_STANDARD.md`. Keep this file for repository-specific Claude constraints only; do not duplicate shared operating rules here.
