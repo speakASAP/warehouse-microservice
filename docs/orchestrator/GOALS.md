@@ -29,15 +29,15 @@ The repository also contains completed source goals WH-G10 through WH-G15 in `do
 
 ## Owner-Approved Parallel Wave Collected 2026-06-14
 
-Owner approved the following candidate goals for parallel start on 2026-06-13. The worker outputs are now present in the remote working tree and have passed combined source validation. Deployment remains blocked until explicit approval.
+Owner approved the following candidate goals for parallel start on 2026-06-13. The worker outputs are committed and deployed in image `localhost:5000/warehouse-microservice:fab5bee`.
 
 | Goal | Status | Evidence | Notes |
 | --- | --- | --- | --- |
-| WH-G10-CATALOG - Catalog identity validation | source-integrated | `docs/intent-preservation/validation-reports/VAL-WH-G10-CATALOG.md` | Read-only reconciliation endpoint/report. |
-| WH-G11-OUTBOX - Transactional stock event outbox | source-integrated | `docs/intent-preservation/validation-reports/VAL-WH-G11-OUTBOX.md` | Requires migration before deployment. |
-| WH-G12 - Automatic reservation expiry | source-integrated | `docs/intent-preservation/validation-reports/VAL-WH-G12.md` | Adds protected batch endpoint and Kubernetes CronJob. |
-| WH-G13-CONFLICTS - Supplier conflict operations | source-integrated | `docs/intent-preservation/validation-reports/VAL-WH-G13-CONFLICTS.md` | Added during collection because prior WH-G13 artifacts described older admin topology work. |
-| WH-G14-AUTH - Authenticated actor enforcement | source-integrated | `docs/intent-preservation/validation-reports/VAL-WH-G14-AUTH.md` | Uses suffixed ID to avoid overwriting completed WH-G14 product-logistics evidence. |
+| WH-G10-CATALOG - Catalog identity validation | deployed | `docs/intent-preservation/validation-reports/VAL-WH-G10-CATALOG.md` | Read-only reconciliation endpoint/report. |
+| WH-G11-OUTBOX - Transactional stock event outbox | deployed | `docs/intent-preservation/validation-reports/VAL-WH-G11-OUTBOX.md` | Requires migration before deployment. |
+| WH-G12 - Automatic reservation expiry | deployed | `docs/intent-preservation/validation-reports/VAL-WH-G12.md` | Adds protected batch endpoint and Kubernetes CronJob. |
+| WH-G13-CONFLICTS - Supplier conflict operations | deployed | `docs/intent-preservation/validation-reports/VAL-WH-G13-CONFLICTS.md` | Added during collection because prior WH-G13 artifacts described older admin topology work. |
+| WH-G14-AUTH - Authenticated actor enforcement | deployed | `docs/intent-preservation/validation-reports/VAL-WH-G14-AUTH.md` | Uses suffixed ID to avoid overwriting completed WH-G14 product-logistics evidence. |
 
 ## Current Integration Validation
 
@@ -58,7 +58,4 @@ Every new goal file must include blockers, dependencies, write ownership, valida
 
 ## Next Goal Processing Rule
 
-Next coding is blocked until either:
-
-- the integrated WH-G10+ wave is committed and the owner approves deployment; or
-- the owner approves a new source-only goal and the IPS pre-coding gate is completed before edits.
+Next coding is blocked until the owner approves a new source-only goal and the IPS pre-coding gate is completed before edits.

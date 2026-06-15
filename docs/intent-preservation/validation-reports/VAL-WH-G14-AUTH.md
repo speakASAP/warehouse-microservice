@@ -2,7 +2,7 @@
 
 Metadata:
 - id: VAL-WH-G14-AUTH
-- status: passed
+- status: deployed
 - goal_id: WH-G14-AUTH
 - task_ids: WH-G14-AUTH-T1
 - created: 2026-06-13
@@ -28,3 +28,11 @@ WH-G14-AUTH passed source validation. Warehouse mutation controllers now derive 
 - [UNKNOWN: final ecosystem service-JWT claim name] Auth docs do not define a standardized service identity JWT claim. The helper supports serviceName, service, and clientId when present, and otherwise falls back to Auth subject identity.
 - [MISSING: orchestrator numbering reconciliation] Delegation called this WH-G14, but remote WH-G14 is already completed product-logistics history. This validation report uses WH-G14-AUTH to avoid overwriting completed evidence.
 - The remote worktree contains unrelated uncommitted parallel-worker changes. Validation ran against the combined source state.
+
+
+## Deployment Evidence
+
+- Deployed on 2026-06-15 as part of integrated WH-G10+ wave.
+- Commit: `fab5bee`.
+- Image: `localhost:5000/warehouse-microservice:fab5bee`.
+- Validation: deployment script completed successfully; production `/api/health`, `/api/ready`, `/admin`, and manual reservation-expiry CronJob smoke passed.

@@ -2,7 +2,7 @@
 
 ```yaml
 id: VAL-WH-G10-CATALOG
-status: passed-with-unrelated-suite-failure
+status: deployed-with-unrelated-suite-failure
 goal_id: WH-G10-CATALOG-IDENTITY-VALIDATION
 task_ids:
   - WH-G10-CATALOG-T1
@@ -54,3 +54,11 @@ Result: pass-with-documented-risk. Live mutation-time validation remains blocked
 ## Result
 
 WH-G10-CATALOG source validation passed for the new reconciliation report. Full-suite closure is blocked by an unrelated concurrent outbox test failure outside this task's write ownership.
+
+
+## Deployment Evidence
+
+- Deployed on 2026-06-15 as part of integrated WH-G10+ wave.
+- Commit: `fab5bee`.
+- Image: `localhost:5000/warehouse-microservice:fab5bee`.
+- Validation: deployment script completed successfully; production `/api/health`, `/api/ready`, `/admin`, and manual reservation-expiry CronJob smoke passed.

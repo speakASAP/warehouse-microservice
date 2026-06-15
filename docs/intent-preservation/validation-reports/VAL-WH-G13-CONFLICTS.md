@@ -2,7 +2,7 @@
 
 Metadata:
 - id: VAL-WH-G13-CONFLICTS
-- status: passed-no-deploy
+- status: deployed
 - goal_id: WH-G13-CONFLICTS
 - task_ids:
   - WH-G13-CONFLICTS-T1
@@ -46,3 +46,11 @@ WH-G13-CONFLICTS is source-integrated and validated in the combined remote worki
 - Deployment requires explicit owner approval.
 - Migration `1781400000000-AddSupplierConflictReviewMetadata.ts` must be included in the deployment migration run before the new review fields are used in production.
 - The original worker did not leave dedicated WH-G13-CONFLICTS IPS artifacts; these were reconstructed by the orchestrator from source diff and validation evidence.
+
+
+## Deployment Evidence
+
+- Deployed on 2026-06-15 as part of integrated WH-G10+ wave.
+- Commit: `fab5bee`.
+- Image: `localhost:5000/warehouse-microservice:fab5bee`.
+- Validation: deployment script completed successfully; production `/api/health`, `/api/ready`, `/admin`, and manual reservation-expiry CronJob smoke passed.

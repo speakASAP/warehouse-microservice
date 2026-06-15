@@ -2,7 +2,7 @@
 
 Metadata:
 - id: VAL-WH-G12
-- status: implemented-with-integration-risk
+- status: deployed
 - goal_id: WH-G12
 - task_ids: WH-G12-T1
 - created: 2026-06-13
@@ -43,3 +43,11 @@ Full-suite validation is currently blocked by other concurrent worker changes in
 ## Deployment
 
 Not approved and not performed.
+
+
+## Deployment Evidence
+
+- Deployed on 2026-06-15 as part of integrated WH-G10+ wave.
+- Commit: `fab5bee`.
+- Image: `localhost:5000/warehouse-microservice:fab5bee`.
+- Validation: deployment script completed successfully; production `/api/health`, `/api/ready`, `/admin`, and manual reservation-expiry CronJob smoke passed.

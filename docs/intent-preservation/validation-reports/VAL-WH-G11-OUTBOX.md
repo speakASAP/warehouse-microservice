@@ -2,7 +2,7 @@
 
 Metadata:
 - id: VAL-WH-G11-OUTBOX
-- status: passed-no-deploy
+- status: deployed
 - goal_id: WH-G11-OUTBOX
 - task_ids: WH-G11-OUTBOX-T1
 - created: 2026-06-13
@@ -29,3 +29,11 @@ Not approved. Migration execution and production deploy were not run.
 - `stock_event_outbox` migration must be run before deploying this code to production.
 - Published-row retention cleanup is documented but not implemented; owner must approve a retention window and cleanup mechanism.
 - RabbitMQ delivery is at-least-once; consumers should deduplicate by `eventId` / AMQP `messageId`.
+
+
+## Deployment Evidence
+
+- Deployed on 2026-06-15 as part of integrated WH-G10+ wave.
+- Commit: `fab5bee`.
+- Image: `localhost:5000/warehouse-microservice:fab5bee`.
+- Validation: deployment script completed successfully; production `/api/health`, `/api/ready`, `/admin`, and manual reservation-expiry CronJob smoke passed.
