@@ -42,6 +42,15 @@ export class SupplierStockReconciliation {
   @Column({ type: 'text', nullable: true })
   conflictReason: string;
 
+  @Column({ type: 'timestamp', nullable: true })
+  reviewedAt: Date | null;
+
+  @Column({ length: 200, nullable: true })
+  reviewedBy: string | null;
+
+  @Column({ type: 'text', nullable: true })
+  operatorNote: string | null;
+
   @Column({ length: 200 })
   actor: string;
 

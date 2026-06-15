@@ -3,14 +3,16 @@
   "project": "warehouse-microservice",
   "stage": "production",
   "health": "ok",
-  "cycle": 16,
-  "last_cycle_at": "2026-06-13T00:00:00Z",
+  "cycle": 17,
+  "last_cycle_at": "2026-06-14T00:00:00Z",
   "tasks_active": 0,
   "tasks_failed_last_cycle": 0,
   "open_task_ids": [],
-  "last_milestone": "WH-G15 batch product logistics contract source implementation validated",
-  "next_focus": "Deploy or smoke cross-service logistics projection after owner approval",
-  "blockers": [],
+  "last_milestone": "Integrated WH-G10+ parallel worker output source validation passed",
+  "next_focus": "Request owner approval to commit/deploy integrated WH-G10+ wave, or define next goal",
+  "blockers": [
+    "deployment approval required before deploying integrated WH-G10+ wave"
+  ],
   "budget_units_used": 0,
   "metrics": {
     "custom": {
@@ -79,7 +81,14 @@
       "product_logistics_endpoint": "GET /api/warehouses/logistics/:productId",
       "wh_g15_batch_logistics_contract": "validated_source_no_deploy",
       "wh_g15_validation": "npm_test_23_passed_build_passed_diff_check_passed",
-      "batch_product_logistics_endpoint": "POST /api/warehouses/logistics/batch"
+      "batch_product_logistics_endpoint": "POST /api/warehouses/logistics/batch",
+      "wh_g10_catalog_identity_validation": "source_integrated_no_deploy",
+      "wh_g11_transactional_outbox": "source_integrated_no_deploy",
+      "wh_g12_automatic_reservation_expiry": "source_integrated_no_deploy",
+      "wh_g13_supplier_conflict_operations": "source_integrated_no_deploy",
+      "wh_g14_authenticated_actor_enforcement": "source_integrated_no_deploy",
+      "wh_g10_plus_integration_validation": "git_diff_check_passed_full_jest_50_passed_build_passed",
+      "next_orchestrator_command": "request deployment approval for integrated WH-G10+ wave, or define next goal"
     }
   }
 }

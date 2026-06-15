@@ -4,17 +4,18 @@ import { Stock } from './stock.entity';
 import { StockService } from './stock.service';
 import { StockController } from './stock.controller';
 import { StockEventsService } from './stock-events.service';
+import { CatalogProductReconciliationService } from './catalog-product-reconciliation.service';
 import { LoggerModule } from '../logger/logger.module';
 import { StockMovement } from '../movements/stock-movement.entity';
+import { StockEventOutbox } from './stock-event-outbox.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Stock, StockMovement]),
+    TypeOrmModule.forFeature([Stock, StockMovement, StockEventOutbox]),
     LoggerModule,
   ],
   controllers: [StockController],
-  providers: [StockService, StockEventsService],
+  providers: [StockService, StockEventsService, CatalogProductReconciliationService],
   exports: [StockService, StockEventsService],
 })
 export class StockModule {}
-

@@ -1,7 +1,9 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Req } from '@nestjs/common';
+import { Request } from 'express';
+import { getAuthenticatedMutationActor } from '../auth/authenticated-actor';
 import { ReservationsService } from './reservations.service';
 import { LoggerService } from '../logger/logger.service';
-import { ReservationLifecycleDto, ReserveStockDto, UnreserveStockDto } from '../stock/dto/stock-mutation.dto';
+import { ExpireDueReservationsDto, ReservationLifecycleDto, ReserveStockDto, UnreserveStockDto } from '../stock/dto/stock-mutation.dto';
 
 @Controller('reservations')
 export class ReservationsController {
@@ -32,44 +34,51 @@ export class ReservationsController {
   }
 
   @Post('reserve')
-  async reserve(@Body() body: ReserveStockDto) {
+  async reserve(@Body() body: ReserveStockDto, @Req() request: Request) {
     this.logger.log('POST /api/reservations/reserve', 'ReservationsController');
-    const stock = await this.reservationsService.reserve(body);
+    const stock = await this.reservationsService.reserve({ ...body, actor: getAuthenticatedMutationActor(request) });
     return { success: true, data: stock };
   }
 
   @Post('release')
-  async release(@Body() body: UnreserveStockDto) {
+  async release(@Body() body: UnreserveStockDto, @Req() request: Request) {
     this.logger.log('POST /api/reservations/release', 'ReservationsController');
-    const stock = await this.reservationsService.release(body);
+    const stock = await this.reservationsService.release({ ...body, actor: getAuthenticatedMutationActor(request) });
     return { success: true, data: stock };
   }
 
   @Post('fulfill')
-  async fulfill(@Body() body: ReservationLifecycleDto) {
+  async fulfill(@Body() body: ReservationLifecycleDto, @Req() request: Request) {
     this.logger.log('POST /api/reservations/fulfill', 'ReservationsController');
-    const stock = await this.reservationsService.fulfill(body);
+    const stock = await this.reservationsService.fulfill({ ...body, actor: getAuthenticatedMutationActor(request) });
     return { success: true, data: stock };
   }
 
   @Post('cancel')
-  async cancel(@Body() body: ReservationLifecycleDto) {
+  async cancel(@Body() body: ReservationLifecycleDto, @Req() request: Request) {
     this.logger.log('POST /api/reservations/cancel', 'ReservationsController');
-    const stock = await this.reservationsService.cancel(body);
+    const stock = await this.reservationsService.cancel({ ...body, actor: getAuthenticatedMutationActor(request) });
     return { success: true, data: stock };
   }
 
   @Post('expire')
-  async expire(@Body() body: ReservationLifecycleDto) {
+  async expire(@Body() body: ReservationLifecycleDto, @Req() request: Request) {
     this.logger.log('POST /api/reservations/expire', 'ReservationsController');
-    const stock = await this.reservationsService.expire(body);
+    const stock = await this.reservationsService.expire({ ...body, actor: getAuthenticatedMutationActor(request) });
     return { success: true, data: stock };
   }
 
+  @Post('expire-due')
+  async expireDue(@Body() body: ExpireDueReservationsDto) {
+    this.logger.log('POST /api/reservations/expire-due', 'ReservationsController');
+    const summary = await this.reservationsService.expireDueReservations(body);
+    return { success: summary.failed === 0, data: summary };
+  }
+
   @Post('return')
-  async returnReservation(@Body() body: ReservationLifecycleDto) {
+  async returnReservation(@Body() body: ReservationLifecycleDto, @Req() request: Request) {
     this.logger.log('POST /api/reservations/return', 'ReservationsController');
-    const stock = await this.reservationsService.returnReservation(body);
+    const stock = await this.reservationsService.returnReservation({ ...body, actor: getAuthenticatedMutationActor(request) });
     return { success: true, data: stock };
   }
 }

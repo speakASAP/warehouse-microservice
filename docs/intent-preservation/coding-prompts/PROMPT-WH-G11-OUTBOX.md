@@ -1,0 +1,3 @@
+# PROMPT-WH-G11-OUTBOX - Coding Prompt
+
+Implement WH-G11 transactional stock event outbox in `warehouse-microservice`. Persist `stock.updated`, `stock.low`, and `stock.out` event intents in a committed `stock_event_outbox` table inside the same transaction as stock mutations and movement evidence. Replay pending/failed due rows to RabbitMQ after commit, on startup, and on an interval. Include `eventId` in payloads and AMQP `messageId` for idempotent consumers. Expose outbox counts/replay counters in health/ready operations status. Update stock event docs, add focused unit tests, and validate with `npm test -- --runInBand`, `npm run build`, and `git diff --check`. Do not deploy or mutate production stock.

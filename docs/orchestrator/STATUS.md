@@ -1,51 +1,26 @@
 # Warehouse Orchestrator Status
 
-## 2026-06-13 - Fulfillment Supplier Linkage Gate
-
-Change: tightened Warehouse fulfillment so a legacy active reservation cannot be fulfilled from supplier-managed stock when the Warehouse origin metadata is missing supplier linkage. Reservation release, expiry, cancellation, and return remain available for cleanup, but completed order fulfillment now requires traceable supplier ownership.
-
-Validation evidence: npm test -- --runInBand test/stock.service.spec.ts test/warehouses.service.spec.ts passed, npm run build passed, and git diff --check passed. Added focused coverage proving fulfillment from supplier-managed stock without supplier linkage rejects before saving stock, reservation, or movement rows.
-
-Boundary decision: no deployment, runtime token inspection, live fixture creation, production supplier import, Warehouse stock mutation, or cleanup mutation was performed. Current-head runtime completion remains unproven until owner-approved guarded runtime evidence regeneration.
-
-## 2026-06-13 - Reservation Supplier Linkage Gate
-
-Change: tightened Warehouse checkout reservation behavior so supplier-managed stock rows cannot be reserved when their Warehouse origin metadata shows missing supplier linkage. This aligns the stock mutation path with the logistics canReserveFromWarehouse contract and keeps unlinked supplier or dropship stock visible only as diagnostics.
-
-Validation evidence: npm test -- --runInBand test/stock.service.spec.ts test/warehouses.service.spec.ts passed, npm run build passed, and git diff --check passed. Added focused coverage proving reservation from supplier-managed stock without supplier linkage rejects before saving stock, reservation, or movement rows.
-
-Boundary decision: no deployment, runtime token inspection, live fixture creation, production supplier import, Warehouse stock mutation, or cleanup mutation was performed. Current-head runtime completion remains unproven until owner-approved guarded runtime evidence regeneration.
-
-Last updated: 2026-06-12.
+Last updated: 2026-06-14.
 
 Current state:
 
-- WH-G1 complete.
-- WH-G2 complete.
-- WH-G3 through WH-G9 are complete.
-- No active workers.
-- No known blockers.
-- Awaiting owner-approved next goal.
+- WH-G1 through WH-G9 are complete and preserve the original warehouse foundation sequence.
+- Previously completed source goals WH-G10 through WH-G15 remain recorded in `docs/IMPLEMENTATION_STATE.md`.
+- Owner-approved parallel wave WH-G10-CATALOG, WH-G11-OUTBOX, WH-G12, WH-G13-CONFLICTS, and WH-G14-AUTH has been collected and source-integrated in the remote working tree.
+- Combined validation passed on 2026-06-14: `git diff --check`, `npm test -- --runInBand` (8 suites / 50 tests), and `npm run build`.
+- Deployment blocker: no explicit deployment approval for the current combined remote diff.
+- Process debt: WH-G13 supplier-conflict operations code existed without dedicated IPS artifacts; artifacts were added during collection on 2026-06-14.
+- Numbering debt: the repository already has completed historical WH-G10 through WH-G15 goals, so the new approved parallel wave uses suffixed IDs where needed to avoid overwriting completed evidence.
+
+What is left from the current plan:
+
+1. Review and optionally commit the combined WH-G10+ remote diff.
+2. Obtain explicit owner approval before deploy or production smoke tests that require deployment.
+3. If deployment is approved, run `./scripts/deploy.sh` on `alfares` and then production health/readiness/admin smoke checks.
+4. If deployment is not approved, define the next owner-approved source goal with full IPS artifacts before coding.
 
 Next command:
 
 ```text
-WAREHOUSE ORCHESTRATOR: define next goal
+WAREHOUSE ORCHESTRATOR: request deployment approval for integrated WH-G10+ wave, or define next goal
 ```
-
-
-## 2026-06-13 - Preferred Route Requires Reservability
-
-Change: tightened Warehouse product logistics so preferredRoute is selected from the first route with canReserveFromWarehouse=true instead of the first visible diagnostic option. Reserved-only and supplier-managed routes missing supplier linkage still remain visible in options, but they no longer advertise a preferred fulfillment path.
-
-Validation evidence: npm test -- --runInBand test/warehouses.service.spec.ts passed, npm run build passed, and git diff --check passed. Added focused coverage for a reserved-only supplier route, supplier-managed routes missing supplier linkage, and a later reservable dropship route that becomes preferred when an earlier supplier diagnostic route cannot be reserved.
-
-Boundary decision: no deployment, runtime token inspection, live fixture creation, production supplier import, Warehouse stock mutation, or cleanup mutation was performed. Current-head runtime completion remains unproven until owner-approved guarded runtime evidence regeneration.
-
-## 2026-06-13 - Logistics Route Reservability Gate
-
-Change: tightened Warehouse product logistics so route options remain visible for reserved-only stock diagnostics but canReserveFromWarehouse is true only when the route has positive available stock. This keeps Warehouse as the source of truth for whether a local, supplier replenishment, or dropship route is actually reservable.
-
-Validation evidence: npm test -- --runInBand test/warehouses.service.spec.ts passed, npm run build passed, and git diff --check passed. Added focused coverage for a reserved-only supplier route that remains visible but is not reservable.
-
-Boundary decision: no deployment, runtime token inspection, live fixture creation, production supplier import, Warehouse stock mutation, or cleanup mutation was performed. Current-head runtime completion remains unproven until owner-approved guarded runtime evidence regeneration.

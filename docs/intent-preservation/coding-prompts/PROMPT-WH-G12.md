@@ -1,3 +1,3 @@
-# PROMPT-WH-G12 - Inventory Topology Read Model
+# PROMPT-WH-G12 - Automatic Reservation Expiry
 
-Implement WH-G12-T1 in warehouse-microservice. Add a read-only topology endpoint that lists active warehouses grouped by origin type and includes stock totals. Keep the endpoint additive and avoid stock mutation. Preserve Catalog product ownership by treating productId as an opaque filter. Preserve supplier boundaries by exposing only Warehouse-owned supplierId linkage, never supplier credentials.
+Implement WH-G12-T1 in `warehouse-microservice`: expire timed-out active reservations automatically without relying on manual `/reservations/expire` calls. Use a Kubernetes CronJob or explicit worker endpoint rather than a hidden in-process loop. Reuse existing reservation lifecycle transaction logic, require the fixed actor `warehouse-reservation-expiry-cron` and reason `RESERVATION_TTL_EXPIRED`, preserve append-only movement evidence, do not deploy, and do not mutate production stock during validation.

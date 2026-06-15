@@ -1,0 +1,82 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: warehouse-reservation-expiry
+  namespace: statex-apps
+  labels:
+    app: warehouse-microservice
+    job: reservation-expiry
+    managed-by: k8s-migration
+spec:
+  schedule: "*/5 * * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 5
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      template:
+        metadata:
+          labels:
+            app: warehouse-microservice
+            job: reservation-expiry
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: expire-due-reservations
+              image: localhost:5000/warehouse-microservice:latest
+              imagePullPolicy: Always
+              envFrom:
+                - configMapRef:
+                    name: warehouse-microservice-config
+                - secretRef:
+                    name: warehouse-microservice-secret
+              env:
+                - name: WAREHOUSE_BASE_URL
+                  value: "http://warehouse-microservice:3201"
+                - name: RESERVATION_EXPIRY_LIMIT
+                  value: "100"
+              command:
+                - node
+                - -e
+              args:
+                - |
+                  (async () => {
+                    const jwt = require('jsonwebtoken');
+                    const baseUrl = process.env.WAREHOUSE_BASE_URL || 'http://warehouse-microservice:3201';
+                    const serviceName = process.env.SERVICE_NAME || 'warehouse-microservice';
+                    const limit = Number.parseInt(process.env.RESERVATION_EXPIRY_LIMIT || '100', 10);
+                    if (!process.env.JWT_SECRET) {
+                      throw new Error('JWT_SECRET is required for reservation expiry CronJob');
+                    }
+                    const token = jwt.sign({
+                      sub: 'warehouse-reservation-expiry-cron',
+                      roles: [`internal:${serviceName}:admin`],
+                    }, process.env.JWT_SECRET, { expiresIn: '5m' });
+                    const response = await fetch(`${baseUrl}/api/reservations/expire-due`, {
+                      method: 'POST',
+                      headers: {
+                        authorization: `Bearer ${token}`,
+                        'content-type': 'application/json',
+                      },
+                      body: JSON.stringify({ limit }),
+                    });
+                    const text = await response.text();
+                    let payload;
+                    try {
+                      payload = JSON.parse(text);
+                    } catch (error) {
+                      throw new Error(`Unexpected expiry response: status=${response.status} body=${text}`);
+                    }
+                    console.log(JSON.stringify({
+                      status: response.status,
+                      success: payload.success,
+                      data: payload.data,
+                    }));
+                    if (!response.ok || !payload.success || payload.data?.failed > 0) {
+                      throw new Error(`Reservation expiry failed: status=${response.status} failed=${payload.data?.failed ?? 'unknown'}`);
+                    }
+                  })().catch((error) => {
+                    console.error(error);
+                    process.exit(1);
+                  });

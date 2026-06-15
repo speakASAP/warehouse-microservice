@@ -12,6 +12,7 @@ import {
 import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
+import { RequestWithAuthenticatedUser } from './authenticated-actor';
 import { ROLES_KEY, PUBLIC_KEY } from './roles.decorator';
 
 @Injectable()
@@ -43,7 +44,17 @@ export class JwtRolesGuard implements CanActivate {
 
     const token = authHeader.slice(7);
     try {
-      const payload = this.jwtService.verify<{ sub: string; email?: string; roles?: string[] }>(token, {
+      const payload = this.jwtService.verify<{
+        sub?: string;
+        email?: string;
+        type?: string;
+        auth_method?: string;
+        roles?: string[];
+        service?: string;
+        serviceName?: string;
+        clientId?: string;
+        client_id?: string;
+      }>(token, {
         secret: process.env.JWT_SECRET,
       });
       const userRoles: string[] = Array.isArray(payload.roles) ? payload.roles : [];
@@ -53,10 +64,15 @@ export class JwtRolesGuard implements CanActivate {
         throw new ForbiddenException('Insufficient permissions');
       }
 
-      (request as Request & { user: unknown }).user = {
+      (request as RequestWithAuthenticatedUser).user = {
         sub: payload.sub,
         email: payload.email,
+        type: payload.type,
+        authMethod: payload.auth_method,
         roles: userRoles,
+        service: payload.service,
+        serviceName: payload.serviceName,
+        clientId: payload.clientId ?? payload.client_id,
       };
       return true;
     } catch (err) {

@@ -22,6 +22,7 @@ describe('SupplierReconciliationService', () => {
     warehouse?: Partial<Warehouse>;
     stock?: Partial<Stock>;
     existingReconciliation?: Partial<SupplierStockReconciliation>;
+    listedReconciliations?: Partial<SupplierStockReconciliation>[];
     activeReservationCount?: number;
   } = {}) {
     const warehouse = options.warehouse ?? {
@@ -30,10 +31,19 @@ describe('SupplierReconciliationService', () => {
       supplierId: 'supplier-1',
     };
 
+    const queryBuilder = {
+      where: jest.fn().mockReturnThis(),
+      andWhere: jest.fn().mockReturnThis(),
+      orderBy: jest.fn().mockReturnThis(),
+      take: jest.fn().mockReturnThis(),
+      getMany: jest.fn().mockResolvedValue(options.listedReconciliations ?? []),
+    };
+
     const reconciliationRepository = {
       findOne: jest.fn().mockResolvedValue(options.existingReconciliation ?? null),
       create: jest.fn((data) => data),
       save: jest.fn(async (reconciliation) => reconciliation),
+      createQueryBuilder: jest.fn().mockReturnValue(queryBuilder),
     };
 
     const warehouseRepository = {
@@ -101,6 +111,7 @@ describe('SupplierReconciliationService', () => {
       movementRepository,
       stockEvents,
       operationalMetrics,
+      queryBuilder,
     };
   }
 
@@ -173,6 +184,86 @@ describe('SupplierReconciliationService', () => {
     expect(stockRepository.save).not.toHaveBeenCalled();
     expect(movementRepository.save).not.toHaveBeenCalled();
     expect(reconciliationRepository.save).not.toHaveBeenCalled();
+  });
+
+  it('lists supplier conflicts with composable filters', async () => {
+    const listedReconciliations = [{
+      id: 'rec-1',
+      supplierId: 'supplier-1',
+      warehouseId: 'warehouse-1',
+      productId: 'product-1',
+      externalReference: 'feed-123',
+      status: 'conflict' as const,
+    }];
+    const { service, queryBuilder } = createService({ listedReconciliations });
+
+    const result = await service.list({
+      supplierId: 'supplier-1',
+      productId: 'product-1',
+      reviewed: false,
+      limit: 25,
+    });
+
+    expect(queryBuilder.where).toHaveBeenCalledWith('reconciliation.status = :status', { status: 'conflict' });
+    expect(queryBuilder.andWhere).toHaveBeenCalledWith('reconciliation.supplierId = :supplierId', { supplierId: 'supplier-1' });
+    expect(queryBuilder.andWhere).toHaveBeenCalledWith('reconciliation.productId = :productId', { productId: 'product-1' });
+    expect(queryBuilder.andWhere).toHaveBeenCalledWith('reconciliation.reviewedAt IS NULL');
+    expect(queryBuilder.take).toHaveBeenCalledWith(25);
+    expect(result).toBe(listedReconciliations);
+  });
+
+  it('marks a supplier conflict reviewed without changing stock or movement evidence', async () => {
+    const existingReconciliation = {
+      id: 'rec-1',
+      supplierId: 'supplier-1',
+      warehouseId: 'warehouse-1',
+      productId: 'product-1',
+      externalReference: 'feed-123',
+      status: 'conflict' as const,
+      reviewedAt: null,
+      reviewedBy: null,
+      operatorNote: null,
+    };
+    const { service, reconciliationRepository, stockRepository, movementRepository, stockEvents } = createService({
+      existingReconciliation,
+    });
+
+    const reconciliation = await service.reviewConflict('rec-1', {
+      actor: 'warehouse-ops',
+      operatorNote: 'Checked active reservation queue.',
+    });
+
+    expect(reconciliationRepository.findOne).toHaveBeenCalledWith({
+      where: { id: 'rec-1' },
+      lock: { mode: 'pessimistic_write' },
+    });
+    expect(reconciliationRepository.save).toHaveBeenCalledWith(expect.objectContaining({
+      reviewedAt: expect.any(Date),
+      reviewedBy: 'warehouse-ops',
+      operatorNote: 'Checked active reservation queue.',
+    }));
+    expect(stockRepository.save).not.toHaveBeenCalled();
+    expect(movementRepository.save).not.toHaveBeenCalled();
+    expect(stockEvents.publishStockUpdated).not.toHaveBeenCalled();
+    expect(reconciliation.reviewedBy).toBe('warehouse-ops');
+  });
+
+  it('rejects review for non-conflict reconciliation rows', async () => {
+    const { service, reconciliationRepository, stockRepository, movementRepository } = createService({
+      existingReconciliation: {
+        id: 'rec-1',
+        status: 'applied' as const,
+      },
+    });
+
+    await expect(service.reviewConflict('rec-1', {
+      actor: 'warehouse-ops',
+      operatorNote: 'No conflict.',
+    })).rejects.toThrow('Only conflict reconciliations can be reviewed');
+
+    expect(reconciliationRepository.save).not.toHaveBeenCalled();
+    expect(stockRepository.save).not.toHaveBeenCalled();
+    expect(movementRepository.save).not.toHaveBeenCalled();
   });
 
   it('records a conflict when supplier quantity is below active reserved stock', async () => {

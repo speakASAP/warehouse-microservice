@@ -1,6 +1,7 @@
 import 'reflect-metadata';
 import { BadRequestException } from '@nestjs/common';
 import { StockReservation } from '../src/reservations/stock-reservation.entity';
+import { StockEventOutbox } from '../src/stock/stock-event-outbox.entity';
 import { Stock } from '../src/stock/stock.entity';
 import { StockService, StockMutationContext } from '../src/stock/stock.service';
 
@@ -32,6 +33,10 @@ describe('StockService mutation invariants', () => {
       save: jest.fn(async (movement) => movement),
     };
 
+    const outboxRepository = {
+      save: jest.fn(async (events) => events),
+    };
+
     const matchesStatus = (reservation: Partial<StockReservation>, statusCriteria: any) => {
       if (typeof statusCriteria === 'string') {
         return reservation.status === statusCriteria;
@@ -57,6 +62,7 @@ describe('StockService mutation invariants', () => {
       getRepository: jest.fn((entity) => {
         if (entity === Stock) return stockRepository;
         if (entity === StockReservation) return reservationRepository;
+        if (entity === StockEventOutbox) return outboxRepository;
         return movementRepository;
       }),
     };
@@ -66,9 +72,7 @@ describe('StockService mutation invariants', () => {
     };
 
     const stockEvents = {
-      publishStockUpdated: jest.fn().mockResolvedValue({ type: 'stock.updated', status: 'published', timestamp: '2026-06-12T10:00:00.000Z' }),
-      publishStockLow: jest.fn().mockResolvedValue({ type: 'stock.low', status: 'published', timestamp: '2026-06-12T10:00:00.000Z' }),
-      publishStockOut: jest.fn().mockResolvedValue({ type: 'stock.out', status: 'published', timestamp: '2026-06-12T10:00:00.000Z' }),
+      replayPendingOutbox: jest.fn().mockResolvedValue([{ type: 'stock.updated', status: 'published', eventId: 'event-1', timestamp: '2026-06-12T10:00:00.000Z' }]),
     };
 
     const logger = {
@@ -88,6 +92,7 @@ describe('StockService mutation invariants', () => {
       stockQueryBuilder,
       movementRepository,
       reservationRepository,
+      outboxRepository,
       dataSource,
       stockEvents,
       operationalMetrics,
@@ -202,7 +207,7 @@ describe('StockService mutation invariants', () => {
   });
 
   it('locks the stock row and writes stock plus movement in the same transaction', async () => {
-    const { service, stockRepository, stockQueryBuilder, movementRepository, dataSource, stockEvents } = createService({
+    const { service, stockRepository, stockQueryBuilder, movementRepository, outboxRepository, dataSource, stockEvents } = createService({
       productId: 'product-1',
       warehouseId: 'warehouse-1',
       quantity: 10,
@@ -237,7 +242,24 @@ describe('StockService mutation invariants', () => {
         createdBy: 'orders-microservice',
       }),
     );
-    expect(stockEvents.publishStockUpdated).toHaveBeenCalledWith('product-1', 'warehouse-1', 6, 6);
+    expect(outboxRepository.save).toHaveBeenCalledWith(expect.arrayContaining([
+      expect.objectContaining({
+        type: 'stock.updated',
+        routingKey: 'stock.updated',
+        productId: 'product-1',
+        warehouseId: 'warehouse-1',
+        payload: expect.objectContaining({
+          eventId: expect.any(String),
+          type: 'stock.updated',
+          quantity: 6,
+          available: 6,
+        }),
+        status: 'pending',
+        attempts: 0,
+        maxAttempts: 12,
+      }),
+    ]));
+    expect(stockEvents.replayPendingOutbox).toHaveBeenCalledTimes(1);
   });
 
   it('creates a reservation row and increases reserved stock on checkout hold', async () => {
@@ -308,7 +330,7 @@ describe('StockService mutation invariants', () => {
       quantity: 3,
       status: 'active',
     };
-    const { service, stockRepository, reservationRepository, movementRepository } = createService({
+    const { service, stockRepository, reservationRepository, movementRepository, outboxRepository, stockEvents } = createService({
       productId: 'product-1',
       warehouseId: 'warehouse-1',
       quantity: 10,
@@ -328,6 +350,8 @@ describe('StockService mutation invariants', () => {
       status: 'active',
     }));
     expect(movementRepository.save).not.toHaveBeenCalled();
+    expect(outboxRepository.save).not.toHaveBeenCalled();
+    expect(stockEvents.replayPendingOutbox).toHaveBeenCalledTimes(1);
   });
 
   it('releases reserved stock on payment failure', async () => {

@@ -1,3 +1,4 @@
+import { randomUUID } from 'crypto';
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, EntityManager, In, Repository } from 'typeorm';
@@ -5,6 +6,7 @@ import { Stock } from './stock.entity';
 import { StockMovement } from '../movements/stock-movement.entity';
 import { OperationalMetricsService } from '../observability/operational-metrics.service';
 import { StockEventsService, StockEventPublishResult } from './stock-events.service';
+import { StockEventOutbox, StockEventPayload, StockEventType } from './stock-event-outbox.entity';
 import { LoggerService } from '../logger/logger.service';
 import { ReservationStatus, StockReservation } from '../reservations/stock-reservation.entity';
 
@@ -202,6 +204,7 @@ export class StockService {
         createdBy: context.actor,
       });
 
+      await this.enqueueStockEvents(manager, savedStock);
       return savedStock;
     }));
   }
@@ -244,6 +247,7 @@ export class StockService {
         createdBy: context.actor,
       });
 
+      await this.enqueueStockEvents(manager, savedStock);
       return savedStock;
     }));
   }
@@ -284,6 +288,7 @@ export class StockService {
         createdBy: context.actor,
       });
 
+      await this.enqueueStockEvents(manager, savedStock);
       return savedStock;
     }));
   }
@@ -364,6 +369,7 @@ export class StockService {
           reason: context.reasonCode,
           createdBy: context.actor,
         });
+        await this.enqueueStockEvents(manager, savedStock);
       }
 
       return savedStock;
@@ -423,6 +429,7 @@ export class StockService {
         createdBy: context.actor,
       });
 
+      await this.enqueueStockEvents(manager, savedStock);
       return savedStock;
     }));
   }
@@ -469,6 +476,7 @@ export class StockService {
         createdBy: context.actor,
       });
 
+      await this.enqueueStockEvents(manager, savedStock);
       return savedStock;
     }));
   }
@@ -519,6 +527,7 @@ export class StockService {
         createdBy: context.actor,
       });
 
+      await this.enqueueStockEvents(manager, savedStock);
       return savedStock;
     }));
   }
@@ -567,6 +576,7 @@ export class StockService {
         createdBy: context.actor,
       });
 
+      await this.enqueueStockEvents(manager, savedStock);
       return savedStock;
     }));
   }
@@ -607,6 +617,7 @@ export class StockService {
         createdBy: context.actor,
       });
 
+      await this.enqueueStockEvents(manager, savedStock);
       return savedStock;
     }));
   }
@@ -747,6 +758,72 @@ export class StockService {
     }
   }
 
+  private async enqueueStockEvents(manager: EntityManager, stock: Stock): Promise<StockEventOutbox[]> {
+    const outboxRepository = manager.getRepository(StockEventOutbox);
+    const now = new Date().toISOString();
+    const events = this.buildStockEventOutboxRows(stock, now);
+
+    if (events.length === 0) {
+      return [];
+    }
+
+    return outboxRepository.save(events);
+  }
+
+  private buildStockEventOutboxRows(stock: Stock, timestamp: string): StockEventOutbox[] {
+    const rows: StockEventOutbox[] = [
+      this.createStockEventOutboxRow('stock.updated', stock, timestamp, {
+        quantity: stock.quantity,
+        available: stock.available,
+      }),
+    ];
+
+    if (stock.available > 0 && stock.available <= stock.lowStockThreshold) {
+      rows.push(this.createStockEventOutboxRow('stock.low', stock, timestamp, {
+        available: stock.available,
+        threshold: stock.lowStockThreshold,
+      }));
+    }
+
+    if (stock.available <= 0) {
+      rows.push(this.createStockEventOutboxRow('stock.out', stock, timestamp, {}));
+    }
+
+    return rows;
+  }
+
+  private createStockEventOutboxRow(
+    type: StockEventType,
+    stock: Stock,
+    timestamp: string,
+    fields: Partial<StockEventPayload>,
+  ): StockEventOutbox {
+    const eventId = randomUUID();
+    const payload: StockEventPayload = {
+      eventId,
+      type,
+      productId: stock.productId,
+      warehouseId: stock.warehouseId,
+      timestamp,
+      ...fields,
+    };
+
+    return Object.assign(new StockEventOutbox(), {
+      eventId,
+      type,
+      routingKey: type,
+      productId: stock.productId,
+      warehouseId: stock.warehouseId,
+      payload,
+      status: 'pending',
+      attempts: 0,
+      maxAttempts: parseInt(process.env.STOCK_EVENT_OUTBOX_MAX_ATTEMPTS || '12', 10),
+      nextAttemptAt: null,
+      lastError: null,
+      publishedAt: null,
+    });
+  }
+
   private async runStockMutation(
     operation: string,
     details: StockMutationLogDetails,
@@ -754,7 +831,7 @@ export class StockService {
   ): Promise<Stock> {
     try {
       const stock = await mutate();
-      const eventResults = await this.publishStockEvents(stock);
+      const eventResults = await this.stockEvents.replayPendingOutbox();
       this.logStockMutation('success', operation, details, eventResults);
       this.operationalMetrics.recordMutationSuccess({
         operation,
@@ -808,37 +885,5 @@ export class StockService {
     } else {
       this.logger.error(`stock_mutation ${fields}`, '', 'StockService');
     }
-  }
-
-  /**
-   * Publish stock events based on current state
-   */
-  private async publishStockEvents(stock: Stock): Promise<StockEventPublishResult[]> {
-    const results: StockEventPublishResult[] = [];
-
-    // Always publish stock.updated
-    results.push(await this.stockEvents.publishStockUpdated(
-      stock.productId,
-      stock.warehouseId,
-      stock.quantity,
-      stock.available
-    ));
-
-    // Check for low stock
-    if (stock.available > 0 && stock.available <= stock.lowStockThreshold) {
-      results.push(await this.stockEvents.publishStockLow(
-        stock.productId,
-        stock.warehouseId,
-        stock.available,
-        stock.lowStockThreshold
-      ));
-    }
-
-    // Check for out of stock
-    if (stock.available <= 0) {
-      results.push(await this.stockEvents.publishStockOut(stock.productId, stock.warehouseId));
-    }
-
-    return results;
   }
 }

@@ -1,28 +1,29 @@
 # Warehouse Implementation State
 
-Last updated: 2026-06-13.
+Last updated: 2026-06-14.
 
 ## Orchestrator Command
 
 ```text
-2026-06-13: WH-G15 completed in source. Added read-only POST /api/warehouses/logistics/batch so Catalog and channel projections can consume Warehouse-owned logistics routes without deriving route semantics. No stock mutation or deployment was performed. Validation passed: npm test -- --runInBand (3 suites / 23 tests), npm run build, and git diff --check. Next recommended slice: deploy or smoke the cross-service logistics projection after owner approval.
-WAREHOUSE ORCHESTRATOR: continue implementation
+2026-06-14: Collected integrated WH-G10+ parallel worker output. Source validation passed: git diff --check, npm test -- --runInBand (8 suites / 50 tests), and npm run build. No production deployment, migration execution, or production stock mutation performed. Remaining work: owner decision to commit/deploy this integrated wave or define next source-only goal.
+2026-06-14: Collected owner-approved WH-G10+ parallel worker outputs in the remote working tree: catalog identity reconciliation, transactional stock event outbox, automatic reservation expiry, supplier conflict operations, and authenticated actor enforcement. Combined validation passed: git diff --check, npm test -- --runInBand (8 suites / 50 tests), and npm run build. No production deployment or production stock mutation was performed.
+WAREHOUSE ORCHESTRATOR: request deployment approval for integrated WH-G10+ wave, or define next goal
 ```
 
 To define the next owner-approved goal:
 
 ```text
-WAREHOUSE ORCHESTRATOR: define next goal
+WAREHOUSE ORCHESTRATOR: request deployment approval for integrated WH-G10+ wave, or define next goal
 ```
 
 ## Current Status
 
-- Active goal: none
-- Current wave: Wave 10 - Landing page and authenticated admin entry complete
+- Active goal: integrated WH-G10+ parallel wave awaiting owner deployment/commit decision
+- Current wave: Wave 11 - approved parallel source integration collected
 - Completed goals: WH-G1 Deployment And Truthful Health, WH-G2 RabbitMQ Stock Events, WH-G3 Stock Mutation Invariants, WH-G4 Reservation Lifecycle, WH-G5 Catalog And Availability Contracts, WH-G6 Supplier Reconciliation, WH-G7 Production Observability, WH-G8 Database Migration Discipline, WH-G9 Production Admin Console, WH-G10 Landing Page And Authenticated Admin Entry, WH-G11 Stock Origin Visibility, WH-G12 Inventory Topology Read Model, WH-G13 Admin Inventory Topology Visibility, WH-G14 Product Logistics Route Read Model, WH-G15 Batch Product Logistics Contract
 - Running goals: none
-- Blocked goals: none
-- Worker threads: none
+- Blocked goals: deployment for integrated WH-G10+ wave pending explicit owner approval
+- Worker threads: collected
 - Intent source: `docs/orchestrator/warehouse-intent-plan.md`
 - Agent entrypoint: `AGENTS.md`
 - Process gates: `docs/process/OPERATIONAL_GATES.md`
@@ -141,10 +142,10 @@ Next command:
 
 ## Next Action
 
-Warehouse source goals are complete through WH-G15. WH-G10 is deployed; WH-G11 through WH-G15 are validated in source only. Await an owner-approved next goal or deployment approval:
+Warehouse source goals are complete through the historical WH-G15 sequence, and the newer owner-approved WH-G10+ parallel wave is collected and validated in the remote working tree. Await owner approval to commit/deploy the integrated wave, or define a new source-only goal:
 
 ```text
-WAREHOUSE ORCHESTRATOR: define next goal
+WAREHOUSE ORCHESTRATOR: request deployment approval for integrated WH-G10+ wave, or define next goal
 ```
 
 Source documents:

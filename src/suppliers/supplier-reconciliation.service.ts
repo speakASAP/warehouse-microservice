@@ -8,7 +8,11 @@ import { StockEventsService, StockEventPublishResult } from '../stock/stock-even
 import { Stock } from '../stock/stock.entity';
 import { Warehouse } from '../warehouses/warehouse.entity';
 import { LoggerService } from '../logger/logger.service';
-import { SupplierStockReconciliationDto } from './dto/supplier-stock-reconciliation.dto';
+import {
+  SupplierConflictReviewDto,
+  SupplierReconciliationQueryDto,
+  SupplierStockReconciliationDto,
+} from './dto/supplier-stock-reconciliation.dto';
 import { SupplierStockReconciliation } from './supplier-stock-reconciliation.entity';
 
 @Injectable()
@@ -21,6 +25,73 @@ export class SupplierReconciliationService {
     private readonly logger: LoggerService,
     private readonly operationalMetrics: OperationalMetricsService,
   ) {}
+
+  async list(query: SupplierReconciliationQueryDto = {}): Promise<SupplierStockReconciliation[]> {
+    const status = query.status || 'conflict';
+    const limit = Math.min(Math.max(Number(query.limit || 50), 1), 200);
+    const builder = this.reconciliationRepository.createQueryBuilder('reconciliation')
+      .where('reconciliation.status = :status', { status })
+      .orderBy('reconciliation.createdAt', 'DESC')
+      .take(limit);
+
+    if (query.supplierId) {
+      builder.andWhere('reconciliation.supplierId = :supplierId', { supplierId: query.supplierId });
+    }
+    if (query.warehouseId) {
+      builder.andWhere('reconciliation.warehouseId = :warehouseId', { warehouseId: query.warehouseId });
+    }
+    if (query.productId) {
+      builder.andWhere('reconciliation.productId = :productId', { productId: query.productId });
+    }
+    if (query.externalReference) {
+      builder.andWhere('reconciliation.externalReference = :externalReference', { externalReference: query.externalReference });
+    }
+    if (query.reviewed === true) {
+      builder.andWhere('reconciliation.reviewedAt IS NOT NULL');
+    }
+    if (query.reviewed === false) {
+      builder.andWhere('reconciliation.reviewedAt IS NULL');
+    }
+    if (query.createdFrom) {
+      builder.andWhere('reconciliation.createdAt >= :createdFrom', { createdFrom: new Date(query.createdFrom) });
+    }
+    if (query.createdTo) {
+      builder.andWhere('reconciliation.createdAt <= :createdTo', { createdTo: new Date(query.createdTo) });
+    }
+
+    return builder.getMany();
+  }
+
+  async reviewConflict(id: string, body: SupplierConflictReviewDto): Promise<SupplierStockReconciliation> {
+    return this.dataSource.transaction(async (manager) => {
+      const reconciliationRepository = manager.getRepository(SupplierStockReconciliation);
+      const reconciliation = await reconciliationRepository.findOne({
+        where: { id },
+        lock: { mode: 'pessimistic_write' },
+      });
+
+      if (!reconciliation) {
+        throw new NotFoundException(`Supplier reconciliation ${id} not found`);
+      }
+      if (reconciliation.status !== 'conflict') {
+        throw new BadRequestException('Only conflict reconciliations can be reviewed');
+      }
+
+      if (!reconciliation.reviewedAt) {
+        reconciliation.reviewedAt = new Date();
+        reconciliation.reviewedBy = body.actor;
+      } else if (!reconciliation.reviewedBy) {
+        reconciliation.reviewedBy = body.actor;
+      }
+
+      if (body.operatorNote !== undefined) {
+        const note = body.operatorNote.trim();
+        reconciliation.operatorNote = note || null;
+      }
+
+      return reconciliationRepository.save(reconciliation);
+    });
+  }
 
   async reconcile(body: SupplierStockReconciliationDto): Promise<SupplierStockReconciliation> {
     this.logger.log(

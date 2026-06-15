@@ -3,6 +3,7 @@ import { DataSource, DataSourceOptions } from 'typeorm';
 import { config } from 'dotenv';
 import { StockMovement } from '../movements/stock-movement.entity';
 import { StockReservation } from '../reservations/stock-reservation.entity';
+import { StockEventOutbox } from '../stock/stock-event-outbox.entity';
 import { Stock } from '../stock/stock.entity';
 import { SupplierStockReconciliation } from '../suppliers/supplier-stock-reconciliation.entity';
 import { Warehouse } from '../warehouses/warehouse.entity';
@@ -19,6 +20,7 @@ export function createWarehouseTypeOrmOptions(): DataSourceOptions {
       Stock,
       StockMovement,
       StockReservation,
+      StockEventOutbox,
       SupplierStockReconciliation,
     ],
     migrations: [__dirname + '/../migrations/*{.ts,.js}'],

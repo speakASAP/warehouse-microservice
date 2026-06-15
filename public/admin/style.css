@@ -41,7 +41,8 @@ body {
 
 button,
 input,
-select {
+select,
+textarea {
   font: inherit;
 }
 
@@ -192,7 +193,8 @@ label {
 }
 
 input,
-select {
+select,
+textarea {
   width: 100%;
   min-width: 0;
   height: 38px;
@@ -206,9 +208,15 @@ select {
 }
 
 input:focus,
-select:focus {
+select:focus,
+textarea:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px rgba(37, 111, 123, 0.12);
+}
+
+textarea {
+  min-height: 78px;
+  resize: vertical;
 }
 
 .button {
@@ -478,6 +486,10 @@ td code {
 
 .span-2 {
   grid-column: span 2;
+}
+
+.subhead {
+  margin-top: 20px;
 }
 
 .check {

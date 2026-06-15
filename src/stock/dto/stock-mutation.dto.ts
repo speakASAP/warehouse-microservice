@@ -8,6 +8,7 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
+  Max,
   MaxLength,
   Min,
 } from 'class-validator';
@@ -18,10 +19,11 @@ export class StockMutationAuditDto {
   @MaxLength(100)
   reasonCode: string;
 
+  @IsOptional()
   @IsString()
   @IsNotEmpty()
   @MaxLength(200)
-  actor: string;
+  actor?: string;
 
   @IsOptional()
   @IsString()
@@ -111,4 +113,13 @@ export class BatchAvailabilityDto {
   @IsNotEmpty({ each: true })
   @MaxLength(200, { each: true })
   warehouseIds?: string[];
+}
+
+export class ExpireDueReservationsDto {
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(500)
+  limit?: number;
 }

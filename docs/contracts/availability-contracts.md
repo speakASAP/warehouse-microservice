@@ -18,6 +18,31 @@ Compensating checks required before WH-G5 is extended with live catalog validati
 - Channel publication should require both catalog readiness and warehouse availability.
 - Manual stock creation must be tied to an owner-approved task or catalog/admin workflow.
 
+## Catalog identity reconciliation report
+
+Use the Warehouse reconciliation report to find stock rows whose `productId` does not resolve in Catalog.
+
+GET /api/stock/catalog/reconciliation
+
+Optional query:
+
+- `productIds`: comma-separated Catalog product IDs to check. Omit it to scan unique Warehouse stock product IDs.
+- `warehouseIds`: comma-separated Warehouse IDs to limit the scan.
+- `limit`: maximum unique Warehouse product IDs to scan when `productIds` is omitted. Defaults to 500 and caps at 1000.
+- `includeKnown`: set to `true` to include Catalog-known product identity summaries in the response.
+
+Response shape:
+
+- `source`: `catalog-product-read`, meaning Warehouse checks Catalog's product identity read endpoint.
+- `requestedProductIds`: explicit product IDs supplied by the caller, or an empty list for a stock scan.
+- `checkedProductIds`: product IDs included in the reconciliation run.
+- `totals`: counts for stock rows, unique products, known Catalog products, unknown products, dependency-unavailable products, and aggregate stock quantities.
+- `unknownProducts`: Warehouse product IDs that Catalog rejected with an invalid or missing product identity response.
+- `catalogUnavailableProducts`: Warehouse product IDs that could not be checked because the Catalog dependency failed.
+- `knownProducts`: included only when `includeKnown=true`.
+
+This report is read-only. It does not mutate Warehouse stock and does not turn Warehouse into the product identity authority. Live mutation-time validation remains blocked until the Catalog service-auth, timeout/failure behavior, and write-path migration contract are explicitly approved.
+
 ## Batch availability read
 
 Use one batch call for product lists instead of N+1 calls.

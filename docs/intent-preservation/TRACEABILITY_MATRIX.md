@@ -5,7 +5,7 @@ id: WH-IPS-TRACEABILITY
 status: draft
 owner: warehouse-owner
 created: 2026-06-12
-last_updated: 2026-06-12
+last_updated: 2026-06-14
 completeness_level: complete
 upstream:
   - docs/orchestrator/warehouse-intent-plan.md
@@ -49,6 +49,10 @@ This matrix preserves the chain from original warehouse intent to executable imp
 | WH-G4 through WH-G9 | completed tasks | historical evidence in `TASKS.md` and `docs/IMPLEMENTATION_STATE.md` | create retrospective IPS artifacts only when owner requests audit backfill | create retrospective IPS artifacts only when owner requests audit backfill | create retrospective IPS artifacts only when owner requests audit backfill | historical evidence already recorded |
 | WH-G10 | WH-G10-T1 | `docs/intent-preservation/tasks/WH-G10-T1.md` | `docs/intent-preservation/execution-plans/EP-WH-G10.md` | `docs/intent-preservation/context-packages/CP-WH-G10.md` | `docs/intent-preservation/coding-prompts/PROMPT-WH-G10.md` | `docs/intent-preservation/validation-reports/VAL-WH-G10.md` |
 | WH-G12 | WH-G12-T1 | docs/intent-preservation/tasks/WH-G12-T1.md | docs/intent-preservation/execution-plans/EP-WH-G12.md | docs/intent-preservation/context-packages/CP-WH-G12.md | docs/intent-preservation/coding-prompts/PROMPT-WH-G12.md | docs/intent-preservation/validation-reports/VAL-WH-G12.md |
+| WH-G10-CATALOG | WH-G10-CATALOG-T1 | `docs/intent-preservation/tasks/WH-G10-CATALOG-T1.md` | `docs/intent-preservation/execution-plans/EP-WH-G10-CATALOG.md` | `docs/intent-preservation/context-packages/CP-WH-G10-CATALOG.md` | `docs/intent-preservation/coding-prompts/PROMPT-WH-G10-CATALOG.md` | `docs/intent-preservation/validation-reports/VAL-WH-G10-CATALOG.md` |
+| WH-G11-OUTBOX | WH-G11-OUTBOX-T1 | `docs/intent-preservation/tasks/WH-G11-OUTBOX-T1.md` | `docs/intent-preservation/execution-plans/EP-WH-G11-OUTBOX.md` | `docs/intent-preservation/context-packages/CP-WH-G11-OUTBOX.md` | `docs/intent-preservation/coding-prompts/PROMPT-WH-G11-OUTBOX.md` | `docs/intent-preservation/validation-reports/VAL-WH-G11-OUTBOX.md` |
+| WH-G13-CONFLICTS | WH-G13-CONFLICTS-T1 | `docs/intent-preservation/tasks/WH-G13-CONFLICTS-T1.md` | `docs/intent-preservation/execution-plans/EP-WH-G13-CONFLICTS.md` | `docs/intent-preservation/context-packages/CP-WH-G13-CONFLICTS.md` | `docs/intent-preservation/coding-prompts/PROMPT-WH-G13-CONFLICTS.md` | `docs/intent-preservation/validation-reports/VAL-WH-G13-CONFLICTS.md` |
+| WH-G14-AUTH | WH-G14-AUTH-T1 | `docs/intent-preservation/tasks/WH-G14-AUTH-T1.md` | `docs/intent-preservation/execution-plans/EP-WH-G14-AUTH.md` | `docs/intent-preservation/context-packages/CP-WH-G14-AUTH.md` | `docs/intent-preservation/coding-prompts/PROMPT-WH-G14-AUTH.md` | `docs/intent-preservation/validation-reports/VAL-WH-G14-AUTH.md` |
 | Future owner-approved goal | future tasks | create before coding | create before coding | create before coding | create before coding | create before completion |
 
 ## Protected Boundaries

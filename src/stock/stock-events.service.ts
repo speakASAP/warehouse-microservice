@@ -1,27 +1,21 @@
-import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
+import { randomUUID } from 'crypto';
+import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import * as amqp from 'amqplib';
+import { LessThanOrEqual, Repository } from 'typeorm';
 import { LoggerService } from '../logger/logger.service';
-
-type StockEventPayload = {
-  type: 'stock.updated' | 'stock.low' | 'stock.out';
-  productId: string;
-  warehouseId: string;
-  quantity?: number;
-  available?: number;
-  threshold?: number;
-  timestamp: string;
-};
+import { StockEventOutbox, StockEventPayload, StockEventType } from './stock-event-outbox.entity';
 
 export type StockEventPublishResult = {
-  type: StockEventPayload['type'];
+  type: StockEventType;
   status: 'published' | 'failed';
+  eventId?: string;
   error?: string;
   timestamp: string;
 };
 
-/**
- * Service for publishing stock events to RabbitMQ
- */
+type StockEventOutboxCounts = Record<'pending' | 'publishing' | 'published' | 'failed', number>;
+
 @Injectable()
 export class StockEventsService implements OnModuleInit, OnModuleDestroy {
   private connection: any = null;
@@ -29,16 +23,33 @@ export class StockEventsService implements OnModuleInit, OnModuleDestroy {
   private lastConnectionError: string | null = null;
   private publishAttempts = 0;
   private publishFailures = 0;
+  private replayAttempts = 0;
+  private replayFailures = 0;
   private lastPublishResult: StockEventPublishResult | null = null;
+  private lastReplayAt: string | null = null;
+  private replayTimer: NodeJS.Timeout | null = null;
   private readonly exchangeName = 'stock.events';
+  private readonly replayBatchSize = parseInt(process.env.STOCK_EVENT_OUTBOX_BATCH_SIZE || '25', 10);
+  private readonly replayIntervalMs = parseInt(process.env.STOCK_EVENT_OUTBOX_REPLAY_INTERVAL_MS || '60000', 10);
+  private readonly retryDelayMs = parseInt(process.env.STOCK_EVENT_OUTBOX_RETRY_DELAY_MS || '30000', 10);
 
-  constructor(private readonly logger: LoggerService) {}
+  constructor(
+    private readonly logger: LoggerService,
+    @InjectRepository(StockEventOutbox)
+    private readonly outboxRepository: Repository<StockEventOutbox>,
+  ) {}
 
   async onModuleInit() {
     await this.connect();
+    await this.replayPendingOutbox();
+    this.startReplayTimer();
   }
 
   async onModuleDestroy() {
+    if (this.replayTimer) {
+      clearInterval(this.replayTimer);
+      this.replayTimer = null;
+    }
     await this.disconnect();
   }
 
@@ -58,7 +69,6 @@ export class StockEventsService implements OnModuleInit, OnModuleDestroy {
         throw new Error('Failed to create RabbitMQ channel');
       }
 
-      // Declare exchange for stock events
       await this.channel.assertExchange(this.exchangeName, 'topic', { durable: true });
 
       this.lastConnectionError = null;
@@ -89,9 +99,20 @@ export class StockEventsService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  /**
-   * Current RabbitMQ publishing dependency state for health/readiness.
-   */
+  private startReplayTimer() {
+    if (this.replayIntervalMs <= 0 || this.replayTimer) {
+      return;
+    }
+
+    this.replayTimer = setInterval(() => {
+      this.replayPendingOutbox().catch((error: unknown) => {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        const errorStack = error instanceof Error ? error.stack : undefined;
+        this.logger.error(`Stock event outbox replay failed: ${errorMessage}`, errorStack, 'StockEventsService');
+      });
+    }, this.replayIntervalMs);
+  }
+
   getConnectionStatus() {
     return {
       status: this.channel ? 'up' : 'down',
@@ -100,19 +121,73 @@ export class StockEventsService implements OnModuleInit, OnModuleDestroy {
     };
   }
 
-  getPublishStatus() {
+  async getPublishStatus() {
     return {
       attempts: this.publishAttempts,
       failures: this.publishFailures,
       lastResult: this.lastPublishResult,
+      outbox: {
+        counts: await this.getOutboxCounts(),
+        replayAttempts: this.replayAttempts,
+        replayFailures: this.replayFailures,
+        lastReplayAt: this.lastReplayAt,
+        batchSize: this.replayBatchSize,
+        retryDelayMs: this.retryDelayMs,
+      },
     };
   }
 
-  /**
-   * Publish stock.updated event
-   */
+  async replayPendingOutbox(limit = this.replayBatchSize): Promise<StockEventPublishResult[]> {
+    const dueEvents = await this.outboxRepository.find({
+      where: [
+        { status: 'pending' },
+        { status: 'failed', nextAttemptAt: LessThanOrEqual(new Date()) },
+      ],
+      order: { createdAt: 'ASC' },
+      take: limit,
+    } as any);
+
+    const eligibleEvents = dueEvents.filter((event) => event.attempts < event.maxAttempts);
+    if (eligibleEvents.length === 0) {
+      return [];
+    }
+
+    this.replayAttempts += 1;
+    this.lastReplayAt = new Date().toISOString();
+    const results: StockEventPublishResult[] = [];
+
+    for (const outboxEvent of eligibleEvents) {
+      outboxEvent.status = 'publishing';
+      await this.outboxRepository.save({ ...outboxEvent });
+
+      const result = await this.publish(outboxEvent.routingKey, outboxEvent.payload);
+      results.push(result);
+
+      outboxEvent.attempts += 1;
+      if (result.status === 'published') {
+        outboxEvent.status = 'published';
+        outboxEvent.lastError = null;
+        outboxEvent.nextAttemptAt = null;
+        outboxEvent.publishedAt = new Date();
+      } else {
+        this.replayFailures += 1;
+        outboxEvent.status = 'failed';
+        outboxEvent.lastError = result.error ?? 'Unknown publish failure';
+        outboxEvent.nextAttemptAt = outboxEvent.attempts >= outboxEvent.maxAttempts
+          ? null
+          : new Date(Date.now() + this.retryDelayMs);
+      }
+
+      await this.outboxRepository.save({ ...outboxEvent });
+      this.logPublishResult(result, outboxEvent.productId, outboxEvent.warehouseId, outboxEvent.payload.available, outboxEvent.payload.threshold);
+    }
+
+    return results;
+  }
+
   async publishStockUpdated(productId: string, warehouseId: string, quantity: number, available: number): Promise<StockEventPublishResult> {
     const event: StockEventPayload = {
+      eventId: randomUUID(),
       type: 'stock.updated',
       productId,
       warehouseId,
@@ -126,11 +201,9 @@ export class StockEventsService implements OnModuleInit, OnModuleDestroy {
     return result;
   }
 
-  /**
-   * Publish stock.low event when stock falls below threshold
-   */
   async publishStockLow(productId: string, warehouseId: string, available: number, threshold: number): Promise<StockEventPublishResult> {
     const event: StockEventPayload = {
+      eventId: randomUUID(),
       type: 'stock.low',
       productId,
       warehouseId,
@@ -144,11 +217,9 @@ export class StockEventsService implements OnModuleInit, OnModuleDestroy {
     return result;
   }
 
-  /**
-   * Publish stock.out event when stock reaches zero
-   */
   async publishStockOut(productId: string, warehouseId: string): Promise<StockEventPublishResult> {
     const event: StockEventPayload = {
+      eventId: randomUUID(),
       type: 'stock.out',
       productId,
       warehouseId,
@@ -160,12 +231,12 @@ export class StockEventsService implements OnModuleInit, OnModuleDestroy {
     return result;
   }
 
-  private async publish(routingKey: StockEventPayload['type'], event: StockEventPayload): Promise<StockEventPublishResult> {
+  private async publish(routingKey: StockEventType, event: StockEventPayload): Promise<StockEventPublishResult> {
     this.validateEvent(routingKey, event);
     this.publishAttempts += 1;
 
     if (!this.channel) {
-      return this.recordPublishFailure(routingKey, 'RabbitMQ channel not available');
+      return this.recordPublishFailure(routingKey, 'RabbitMQ channel not available', event.eventId);
     }
 
     try {
@@ -173,37 +244,40 @@ export class StockEventsService implements OnModuleInit, OnModuleDestroy {
       this.channel.publish(this.exchangeName, routingKey, Buffer.from(message), {
         persistent: true,
         contentType: 'application/json',
+        messageId: event.eventId,
       });
-      return this.recordPublishSuccess(routingKey);
+      return this.recordPublishSuccess(routingKey, event.eventId);
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       const errorStack = error instanceof Error ? error.stack : undefined;
       this.logger.error(`Failed to publish event: ${errorMessage}`, errorStack, 'StockEventsService');
-      return this.recordPublishFailure(routingKey, errorMessage);
+      return this.recordPublishFailure(routingKey, errorMessage, event.eventId);
     }
   }
 
-  private recordPublishSuccess(type: StockEventPayload['type']): StockEventPublishResult {
+  private recordPublishSuccess(type: StockEventType, eventId?: string): StockEventPublishResult {
     const result: StockEventPublishResult = {
       type,
       status: 'published',
+      eventId,
       timestamp: new Date().toISOString(),
     };
     this.lastPublishResult = result;
     return result;
   }
 
-  private recordPublishFailure(type: StockEventPayload['type'], error: string): StockEventPublishResult {
+  private recordPublishFailure(type: StockEventType, error: string, eventId?: string): StockEventPublishResult {
     this.publishFailures += 1;
     this.lastConnectionError = error;
     const result: StockEventPublishResult = {
       type,
       status: 'failed',
+      eventId,
       error,
       timestamp: new Date().toISOString(),
     };
     this.lastPublishResult = result;
-    this.logger.error(`Stock event publish failed: type=${type} error=${error}`, '', 'StockEventsService');
+    this.logger.error(`Stock event publish failed: type=${type} eventId=${eventId ?? 'none'} error=${error}`, '', 'StockEventsService');
     return result;
   }
 
@@ -216,6 +290,7 @@ export class StockEventsService implements OnModuleInit, OnModuleDestroy {
   ) {
     const fields = [
       `event=${result.type}`,
+      result.eventId ? `eventId=${result.eventId}` : null,
       `status=${result.status}`,
       `productId=${productId}`,
       `warehouseId=${warehouseId}`,
@@ -231,12 +306,12 @@ export class StockEventsService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  private validateEvent(routingKey: StockEventPayload['type'], event: StockEventPayload) {
+  private validateEvent(routingKey: StockEventType, event: StockEventPayload) {
     if (event.type !== routingKey) {
       throw new Error(`Invalid stock event: routing key ${routingKey} does not match type ${event.type}`);
     }
-    if (!event.productId || !event.warehouseId || !event.timestamp) {
-      throw new Error(`Invalid ${event.type} event: productId, warehouseId, and timestamp are required`);
+    if (!event.eventId || !event.productId || !event.warehouseId || !event.timestamp) {
+      throw new Error(`Invalid ${event.type} event: eventId, productId, warehouseId, and timestamp are required`);
     }
     if (Number.isNaN(Date.parse(event.timestamp))) {
       throw new Error(`Invalid ${event.type} event: timestamp must be ISO-8601 parseable`);
@@ -255,5 +330,34 @@ export class StockEventsService implements OnModuleInit, OnModuleDestroy {
     if (typeof value !== 'number' || !Number.isFinite(value)) {
       throw new Error(`Invalid ${eventType} event: ${field} must be a finite number`);
     }
+  }
+
+  private async getOutboxCounts(): Promise<StockEventOutboxCounts> {
+    const counts: StockEventOutboxCounts = {
+      pending: 0,
+      publishing: 0,
+      published: 0,
+      failed: 0,
+    };
+
+    try {
+      const rows = await this.outboxRepository
+        .createQueryBuilder('event')
+        .select('event.status', 'status')
+        .addSelect('COUNT(*)', 'count')
+        .groupBy('event.status')
+        .getRawMany();
+
+      for (const row of rows) {
+        if (row.status in counts) {
+          counts[row.status as keyof StockEventOutboxCounts] = parseInt(row.count, 10);
+        }
+      }
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      this.logger.error(`Failed to read stock event outbox status: ${errorMessage}`, '', 'StockEventsService');
+    }
+
+    return counts;
   }
 }

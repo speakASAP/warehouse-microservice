@@ -24,7 +24,7 @@ export class HealthService {
       timestamp: new Date().toISOString(),
       environment: process.env.NODE_ENV || 'development',
       dependencies,
-      operations: this.getOperationsStatus(),
+      operations: await this.getOperationsStatus(),
     };
   }
 
@@ -38,7 +38,7 @@ export class HealthService {
       service: process.env.SERVICE_NAME || 'warehouse-microservice',
       timestamp: new Date().toISOString(),
       dependencies,
-      operations: this.getOperationsStatus(),
+      operations: await this.getOperationsStatus(),
     };
   }
 
@@ -49,10 +49,10 @@ export class HealthService {
     };
   }
 
-  private getOperationsStatus() {
+  private async getOperationsStatus() {
     return {
       mutations: this.operationalMetrics.getMutationStatus(),
-      stockEvents: this.stockEvents.getPublishStatus(),
+      stockEvents: await this.stockEvents.getPublishStatus(),
     };
   }
 

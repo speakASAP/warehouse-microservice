@@ -97,6 +97,24 @@ kubectl -n statex-apps exec rabbitmq-0 -- rabbitmqadmin list exchanges name type
 
 Expected: `stock.events` is durable and type `topic`.
 
+## Reservation Expiry
+
+Expired checkout holds are processed by the `warehouse-reservation-expiry` Kubernetes CronJob. It runs every five minutes, mints a short-lived internal Warehouse JWT from `JWT_SECRET`, and calls the protected batch endpoint:
+
+```bash
+kubectl -n statex-apps get cronjob warehouse-reservation-expiry
+kubectl -n statex-apps get jobs -l job=reservation-expiry --sort-by=.metadata.creationTimestamp
+kubectl -n statex-apps logs job/<job-name>
+```
+
+To trigger one manual run without deploying a new image:
+
+```bash
+kubectl -n statex-apps create job --from=cronjob/warehouse-reservation-expiry warehouse-reservation-expiry-manual-$(date -u +%Y%m%d%H%M%S)
+```
+
+Expected job logs include `success:true` and a data object with `examined`, `expired`, and `failed`. Any non-zero `failed` count makes the job fail so operators can inspect reservation and stock drift before retrying.
+
 ## Mutation Failure Signal
 
 `/api/health` and `/api/ready` expose:

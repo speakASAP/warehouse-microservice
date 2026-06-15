@@ -2,38 +2,44 @@
 
 Metadata:
 - id: VAL-WH-G12
-- status: passed
+- status: implemented-with-integration-risk
 - goal_id: WH-G12
 - task_ids: WH-G12-T1
 - created: 2026-06-13
 - last_updated: 2026-06-13
-- completeness_level: complete
+- completeness_level: partial-validation
 
 ## Planned Validation
 
 | Command | Status | Notes |
 | --- | --- | --- |
-| Manual pre-coding gate | passed | Goal, task, execution plan, context package, coding prompt, and validation draft created before source edits. |
-| npm test -- --runInBand | passed | 3 suites, 21 tests passed. |
+| Manual pre-coding gate | passed-with-documented-risk | WH-G12-specific artifacts updated before source edits; shared state files intentionally not edited by this worker. |
+| git diff --check | passed | No whitespace errors in the combined remote diff. |
+| npm test -- test/reservations.service.spec.ts --runInBand | passed | 1 suite, 2 WH-G12 automatic expiry tests passed. |
 | npm run build | passed | Nest build completed. |
-| git diff --check | passed | No whitespace errors. |
+| npm test -- --runInBand | failed | Latest combined run: WH-G12 test passed; one concurrent WH-G11-owned outbox replay expectation fails in `test/stock-events.service.spec.ts`. |
 
+## Artifact Under Validation
 
-## Artifact Validated
-
-WH-G12-T1 Warehouse inventory topology read model.
+WH-G12-T1 automatic reservation expiry through a protected batch endpoint and Kubernetes CronJob.
 
 ## Invariant Evidence
 
-Warehouse remains stock and warehouse-origin authority. The read model uses active Warehouse records and Stock rows only. Catalog product identity remains an opaque productId filter. Supplier credentials are not exposed; only Warehouse-owned supplierId linkage is returned.
+Warehouse remains stock and reservation authority. Automatic expiry uses the existing transaction path that updates stock, reservation status, movement evidence, stock events, and mutation metrics. The CronJob has explicit Kubernetes visibility and no hidden in-process mutation loop is introduced.
 
 ## Passed Criteria
 
-- Active warehouses are returned with stock totals and origin classification.
-- Own and supplier-managed warehouses are grouped separately.
-- Optional productId filtering keeps the warehouse directory shape while narrowing stock totals.
-- No stock mutation, reservation mutation, supplier reconciliation write, event publishing, or deployment was performed.
+- Added protected `POST /api/reservations/expire-due`.
+- Added a batch service path that finds active due reservations and calls the existing `expireReservation` lifecycle transition.
+- Added fixed worker audit context: actor `warehouse-reservation-expiry-cron`, reason `RESERVATION_TTL_EXPIRED`.
+- Added `k8s/reservation-expiry-cronjob.yaml` and deploy-manifest inclusion.
+- Added runbook instructions for checking and manually triggering the CronJob.
+- Added focused tests for successful due expiry and per-reservation failure reporting.
 
-## Deviations
+## Integration Risk
 
-Existing uncommitted WH-G10 and WH-G11 source/documentation work was preserved and not reverted.
+Full-suite validation is currently blocked by other concurrent worker changes in stock outbox replay tests. WH-G12 did not edit those files.
+
+## Deployment
+
+Not approved and not performed.

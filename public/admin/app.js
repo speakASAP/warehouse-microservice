@@ -20,6 +20,7 @@
     inventoryTopology: null,
     reservations: [],
     supplierReconciliation: null,
+    supplierConflicts: [],
     selectedProductId: '',
   };
 
@@ -198,6 +199,7 @@
     $('[data-action="load-warehouses"]').addEventListener('click', () => loadWarehouses(true));
     $('[data-action="load-inventory-topology"]').addEventListener('click', () => loadInventoryTopology(true));
     $('[data-action="load-reservations"]').addEventListener('click', () => loadReservations(true));
+    $('[data-action="load-supplier-conflicts"]').addEventListener('click', () => loadSupplierConflicts(true));
     $('[data-action="reset-warehouse"]').addEventListener('click', () => resetWarehouseForm());
   }
 
@@ -213,6 +215,8 @@
     $('#stockActionForm').addEventListener('submit', submitStockAction);
     $('#reservationActionForm').addEventListener('submit', submitReservationAction);
     $('#supplierReconciliationForm').addEventListener('submit', submitSupplierReconciliation);
+    $('#supplierConflictFilterForm').addEventListener('submit', submitSupplierConflictFilter);
+    $('#supplierConflictReviewForm').addEventListener('submit', submitSupplierConflictReview);
   }
 
   function showPanel(panelId) {
@@ -231,6 +235,9 @@
     }
     if (panelId === 'reservations' && !state.reservations.length) {
       loadReservations().catch((error) => showMessage(error.message, true));
+    }
+    if (panelId === 'suppliers' && !state.supplierConflicts.length) {
+      loadSupplierConflicts().catch((error) => showMessage(error.message, true));
     }
   }
 
@@ -434,6 +441,47 @@
     await loadReservations();
   }
 
+  async function loadSupplierConflicts(showToast) {
+    const form = $('#supplierConflictFilterForm');
+    const filters = form ? formData(form) : { status: 'conflict', limit: '50' };
+    const params = new URLSearchParams();
+    Object.entries(filters).forEach(([key, value]) => {
+      const text = String(value || '').trim();
+      if (text) params.set(key, text);
+    });
+    if (!params.has('status')) params.set('status', 'conflict');
+    if (!params.has('limit')) params.set('limit', '50');
+
+    const response = await request(`supplier-reconciliations?${params.toString()}`);
+    state.supplierConflicts = asArray(response.data);
+    renderSupplierConflicts(state.supplierConflicts);
+    if (showToast) showMessage('Supplier conflicts loaded.');
+  }
+
+  async function submitSupplierConflictFilter(event) {
+    event.preventDefault();
+    await loadSupplierConflicts(true);
+  }
+
+  async function submitSupplierConflictReview(event) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const data = formData(form);
+    if (!data.id) {
+      showMessage('Select a conflict row to review.', true);
+      return;
+    }
+
+    const body = { actor: data.actor, operatorNote: data.operatorNote };
+    const response = await request(`supplier-reconciliations/${encodeURIComponent(data.id)}/review`, {
+      method: 'PATCH',
+      body,
+    });
+    prepareSupplierConflictReview(null);
+    await loadSupplierConflicts();
+    showMessage(`Conflict ${response.data?.id || data.id} marked reviewed.`);
+  }
+
   async function submitSupplierReconciliation(event) {
     event.preventDefault();
     const data = formData(event.currentTarget);
@@ -453,6 +501,7 @@
       $('#topologyProductId').value = data.productId;
       loadInventoryTopology(false, data.productId).catch((error) => showMessage(error.message, true));
     }
+    await loadSupplierConflicts();
   }
 
   function renderWarehouses() {
@@ -581,10 +630,48 @@
     $('#movementsTable').innerHTML = rows || emptyRow(9);
   }
 
+  function renderSupplierConflicts(conflicts) {
+    const rows = conflicts.map((reconciliation) => `
+      <tr>
+        <td>${statusPill(reconciliation.status)}</td>
+        <td>${reconciliation.reviewedAt ? statusPill('reviewed') + '<br><small>' + formatDate(reconciliation.reviewedAt) + '</small>' : statusPill('unreviewed')}</td>
+        <td>${escapeHtml(reconciliation.supplierId)}</td>
+        <td><code>${escapeHtml(reconciliation.productId)}</code></td>
+        <td><code>${escapeHtml(reconciliation.warehouseId)}</code></td>
+        <td>${reconciliation.supplierQuantity ?? '-'}</td>
+        <td>${reconciliation.reservedQuantity ?? '-'}</td>
+        <td>${escapeHtml(reconciliation.externalReference || '-')}</td>
+        <td>${escapeHtml(reconciliation.conflictReason || '-')}</td>
+        <td>${escapeHtml(reconciliation.operatorNote || '-')}</td>
+        <td>
+          <div class="row-actions">
+            <button class="link-button" type="button" data-review-conflict="${escapeAttr(reconciliation.id)}">Review</button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+    $('#supplierConflictTable').innerHTML = rows || emptyRow(11);
+    $$('[data-review-conflict]').forEach((button) => {
+      button.addEventListener('click', () => prepareSupplierConflictReview(button.dataset.reviewConflict));
+    });
+  }
+
+  function prepareSupplierConflictReview(id) {
+    const form = $('#supplierConflictReviewForm');
+    if (!form) return;
+    const reconciliation = id ? state.supplierConflicts.find((item) => item.id === id) : null;
+    form.elements.id.value = reconciliation?.id || '';
+    form.elements.displayId.value = reconciliation?.id || '';
+    form.elements.actor.value = reconciliation?.reviewedBy || form.elements.actor.value || '';
+    form.elements.operatorNote.value = reconciliation?.operatorNote || '';
+    if (reconciliation) form.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
   function renderSupplierReconciliation(reconciliation) {
     if (!reconciliation) {
       $('#supplierResultTable').innerHTML = emptyRow(9);
-    renderMetrics('#topologySummary', []);
+      $('#supplierConflictTable').innerHTML = emptyRow(11);
+      renderMetrics('#topologySummary', []);
       return;
     }
 
@@ -763,6 +850,7 @@
     $('#reservationsTable').innerHTML = emptyRow(7);
     $('#movementsTable').innerHTML = emptyRow(9);
     $('#supplierResultTable').innerHTML = emptyRow(9);
+    $('#supplierConflictTable').innerHTML = emptyRow(11);
     renderMetrics('#topologySummary', []);
   }
 
@@ -772,9 +860,9 @@
 
   function statusPill(status) {
     const value = status || 'unknown';
-    const kind = ['active', 'fulfilled', 'returned', 'applied'].includes(value)
+    const kind = ['active', 'fulfilled', 'returned', 'applied', 'reviewed'].includes(value)
       ? 'ok'
-      : ['expired', 'cancelled', 'released', 'inactive', 'conflict'].includes(value)
+      : ['expired', 'cancelled', 'released', 'inactive', 'conflict', 'unreviewed'].includes(value)
         ? 'warn'
         : '';
     return `<span class="pill ${kind}">${escapeHtml(value)}</span>`;

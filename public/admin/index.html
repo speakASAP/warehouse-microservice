@@ -386,6 +386,65 @@
               <tbody id="supplierResultTable"></tbody>
             </table>
           </div>
+          <div class="section-head subhead">
+            <div>
+              <h3>Conflict queue</h3>
+              <p>Review recorded conflicts without changing stock or reservations.</p>
+            </div>
+            <button class="button" type="button" data-action="load-supplier-conflicts">Reload</button>
+          </div>
+          <form class="surface form-grid" id="supplierConflictFilterForm">
+            <label>Status
+              <select name="status">
+                <option value="conflict">conflict</option>
+                <option value="applied">applied</option>
+              </select>
+            </label>
+            <label>Reviewed
+              <select name="reviewed">
+                <option value="">any</option>
+                <option value="false">unreviewed</option>
+                <option value="true">reviewed</option>
+              </select>
+            </label>
+            <label>Supplier ID<input name="supplierId" maxlength="200"></label>
+            <label>Warehouse ID<input name="warehouseId" maxlength="200"></label>
+            <label>Product ID<input name="productId" maxlength="200"></label>
+            <label>Reference<input name="externalReference" maxlength="200"></label>
+            <label>Limit<input name="limit" type="number" min="1" max="200" value="50"></label>
+            <div class="form-actions">
+              <button class="button primary" type="submit">Filter conflicts</button>
+            </div>
+          </form>
+          <form class="surface form-grid" id="supplierConflictReviewForm">
+            <input type="hidden" name="id">
+            <label>Conflict ID<input name="displayId" disabled></label>
+            <label>Actor<input name="actor" required maxlength="200" placeholder="warehouse-ops"></label>
+            <label class="span-2">Operator note<textarea name="operatorNote" maxlength="2000" rows="3"></textarea></label>
+            <div class="form-actions">
+              <button class="button primary" type="submit">Mark reviewed</button>
+            </div>
+          </form>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Status</th>
+                  <th>Reviewed</th>
+                  <th>Supplier</th>
+                  <th>Product</th>
+                  <th>Warehouse</th>
+                  <th>Supplier qty</th>
+                  <th>Reserved</th>
+                  <th>Reference</th>
+                  <th>Conflict</th>
+                  <th>Operator note</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="supplierConflictTable"></tbody>
+            </table>
+          </div>
         </section>
 
         <section class="panel" id="actions" aria-labelledby="actionsTitle">

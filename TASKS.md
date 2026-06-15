@@ -52,3 +52,9 @@
 - [x] 2026-06-12 WH-ORCH-T1 Adopted GoalKeeper-style orchestration on the remote Warehouse repo: master orchestrator, implementation state, process gates, goal briefs, templates, and next-goal helper while preserving WH-G1 through WH-G9 completion state.
 
 - [x] 2026-06-13 WH-G10-T1 Added public landing page, generated warehouse hero asset, Auth-backed login/register gate, and warehouse-admin role gate before showing `/admin`; validation passed without production deployment.
+
+- [x] 2026-06-14 WH-G10-CATALOG-T1 Collected catalog identity validation worker output; combined validation passed with full Jest, build, and diff check.
+- [x] 2026-06-14 WH-G11-OUTBOX-T1 Collected transactional stock event outbox worker output; combined validation passed with full Jest, build, and diff check.
+- [x] 2026-06-14 WH-G12-T1 Collected automatic reservation expiry worker output; combined validation passed with full Jest, build, and diff check.
+- [x] 2026-06-14 WH-G13-CONFLICTS-T1 Added missing IPS artifacts for supplier conflict operations and validated combined source with full Jest, build, and diff check.
+- [x] 2026-06-14 WH-G14-AUTH-T1 Collected authenticated actor enforcement worker output; combined validation passed with full Jest, build, and diff check.
