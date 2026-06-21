@@ -62,3 +62,7 @@
 - [x] 2026-06-15 WH-G10+ integrated wave deployed from commit fab5bee; production health, readiness, admin, and manual reservation-expiry CronJob smoke passed.
 
 - [x] 2026-06-15 WH-G12-CRON-MONITOR Natural reservation-expiry CronJob monitoring passed for three scheduled jobs; each completed with `success:true`, `expired=0`, and `failed=0`.
+
+## Project Completion Marker
+
+- 2026-06-21: Project marked completed/frozen after remote inventory. There are no active goals, active plans, open tasks, blockers, or pending human/AI actions. Do not ask for a new goal during routine status checks unless the owner explicitly creates one.
