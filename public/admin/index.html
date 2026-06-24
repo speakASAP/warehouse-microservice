@@ -11,7 +11,7 @@
       <div class="auth-brand">
         <a class="landing-link" href="/">Warehouse</a>
         <h1>Admin access</h1>
-        <p>Sign in or register through Auth. The console opens only when your JWT includes a warehouse admin role.</p>
+        <p>Sign in or register through the hosted Auth service. The console opens only when your JWT includes a warehouse admin role.</p>
         <div class="auth-proof">
           <span>Auth login</span>
           <span>Warehouse admin role</span>
@@ -19,24 +19,10 @@
         </div>
       </div>
       <div class="auth-panel">
-        <div class="auth-tabs" role="tablist" aria-label="Authentication mode">
-          <button class="auth-tab active" type="button" data-auth-tab="login">Login</button>
-          <button class="auth-tab" type="button" data-auth-tab="register">Register</button>
+        <div class="auth-actions">
+          <button class="button primary" type="button" data-auth-hosted="login">Sign in with Auth</button>
+          <button class="button" type="button" data-auth-hosted="register">Request access</button>
         </div>
-        <form class="auth-form active" id="loginForm">
-          <label>Email<input name="email" type="email" autocomplete="email" required></label>
-          <label>Password<input name="password" type="password" autocomplete="current-password" required></label>
-          <button class="button primary" type="submit">Sign in</button>
-        </form>
-        <form class="auth-form" id="registerForm">
-          <div class="auth-name-row">
-            <label>First name<input name="firstName" autocomplete="given-name"></label>
-            <label>Last name<input name="lastName" autocomplete="family-name"></label>
-          </div>
-          <label>Email<input name="email" type="email" autocomplete="email" required></label>
-          <label>Password<input name="password" type="password" autocomplete="new-password" minlength="6" required></label>
-          <button class="button primary" type="submit">Request access</button>
-        </form>
         <div class="auth-message hidden" id="authMessage" role="status"></div>
         <div class="access-denied hidden" id="accessDenied">
           <strong>Warehouse admin role required</strong>

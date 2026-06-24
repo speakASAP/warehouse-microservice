@@ -12,7 +12,10 @@ export interface AuthenticatedRequestUser {
   clientId?: string;
 }
 
-export type RequestWithAuthenticatedUser = Request & { user?: AuthenticatedRequestUser };
+export type RequestWithAuthenticatedUser = Request & {
+  user?: AuthenticatedRequestUser;
+  serviceActor?: AuthenticatedRequestUser;
+};
 
 export function getAuthenticatedMutationActor(request: Request): string {
   const user = (request as RequestWithAuthenticatedUser).user;

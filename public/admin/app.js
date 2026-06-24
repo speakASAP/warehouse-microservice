@@ -4,16 +4,18 @@
     token: 'warehouse-admin-token',
     refreshToken: 'warehouse-admin-refresh-token',
     authBase: 'warehouse-admin-auth-base',
+    authState: 'warehouse-admin-auth-state',
     user: 'warehouse-admin-user',
   };
 
   const defaultApiBase = `${window.location.origin}/api`;
-  const defaultAuthBase = 'https://auth.alfares.cz/auth';
+  const defaultAuthBase = 'https://auth.alfares.cz';
+  const authClientId = 'warehouse-microservice';
   const adminRoles = new Set(['global:superadmin', 'internal:warehouse-microservice:admin']);
   const state = {
     apiBase: localStorage.getItem(storage.apiBase) || defaultApiBase,
-    token: localStorage.getItem(storage.token) || '',
-    refreshToken: localStorage.getItem(storage.refreshToken) || '',
+    token: sessionStorage.getItem(storage.token) || localStorage.getItem(storage.token) || '',
+    refreshToken: sessionStorage.getItem(storage.refreshToken) || localStorage.getItem(storage.refreshToken) || '',
     authBase: localStorage.getItem(storage.authBase) || defaultAuthBase,
     user: parseStoredUser(),
     warehouses: [],
@@ -33,68 +35,67 @@
       showMessage(event.reason?.message || 'Request failed.', true);
     });
     bindAuth();
+    const authFragmentState = consumeHostedAuthFragment();
     bindNavigation();
     bindForms();
     bindActions();
     setEmptyRows();
     refreshPublicStatus();
+    if (authFragmentState === 'rejected') {
+      showAuthMessage('Auth sign-in could not be verified. Please start sign-in again.', true);
+    }
     enforceAdminGate();
   }
 
 
   function bindAuth() {
-    $$('[data-auth-tab]').forEach((button) => {
-      button.addEventListener('click', () => showAuthTab(button.dataset.authTab));
+    $$('[data-auth-hosted]').forEach((button) => {
+      button.addEventListener('click', () => {
+        window.location.href = hostedAuthUrl(button.dataset.authHosted === 'register' ? '/register' : '/login');
+      });
     });
-    $('#loginForm').addEventListener('submit', (event) => submitAuthForm(event, 'login'));
-    $('#registerForm').addEventListener('submit', (event) => submitAuthForm(event, 'register'));
     $$('[data-action="logout"]').forEach((button) => {
       button.addEventListener('click', logout);
     });
-    if (window.location.hash === '#register') showAuthTab('register');
   }
 
-  function showAuthTab(tab) {
-    $$('[data-auth-tab]').forEach((button) => button.classList.toggle('active', button.dataset.authTab === tab));
-    $('#loginForm').classList.toggle('active', tab === 'login');
-    $('#registerForm').classList.toggle('active', tab === 'register');
-    $('#accessDenied').classList.add('hidden');
+  function randomState() {
+    if (window.crypto && typeof window.crypto.randomUUID === 'function') return window.crypto.randomUUID();
+    return 'warehouse-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2);
   }
 
-  async function submitAuthForm(event, mode) {
-    event.preventDefault();
-    const form = event.currentTarget;
+  function hostedAuthUrl(path) {
+    const nonce = randomState();
+    sessionStorage.setItem(storage.authState, nonce);
     state.authBase = state.authBase || defaultAuthBase;
     localStorage.setItem(storage.authBase, state.authBase);
-    const data = formData(form);
-    const path = mode === 'register' ? 'register' : 'login';
-    try {
-      const payload = await authRequest(path, data);
-      applyAuthPayload(payload);
-      if (hasWarehouseAdminRole()) {
-        showAuthMessage('Access confirmed. Loading admin console.');
-        revealAdminShell();
-        await loadAuthorizedSummaries(true);
-      } else {
-        lockAdminShell(true);
-      }
-    } catch (error) {
-      showAuthMessage(error.message || 'Authentication failed.', true);
-    }
+    const returnUrl = new URL('/admin', window.location.origin);
+    const url = new URL(path, state.authBase);
+    url.searchParams.set('client_id', authClientId);
+    url.searchParams.set('return_url', returnUrl.toString());
+    url.searchParams.set('state', nonce);
+    return url.toString();
   }
 
-  async function authRequest(path, body) {
-    const response = await fetch(`${state.authBase}/${path}`, {
-      method: 'POST',
-      headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
-    const payload = await response.json().catch(() => ({}));
-    if (!response.ok) {
-      const message = payload.message || payload.error || `Auth request failed with ${response.status}`;
-      throw new Error(Array.isArray(message) ? message.join(', ') : message);
+  function consumeHostedAuthFragment() {
+    if (!window.location.hash || !window.location.hash.includes('access_token=')) return 'none';
+    const params = new URLSearchParams(window.location.hash.slice(1));
+    const accessToken = params.get('access_token') || '';
+    const refreshToken = params.get('refresh_token') || '';
+    const returnedState = params.get('state') || '';
+    const expectedState = sessionStorage.getItem(storage.authState) || '';
+    const cleanUrl = window.location.pathname + window.location.search;
+
+    if (!accessToken || !expectedState || returnedState !== expectedState) {
+      sessionStorage.removeItem(storage.authState);
+      window.history.replaceState(null, document.title, cleanUrl);
+      return 'rejected';
     }
-    return payload;
+
+    applyAuthPayload({ accessToken, refreshToken });
+    sessionStorage.removeItem(storage.authState);
+    window.history.replaceState(null, document.title, cleanUrl);
+    return 'accepted';
   }
 
   function applyAuthPayload(payload) {
@@ -107,8 +108,10 @@
       email: payload.user?.email || tokenUser.email || '',
       sub: tokenUser.sub || payload.user?.id || '',
     };
-    localStorage.setItem(storage.token, state.token);
-    localStorage.setItem(storage.refreshToken, state.refreshToken);
+    sessionStorage.setItem(storage.token, state.token);
+    if (state.refreshToken) sessionStorage.setItem(storage.refreshToken, state.refreshToken);
+    localStorage.removeItem(storage.token);
+    localStorage.removeItem(storage.refreshToken);
     localStorage.setItem(storage.user, JSON.stringify(state.user));
   }
 
@@ -145,6 +148,9 @@
     state.token = '';
     state.refreshToken = '';
     state.user = null;
+    sessionStorage.removeItem(storage.token);
+    sessionStorage.removeItem(storage.refreshToken);
+    sessionStorage.removeItem(storage.authState);
     localStorage.removeItem(storage.token);
     localStorage.removeItem(storage.refreshToken);
     localStorage.removeItem(storage.user);

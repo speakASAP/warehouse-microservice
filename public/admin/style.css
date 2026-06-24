@@ -633,8 +633,18 @@ td code {
   box-shadow: var(--shadow);
 }
 
-.auth-tabs {
+.auth-actions {
   display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.auth-actions .button {
+  width: 100%;
+}
+
+.auth-tabs {
+  display: none;
   grid-template-columns: repeat(2, 1fr);
   gap: 8px;
 }
