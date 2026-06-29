@@ -23,6 +23,17 @@ describe('authenticated mutation actor enforcement', () => {
     },
   } as any;
 
+  const catalogServiceRequest = {
+    user: {
+      sub: 'catalog-warehouse-service',
+      serviceName: 'catalog-microservice',
+      service: 'catalog-microservice',
+      clientId: 'catalog-microservice',
+      authMethod: 'auth-service-jwt',
+      roles: ['internal:warehouse-microservice:admin'],
+    },
+  } as any;
+
   const logger = {
     log: jest.fn(),
   };
@@ -37,6 +48,10 @@ describe('authenticated mutation actor enforcement', () => {
 
   it('derives service actor when a verified service identity claim is present', () => {
     expect(getAuthenticatedMutationActor(serviceRequest)).toBe('service:orders-microservice');
+  });
+
+  it('derives Catalog service actor from the approved Warehouse service-principal shape', () => {
+    expect(getAuthenticatedMutationActor(catalogServiceRequest)).toBe('service:catalog-microservice');
   });
 
   it('fails closed when JWT verification did not attach an authenticated subject', () => {

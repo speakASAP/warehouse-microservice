@@ -1,3 +1,13 @@
+# 2026-06-29 - TASK-STOCK-004 Catalog Service Principal Receiver Coverage
+
+Change: added focused Warehouse regression coverage for the Auth-compatible Catalog-to-Warehouse service principal. The guard spec now proves an Auth `/auth/validate` response with `serviceName=service=clientId=catalog-microservice`, `authMethod=auth-service-jwt`, and role `internal:warehouse-microservice:admin` passes the default Warehouse guard and attaches `serviceActor`; the actor spec proves Warehouse mutation actor derivation becomes `service:catalog-microservice`.
+
+Validation evidence: `npm test -- --runInBand test/jwt-roles.guard.spec.ts test/authenticated-actor.spec.ts` passed `2` suites / `16` tests; `npm run build` passed; `git diff --check` passed.
+
+Boundary decision: source tests only. No Auth helper execution, token issuance, Vault/Kubernetes secret mutation, Warehouse import, stock mutation, reservation, deployment, or live credential read was performed.
+
+Next action: keep runtime provisioning approval-gated; after the Auth-owned Catalog Warehouse token is mounted, rerun Catalog stock credential wiring and acceptance gates.
+
 # Warehouse Orchestrator Status
 
 Last updated: 2026-06-15.

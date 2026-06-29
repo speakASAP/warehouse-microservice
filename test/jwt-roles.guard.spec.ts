@@ -119,6 +119,54 @@ describe('JwtRolesGuard central Auth validation', () => {
     expect(request.user.sub).toBe('auth-user-id');
   });
 
+  it('accepts an Auth-issued Catalog service principal with the Warehouse admin role', async () => {
+    const request = { headers: { authorization: 'Bearer catalog-warehouse-token' } };
+    mockedAxios.post.mockResolvedValueOnce({
+      data: {
+        valid: true,
+        user: {
+          sub: 'catalog-warehouse-service',
+          type: 'service',
+          authMethod: 'auth-service-jwt',
+          roles: ['internal:warehouse-microservice:admin'],
+          serviceName: 'catalog-microservice',
+          service: 'catalog-microservice',
+          clientId: 'catalog-microservice',
+        },
+      },
+    } as any);
+
+    const guard = createGuard();
+
+    await expect(guard.canActivate(createContext(request))).resolves.toBe(true);
+
+    expect(mockedAxios.post).toHaveBeenCalledWith(
+      'http://auth-microservice:3370/auth/validate',
+      { token: 'catalog-warehouse-token' },
+      { timeout: 3000 },
+    );
+    expect(request).toMatchObject({
+      user: {
+        sub: 'catalog-warehouse-service',
+        type: 'service',
+        authMethod: 'auth-service-jwt',
+        roles: ['internal:warehouse-microservice:admin'],
+        service: 'catalog-microservice',
+        serviceName: 'catalog-microservice',
+        clientId: 'catalog-microservice',
+      },
+      serviceActor: {
+        sub: 'catalog-warehouse-service',
+        type: 'service',
+        authMethod: 'auth-service-jwt',
+        roles: ['internal:warehouse-microservice:admin'],
+        service: 'catalog-microservice',
+        serviceName: 'catalog-microservice',
+        clientId: 'catalog-microservice',
+      },
+    });
+  });
+
   it('preserves service identity fields returned by central Auth validation', async () => {
     const request = { headers: { authorization: 'Bearer service-token' } };
     mockedAxios.post.mockResolvedValueOnce({
