@@ -31,7 +31,10 @@ preflight_service_health() {
     echo -e "${RED}kubectl cannot reach cluster${NC}"
     exit 1
   fi
-  BAD_PODS=$(kubectl get pods -n "$NAMESPACE" -l app="$SERVICE_NAME" --no-headers 2>/dev/null | awk '$3 ~ /Error|CrashLoopBackOff|ImagePullBackOff|CreateContainerConfigError|CreateContainerError|ErrImagePull/ {print $1}')
+  BAD_PODS=$({
+    kubectl get pods -n "$NAMESPACE" -l app="$SERVICE_NAME" --field-selector=status.phase=Running --no-headers 2>/dev/null || true
+    kubectl get pods -n "$NAMESPACE" -l app="$SERVICE_NAME" --field-selector=status.phase=Pending --no-headers 2>/dev/null || true
+  } | awk '$3 ~ /Error|CrashLoopBackOff|ImagePullBackOff|CreateContainerConfigError|CreateContainerError|ErrImagePull/ {print $1}')
   if [ -n "$BAD_PODS" ]; then
     echo -e "${RED}Service has unhealthy pods before deploy:${NC}"
     kubectl get pods -n "$NAMESPACE" -l app="$SERVICE_NAME" -o wide || true
