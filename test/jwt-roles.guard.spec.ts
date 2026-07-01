@@ -39,6 +39,7 @@ describe('JwtRolesGuard central Auth validation', () => {
     delete process.env.AUTH_SERVICE_URL;
     delete process.env.AUTH_VALIDATE_TIMEOUT_MS;
     delete process.env.SERVICE_NAME;
+    delete process.env.CLIPLOT_WAREHOUSE_SERVICE_TOKEN;
   });
 
   afterAll(() => {
@@ -165,6 +166,52 @@ describe('JwtRolesGuard central Auth validation', () => {
         clientId: 'catalog-microservice',
       },
     });
+  });
+
+  it('accepts the Cliplot static warehouse service token as a machine actor', async () => {
+    process.env.CLIPLOT_WAREHOUSE_SERVICE_TOKEN = 'cliplot-warehouse-token';
+    const request = { headers: { authorization: 'Bearer cliplot-warehouse-token' } };
+
+    const guard = createGuard();
+
+    await expect(guard.canActivate(createContext(request))).resolves.toBe(true);
+
+    expect(mockedAxios.post).not.toHaveBeenCalled();
+    expect(request).toMatchObject({
+      user: {
+        sub: 'cliplot-service',
+        type: 'service',
+        authMethod: 'warehouse-static-service-token',
+        roles: ['internal:warehouse-microservice:admin'],
+        service: 'cliplot-service',
+        serviceName: 'cliplot-service',
+        clientId: 'cliplot-service',
+      },
+      serviceActor: {
+        sub: 'cliplot-service',
+        type: 'service',
+        authMethod: 'warehouse-static-service-token',
+        roles: ['internal:warehouse-microservice:admin'],
+        service: 'cliplot-service',
+        serviceName: 'cliplot-service',
+        clientId: 'cliplot-service',
+      },
+    });
+  });
+
+  it('does not treat a mismatched Cliplot static token as authenticated', async () => {
+    process.env.CLIPLOT_WAREHOUSE_SERVICE_TOKEN = 'cliplot-warehouse-token';
+    const request = { headers: { authorization: 'Bearer wrong-cliplot-token' } };
+    mockedAxios.post.mockResolvedValueOnce({ data: { valid: false } } as any);
+
+    const guard = createGuard();
+
+    await expect(guard.canActivate(createContext(request))).rejects.toThrow(UnauthorizedException);
+    expect(mockedAxios.post).toHaveBeenCalledWith(
+      'http://auth-microservice:3370/auth/validate',
+      { token: 'wrong-cliplot-token' },
+      { timeout: 3000 },
+    );
   });
 
   it('preserves service identity fields returned by central Auth validation', async () => {

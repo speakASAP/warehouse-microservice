@@ -1,5 +1,14 @@
 # Warehouse Implementation State
 
+2026-07-01: Prepared Cliplot machine-auth receiver support for Warehouse
+without Auth DB mutation. `JwtRolesGuard` accepts only
+`CLIPLOT_WAREHOUSE_SERVICE_TOKEN` as a `cliplot-service` machine actor with
+`internal:warehouse-microservice:admin`; mismatched tokens still fall through
+to Auth `/auth/validate` and fail closed. The token is projected from
+`secret/prod/cliplot-service#WAREHOUSE_SERVICE_TOKEN` through
+`warehouse-microservice-secret`. Validation must not mutate stock; use
+read-only `POST /api/stock/availability/batch` smoke only.
+
 Last updated: 2026-06-15.
 
 ## Orchestrator Command

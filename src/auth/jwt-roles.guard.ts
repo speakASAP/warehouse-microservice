@@ -11,6 +11,7 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import axios from 'axios';
+import { timingSafeEqual } from 'crypto';
 import { Request } from 'express';
 import { RequestWithAuthenticatedUser } from './authenticated-actor';
 import { ROLES_KEY, PUBLIC_KEY } from './roles.decorator';
@@ -62,7 +63,8 @@ export class JwtRolesGuard implements CanActivate {
     }
 
     const token = authHeader.slice(7);
-    const authUser = await this.validateWithAuthService(token);
+    const staticServiceActor = this.resolveStaticServiceActor(token);
+    const authUser = staticServiceActor ?? (await this.validateWithAuthService(token));
     const userRoles = Array.isArray(authUser.roles) ? authUser.roles : [];
 
     const hasRole = requiredRoles.some((r) => userRoles.includes(r));
@@ -91,6 +93,23 @@ export class JwtRolesGuard implements CanActivate {
       };
     }
     return true;
+  }
+
+  private resolveStaticServiceActor(token: string): AuthValidationUser | null {
+    const cliplotToken = process.env.CLIPLOT_WAREHOUSE_SERVICE_TOKEN;
+    if (cliplotToken && this.safeEqual(token, cliplotToken)) {
+      return {
+        sub: 'cliplot-service',
+        type: 'service',
+        authMethod: 'warehouse-static-service-token',
+        roles: ['internal:warehouse-microservice:admin'],
+        service: 'cliplot-service',
+        serviceName: 'cliplot-service',
+        clientId: 'cliplot-service',
+      };
+    }
+
+    return null;
   }
 
   private async validateWithAuthService(token: string): Promise<AuthValidationUser> {
@@ -124,5 +143,14 @@ export class JwtRolesGuard implements CanActivate {
   private getDefaultRoles(): string[] {
     const name = process.env.SERVICE_NAME || 'warehouse-microservice';
     return [`global:superadmin`, `internal:${name}:admin`];
+  }
+
+  private safeEqual(left: string, right: string): boolean {
+    const leftBuffer = Buffer.from(left);
+    const rightBuffer = Buffer.from(right);
+    if (leftBuffer.length !== rightBuffer.length) {
+      return false;
+    }
+    return timingSafeEqual(leftBuffer, rightBuffer);
   }
 }
