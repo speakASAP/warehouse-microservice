@@ -94,6 +94,8 @@ export class SupplierReconciliationService {
   }
 
   async reconcile(body: SupplierStockReconciliationDto): Promise<SupplierStockReconciliation> {
+    const quantity = this.normalizeSupplierQuantity(body.quantity);
+
     this.logger.log(
       `Reconciling supplier stock ${body.supplierId}/${body.productId}/${body.externalReference}`,
       'SupplierReconciliationService',
@@ -167,17 +169,17 @@ export class SupplierReconciliationService {
         },
       });
 
-      if (body.quantity < reservedQuantity) {
+      if (quantity < reservedQuantity) {
         const reconciliation = reconciliationRepository.create({
           supplierId: body.supplierId,
           warehouseId: body.warehouseId,
           productId: body.productId,
-          supplierQuantity: body.quantity,
+          supplierQuantity: quantity,
           previousQuantity,
           reservedQuantity,
           externalReference: body.externalReference,
           status: 'conflict',
-          conflictReason: `Supplier quantity ${body.quantity} is below reserved quantity ${reservedQuantity} across ${activeReservations} active reservation(s)`,
+          conflictReason: `Supplier quantity ${quantity} is below reserved quantity ${reservedQuantity} across ${activeReservations} active reservation(s)`,
           actor: body.actor,
           observedAt,
         });
@@ -188,14 +190,14 @@ export class SupplierReconciliationService {
         };
       }
 
-      stock.quantity = body.quantity;
+      stock.quantity = quantity;
       stock.available = stock.quantity - stock.reserved;
       const savedStock = await stockRepository.save(stock);
 
       await manager.getRepository(StockMovement).save(manager.getRepository(StockMovement).create({
         productId: body.productId,
         type: 'supplier_reconciliation',
-        quantity: body.quantity - previousQuantity,
+        quantity: quantity - previousQuantity,
         toWarehouseId: body.warehouseId,
         reference: body.externalReference,
         reason: 'SUPPLIER_DROPSHIP_RECONCILIATION',
@@ -206,7 +208,7 @@ export class SupplierReconciliationService {
         supplierId: body.supplierId,
         warehouseId: body.warehouseId,
         productId: body.productId,
-        supplierQuantity: body.quantity,
+        supplierQuantity: quantity,
         previousQuantity,
         reservedQuantity,
         externalReference: body.externalReference,
@@ -249,6 +251,20 @@ export class SupplierReconciliationService {
     }
   }
 
+  private normalizeSupplierQuantity(quantity: SupplierStockReconciliationDto['quantity'] | string | null | undefined): number {
+    if (quantity === undefined || quantity === null) {
+      return 0;
+    }
+    if (typeof quantity === 'string' && quantity.trim() === '') {
+      return 0;
+    }
+    const normalizedQuantity = Number(quantity);
+    if (!Number.isInteger(normalizedQuantity) || normalizedQuantity < 0) {
+      throw new BadRequestException('quantity must be a non-negative integer');
+    }
+    return normalizedQuantity;
+  }
+
   private async publishStockEvents(stock: Stock): Promise<StockEventPublishResult[]> {
     const results: StockEventPublishResult[] = [];
     results.push(await this.stockEvents.publishStockUpdated(stock.productId, stock.warehouseId, stock.quantity, stock.available));
@@ -278,7 +294,7 @@ export class SupplierReconciliationService {
       `supplierId=${body.supplierId}`,
       `productId=${body.productId}`,
       `warehouseId=${body.warehouseId}`,
-      `quantity=${body.quantity}`,
+      `quantity=${this.normalizeSupplierQuantity(body.quantity)}`,
       'reasonCode=SUPPLIER_DROPSHIP_RECONCILIATION',
       `reference=${body.externalReference}`,
       `eventResult=${eventResult}`,

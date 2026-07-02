@@ -12,6 +12,16 @@ import {
   Min,
 } from 'class-validator';
 
+function toSupplierQuantity(value: unknown): number {
+  if (value === undefined || value === null) {
+    return 0;
+  }
+  if (typeof value === 'string' && value.trim() === '') {
+    return 0;
+  }
+  return Number(value);
+}
+
 export class SupplierStockReconciliationDto {
   @IsString()
   @IsNotEmpty()
@@ -28,10 +38,10 @@ export class SupplierStockReconciliationDto {
   @MaxLength(200)
   productId: string;
 
-  @Type(() => Number)
+  @Transform(({ value }) => toSupplierQuantity(value))
   @IsInt()
   @Min(0)
-  quantity: number;
+  quantity: number = 0;
 
   @IsString()
   @IsNotEmpty()

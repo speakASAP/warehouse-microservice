@@ -1,9 +1,12 @@
 import 'reflect-metadata';
 import { BadRequestException } from '@nestjs/common';
+import { plainToInstance } from 'class-transformer';
+import { validate } from 'class-validator';
 import { StockMovement } from '../src/movements/stock-movement.entity';
 import { StockReservation } from '../src/reservations/stock-reservation.entity';
 import { Stock } from '../src/stock/stock.entity';
 import { SupplierReconciliationService } from '../src/suppliers/supplier-reconciliation.service';
+import { SupplierStockReconciliationDto } from '../src/suppliers/dto/supplier-stock-reconciliation.dto';
 import { SupplierStockReconciliation } from '../src/suppliers/supplier-stock-reconciliation.entity';
 import { Warehouse } from '../src/warehouses/warehouse.entity';
 
@@ -114,6 +117,102 @@ describe('SupplierReconciliationService', () => {
       queryBuilder,
     };
   }
+
+  it.each([
+    ['absent', {}],
+    ['null', { quantity: null }],
+    ['blank', { quantity: '' }],
+    ['whitespace', { quantity: '   ' }],
+  ])('defaults %s supplier reconciliation quantity to zero at the DTO validation boundary', async (_label, quantityPayload) => {
+    const dto = plainToInstance(SupplierStockReconciliationDto, {
+      supplierId: 'supplier-1',
+      warehouseId: 'warehouse-1',
+      productId: 'product-1',
+      externalReference: 'feed-missing-quantity',
+      ...quantityPayload,
+    });
+
+    const errors = await validate(dto);
+
+    expect(errors).toHaveLength(0);
+    expect(dto.quantity).toBe(0);
+  });
+
+  it.each([
+    ['negative', -1],
+    ['fractional', 1.5],
+    ['non-numeric', 'not-a-number'],
+  ])('rejects %s supplier reconciliation quantity at the DTO validation boundary', async (_label, quantity) => {
+    const dto = plainToInstance(SupplierStockReconciliationDto, {
+      supplierId: 'supplier-1',
+      warehouseId: 'warehouse-1',
+      productId: 'product-1',
+      externalReference: 'feed-invalid-quantity',
+      quantity,
+    });
+
+    const errors = await validate(dto);
+
+    expect(errors.map((error) => error.property)).toContain('quantity');
+  });
+
+  it('defaults a missing direct reconciliation quantity to zero before writing stock evidence', async () => {
+    const { service, stockRepository, movementRepository, reconciliationRepository, stockEvents } = createService({
+      stock: {
+        productId: 'product-1',
+        warehouseId: 'warehouse-1',
+        quantity: 10,
+        reserved: 0,
+        available: 10,
+        lowStockThreshold: 5,
+      },
+      activeReservationCount: 0,
+    });
+
+    const reconciliation = await service.reconcile({
+      ...request,
+      quantity: undefined as unknown as number,
+      externalReference: 'feed-missing-quantity',
+    });
+
+    expect(stockRepository.save).toHaveBeenCalledWith(expect.objectContaining({
+      quantity: 0,
+      reserved: 0,
+      available: 0,
+    }));
+    expect(movementRepository.save).toHaveBeenCalledWith(expect.objectContaining({
+      quantity: -10,
+      reference: 'feed-missing-quantity',
+    }));
+    expect(reconciliationRepository.save).toHaveBeenCalledWith(expect.objectContaining({
+      status: 'applied',
+      supplierQuantity: 0,
+      previousQuantity: 10,
+      reservedQuantity: 0,
+    }));
+    expect(stockEvents.publishStockUpdated).toHaveBeenCalledWith('product-1', 'warehouse-1', 0, 0);
+    expect(stockEvents.publishStockOut).toHaveBeenCalledWith('product-1', 'warehouse-1');
+    expect(reconciliation.status).toBe('applied');
+  });
+
+  it.each([
+    ['negative', -1],
+    ['fractional', 1.5],
+    ['non-numeric', 'not-a-number' as unknown as number],
+  ])('rejects %s direct reconciliation quantity before writing stock evidence', async (_label, quantity) => {
+    const { service, stockRepository, movementRepository, reconciliationRepository, stockEvents } = createService();
+
+    await expect(service.reconcile({
+      ...request,
+      quantity,
+      externalReference: 'feed-invalid-quantity',
+    })).rejects.toThrow('quantity must be a non-negative integer');
+
+    expect(stockRepository.save).not.toHaveBeenCalled();
+    expect(movementRepository.save).not.toHaveBeenCalled();
+    expect(reconciliationRepository.save).not.toHaveBeenCalled();
+    expect(stockEvents.publishStockUpdated).not.toHaveBeenCalled();
+  });
 
   it('applies a supplier quantity update and records movement evidence', async () => {
     const { service, stockRepository, movementRepository, reconciliationRepository, stockEvents } = createService();
