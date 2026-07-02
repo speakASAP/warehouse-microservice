@@ -9,7 +9,17 @@ import {
 } from 'typeorm';
 import { FulfillmentOrderLine } from './fulfillment-order-line.entity';
 
-export type FulfillmentOrderStatus = 'requested' | 'cancelled' | 'returned';
+export type FulfillmentOrderStatus =
+  | 'requested'
+  | 'collecting'
+  | 'forming'
+  | 'formed'
+  | 'handed_to_delivery'
+  | 'in_delivery'
+  | 'delivered'
+  | 'not_delivered'
+  | 'cancelled'
+  | 'returned';
 
 export interface FulfillmentDeliveryAddress {
   name?: string;

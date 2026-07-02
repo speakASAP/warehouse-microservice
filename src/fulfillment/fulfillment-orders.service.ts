@@ -1,9 +1,10 @@
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import axios from 'axios';
 import { DataSource, EntityManager, In, Repository } from 'typeorm';
 import { LoggerService } from '../logger/logger.service';
 import { StockReservation } from '../reservations/stock-reservation.entity';
-import { CreateFulfillmentOrderDto, FulfillmentOrderItemDto, FulfillmentOrderTransitionDto } from './dto/fulfillment-order.dto';
+import { CreateFulfillmentOrderDto, FulfillmentOrderItemDto, FulfillmentOrderStatusTransitionDto, FulfillmentOrderTransitionDto } from './dto/fulfillment-order.dto';
 import { FulfillmentOrderLine } from './fulfillment-order-line.entity';
 import {
   FulfillmentCustomerContact,
@@ -17,6 +18,10 @@ interface FulfillmentOrderCommand extends CreateFulfillmentOrderDto {
 }
 
 interface FulfillmentTransitionCommand extends FulfillmentOrderTransitionDto {
+  actor?: string;
+}
+
+interface FulfillmentStatusTransitionCommand extends FulfillmentOrderStatusTransitionDto {
   actor?: string;
 }
 
@@ -116,12 +121,95 @@ export class FulfillmentOrdersService {
     });
   }
 
+  async updateStatus(orderId: string, body: FulfillmentStatusTransitionCommand): Promise<FulfillmentOrder> {
+    this.validateRequiredString(body.reasonCode, 'reasonCode');
+    this.validateRequiredString(body.actor, 'actor');
+    const saved = await this.dataSource.transaction(async (manager) => {
+      const orderRepository = manager.getRepository(FulfillmentOrder);
+      const order = await orderRepository.findOne({
+        where: { orderId },
+        relations: ['lines'],
+      });
+
+      if (!order) {
+        throw new NotFoundException(`Fulfillment order not found for order ${orderId}`);
+      }
+
+      if (order.status === body.status) {
+        return order;
+      }
+
+      this.assertStatusTransition(order.status, body.status);
+      order.status = body.status;
+      order.statusReasonCode = body.reasonCode;
+      order.statusActor = body.actor;
+      order.statusReference = body.reference;
+      return orderRepository.save(order);
+    });
+
+    await this.notifyOrdersStatus(saved, body);
+    return saved;
+  }
+
   async cancel(orderId: string, body: FulfillmentTransitionCommand): Promise<FulfillmentOrder> {
     return this.transition(orderId, 'cancelled', body);
   }
 
   async returnOrder(orderId: string, body: FulfillmentTransitionCommand): Promise<FulfillmentOrder> {
     return this.transition(orderId, 'returned', body);
+  }
+
+  private assertStatusTransition(current: FulfillmentOrderStatus, next: FulfillmentOrderStatus): void {
+    const allowed: Record<FulfillmentOrderStatus, FulfillmentOrderStatus[]> = {
+      requested: ['collecting', 'cancelled', 'returned'],
+      collecting: ['forming', 'cancelled', 'returned'],
+      forming: ['formed', 'cancelled', 'returned'],
+      formed: ['handed_to_delivery', 'cancelled', 'returned'],
+      handed_to_delivery: ['in_delivery', 'returned'],
+      in_delivery: ['delivered', 'not_delivered', 'returned'],
+      delivered: ['returned'],
+      not_delivered: ['returned'],
+      cancelled: [],
+      returned: [],
+    };
+    if (!allowed[current]?.includes(next)) {
+      throw new BadRequestException(`Invalid fulfillment order transition: ${current} -> ${next}`);
+    }
+  }
+
+  private async notifyOrdersStatus(
+    order: FulfillmentOrder,
+    body: FulfillmentStatusTransitionCommand,
+  ): Promise<void> {
+    const baseUrl = (process.env.ORDERS_SERVICE_URL || '').replace(/\/$/, '');
+    const token = process.env.ORDERS_SERVICE_TOKEN || process.env.JWT_TOKEN;
+    if (!baseUrl || !token) {
+      this.logger.warn('orders fulfillment status sync skipped: missing Orders URL or token', 'FulfillmentOrdersService');
+      return;
+    }
+
+    try {
+      await axios.put(
+        `${baseUrl}/api/orders/${encodeURIComponent(order.orderId)}/warehouse-fulfillment-status`,
+        {
+          status: order.status,
+          reasonCode: body.reasonCode,
+          actor: body.actor,
+          reference: body.reference,
+          fulfillmentOrderId: order.id,
+          occurredAt: new Date().toISOString(),
+        },
+        {
+          timeout: 5000,
+          headers: {
+            'x-service-name': 'warehouse-microservice',
+            'x-internal-service-token': token.trim(),
+          },
+        },
+      );
+    } catch {
+      this.logger.warn('orders fulfillment status sync failed', 'FulfillmentOrdersService');
+    }
   }
 
   private async transition(

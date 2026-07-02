@@ -2,7 +2,7 @@ import { Body, Controller, Get, Param, Post, Req } from '@nestjs/common';
 import { Request } from 'express';
 import { getAuthenticatedMutationActor } from '../auth/authenticated-actor';
 import { LoggerService } from '../logger/logger.service';
-import { CreateFulfillmentOrderDto, FulfillmentOrderTransitionDto } from './dto/fulfillment-order.dto';
+import { CreateFulfillmentOrderDto, FulfillmentOrderStatusTransitionDto, FulfillmentOrderTransitionDto } from './dto/fulfillment-order.dto';
 import { FulfillmentOrdersService } from './fulfillment-orders.service';
 
 @Controller('fulfillment-orders')
@@ -26,6 +26,20 @@ export class FulfillmentOrdersController {
   async findByOrder(@Param('orderId') orderId: string) {
     this.logger.log(`GET /api/fulfillment-orders/order/${orderId}`, 'FulfillmentOrdersController');
     const fulfillmentOrder = await this.fulfillmentOrdersService.findByOrder(orderId);
+    return { success: true, data: fulfillmentOrder };
+  }
+
+  @Post('order/:orderId/status')
+  async updateStatus(
+    @Param('orderId') orderId: string,
+    @Body() body: FulfillmentOrderStatusTransitionDto,
+    @Req() request: Request,
+  ) {
+    this.logger.log(`POST /api/fulfillment-orders/order/${orderId}/status`, 'FulfillmentOrdersController');
+    const fulfillmentOrder = await this.fulfillmentOrdersService.updateStatus(orderId, {
+      ...body,
+      actor: getAuthenticatedMutationActor(request),
+    });
     return { success: true, data: fulfillmentOrder };
   }
 

@@ -6,12 +6,14 @@ import {
   IsInt,
   IsNotEmpty,
   IsOptional,
+  IsIn,
   IsString,
   MaxLength,
   Min,
   ValidateNested,
 } from 'class-validator';
 import { StockMutationAuditDto } from '../../stock/dto/stock-mutation.dto';
+import { FulfillmentOrderStatus } from '../fulfillment-order.entity';
 
 export class FulfillmentDeliveryAddressDto {
   @IsOptional()
@@ -132,3 +134,18 @@ export class CreateFulfillmentOrderDto extends StockMutationAuditDto {
 }
 
 export class FulfillmentOrderTransitionDto extends StockMutationAuditDto {}
+
+export const FULFILLMENT_ORDER_PROGRESS_STATUSES: FulfillmentOrderStatus[] = [
+  'collecting',
+  'forming',
+  'formed',
+  'handed_to_delivery',
+  'in_delivery',
+  'delivered',
+  'not_delivered',
+];
+
+export class FulfillmentOrderStatusTransitionDto extends StockMutationAuditDto {
+  @IsIn(FULFILLMENT_ORDER_PROGRESS_STATUSES)
+  status: Extract<FulfillmentOrderStatus, 'collecting' | 'forming' | 'formed' | 'handed_to_delivery' | 'in_delivery' | 'delivered' | 'not_delivered'>;
+}
