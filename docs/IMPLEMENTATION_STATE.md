@@ -1,5 +1,17 @@
 # Warehouse Implementation State
 
+2026-07-02: WH-G16 paid fulfillment handoff is implemented and source-validated
+without deployment or push. Discovery confirmed `POST /api/reservations/fulfill`
+only finalizes stock/reservation/movement state and does not persist delivery
+address, shipping method, SKU/title snapshots, order item ids, or customer
+contact fields. Added `POST /api/fulfillment-orders`, read-by-order, cancel,
+and return handoff endpoints plus fulfillment order/line entities and migration.
+The contract requires fulfilled reservation ids, central Orders id, line item
+snapshots, delivery address, shipping method, and bounded contact fields.
+Validation passed: `npm test -- --runInBand` (10 suites / 69 tests),
+`npm run build`, and `git diff --check`. No production stock payload, live DB
+row, deployment, push, public landing edit, or Orders repo edit was performed.
+
 2026-07-01: Prepared Cliplot machine-auth receiver support for Warehouse
 without Auth DB mutation. `JwtRolesGuard` accepts only
 `CLIPLOT_WAREHOUSE_SERVICE_TOKEN` as a `cliplot` machine actor with
@@ -9,7 +21,7 @@ to Auth `/auth/validate` and fail closed. The token is projected from
 `warehouse-microservice-secret`. Validation must not mutate stock; use
 read-only `POST /api/stock/availability/batch` smoke only.
 
-Last updated: 2026-06-15.
+Last updated: 2026-07-02.
 
 ## Orchestrator Command
 
@@ -28,8 +40,8 @@ WAREHOUSE ORCHESTRATOR: define next goal
 ## Current Status
 
 - Active goal: none
-- Current wave: Wave 11 - approved parallel source integration deployed
-- Completed goals: WH-G1 Deployment And Truthful Health, WH-G2 RabbitMQ Stock Events, WH-G3 Stock Mutation Invariants, WH-G4 Reservation Lifecycle, WH-G5 Catalog And Availability Contracts, WH-G6 Supplier Reconciliation, WH-G7 Production Observability, WH-G8 Database Migration Discipline, WH-G9 Production Admin Console, WH-G10 Landing Page And Authenticated Admin Entry, WH-G11 Stock Origin Visibility, WH-G12 Inventory Topology Read Model, WH-G13 Admin Inventory Topology Visibility, WH-G14 Product Logistics Route Read Model, WH-G15 Batch Product Logistics Contract
+- Current wave: Wave 12 - WH-G16 source-only fulfillment handoff completed, no deploy
+- Completed goals: WH-G1 Deployment And Truthful Health, WH-G2 RabbitMQ Stock Events, WH-G3 Stock Mutation Invariants, WH-G4 Reservation Lifecycle, WH-G5 Catalog And Availability Contracts, WH-G6 Supplier Reconciliation, WH-G7 Production Observability, WH-G8 Database Migration Discipline, WH-G9 Production Admin Console, WH-G10 Landing Page And Authenticated Admin Entry, WH-G11 Stock Origin Visibility, WH-G12 Inventory Topology Read Model, WH-G13 Admin Inventory Topology Visibility, WH-G14 Product Logistics Route Read Model, WH-G15 Batch Product Logistics Contract, WH-G16 Paid Fulfillment Handoff
 - Running goals: none
 - Blocked goals: none
 - Worker threads: none
@@ -62,6 +74,7 @@ WAREHOUSE ORCHESTRATOR: define next goal
 | WH-G13 | `implementation-goals/GOAL-13-admin-inventory-topology.md` | done | WH-G12 | Admin console displays topology totals and origin rows for operators. |
 | WH-G14 | `implementation-goals/GOAL-14-product-logistics-route-read-model.md` | done | WH-G12 | Warehouse explains product logistics route options by stock origin. |
 | WH-G15 | `implementation-goals/GOAL-15-batch-logistics-contract.md` | done | WH-G14 | Catalog can consume Warehouse-owned logistics routes in one batch call. |
+| WH-G16 | `implementation-goals/GOAL-16-fulfillment-handoff.md` | source validated, not deployed | WH-G4 | Orders can send a paid-order pick/pack/dispatch handoff after reservation fulfillment. |
 
 ## Execution Waves
 
@@ -75,6 +88,7 @@ WAREHOUSE ORCHESTRATOR: define next goal
 | 6 | WH-G7 | sequential | production runbook and smoke checks complete |
 | 7 | WH-G8 | sequential | migrations are committed, deployable, and status-checkable |
 | 8 | WH-G9 | sequential | admin console and browser smoke checks complete |
+| 12 | WH-G16 | source-only worker | Orders client integration and owner-approved deploy are separate follow-ups |
 
 ## Worker Threads
 
@@ -99,6 +113,7 @@ Changed files:
 Append newest entries at the top.
 
 ```text
+2026-07-02: WH-G16 completed in source. Added fulfillment order/pick-ticket contract at `POST /api/fulfillment-orders`, read-by-order, cancel, and return handoff endpoints; added `fulfillment_orders` and `fulfillment_order_lines` migration; documented exact Orders handoff contract. Verification passed: `npm test -- --runInBand` (10 suites / 69 tests), `npm run build`, and `git diff --check`. No deployment or push performed.
 2026-06-15: Natural reservation-expiry CronJob monitoring passed. Scheduled jobs `warehouse-reservation-expiry-29691965`, `warehouse-reservation-expiry-29691970`, and `warehouse-reservation-expiry-29691975` completed successfully; each returned `success:true`, `examined=0`, `expired=0`, and `failed=0`. Final source validation also passed: `git diff --check`, `npm test -- --runInBand` (8 suites / 50 tests), and `npm run build`.
 2026-06-13: WH-G15 completed in source. Added batch product logistics contract for Catalog/channel consumers. Verification passed: npm test -- --runInBand, npm run build, and git diff --check. No production deployment performed.
 2026-06-13: WH-G14 completed in source. Added product logistics route read model for local fulfillment, supplier replenishment, and supplier dropship/direct routes. Verification passed: npm test -- --runInBand, npm run build, and git diff --check. No production deployment performed.
@@ -152,10 +167,10 @@ Next command:
 
 ## Next Action
 
-Warehouse source goals are complete through the historical WH-G15 sequence, the newer owner-approved WH-G10+ parallel wave is deployed, and scheduled reservation-expiry CronJob monitoring passed. Await owner approval for a new source-only goal:
+Warehouse WH-G16 is source-validated and not deployed. The next integration step is for Orders O1 to call `POST /api/fulfillment-orders` after existing reservation fulfillment, including fulfilled reservation ids and the dispatch payload. Warehouse deployment still requires explicit owner approval.
 
 ```text
-WAREHOUSE ORCHESTRATOR: define next goal
+ORDERS O1: wire paid payment transition to Warehouse `POST /api/fulfillment-orders`
 ```
 
 Source documents:
@@ -168,6 +183,7 @@ docs/process/OPERATIONAL_GATES.md
 docs/intent-preservation/README.md
 docs/intent-preservation/TRACEABILITY_MATRIX.md
 docs/intent-preservation/PRE_CODING_GATE.md
+docs/contracts/fulfillment-handoff-contract.md
 TASKS.md
 STATE.json
 ```

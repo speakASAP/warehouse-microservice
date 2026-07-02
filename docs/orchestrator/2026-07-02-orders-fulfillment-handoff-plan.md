@@ -11,7 +11,8 @@ Warehouse must remain the stock authority and must receive a paid-order handoff 
 
 - Reservation lifecycle endpoints exist: reserve, release, fulfill, cancel, expire, return.
 - Orders already calls reserve during order creation and fulfill after payment.
-- `[MISSING: confirmed Warehouse pick-ticket or fulfillment-order entity/API that persists delivery address and dispatch instructions.]`
+- Discovery confirmed current `POST /api/reservations/fulfill` only finalizes stock/reservation/movement state and does not persist delivery address, shipping method, SKU/title snapshots, order item ids, or customer contact fields.
+- WH-G16 adds `POST /api/fulfillment-orders` to persist the paid-order handoff after the referenced reservation ids are fulfilled.
 
 ## Workstream
 
@@ -46,3 +47,14 @@ Forbidden files:
 - pick-ticket/fulfillment order includes delivery address and line items
 - return path is explicit
 - no stock mutation occurs without an authenticated actor and reservation context
+
+## Contract Decision
+
+Current `fulfill` is not enough for warehouse operations because it is a stock transition only. The bounded Warehouse contract is:
+
+1. Orders fulfills the reserved item rows through the existing reservation lifecycle.
+2. Orders sends `POST /api/fulfillment-orders` with central `orderId`, order number, channel, fulfilled reservation ids, order item ids, product ids, SKU/title snapshots, warehouse ids, quantities, shipping method, delivery address, and allowed contact fields.
+3. Warehouse stores the fulfillment order as the pick/pack/dispatch handoff and rejects non-equivalent replays.
+4. Cancel and return handoff states are explicit on fulfillment orders; stock effects remain on `POST /api/reservations/cancel` and `POST /api/reservations/return`.
+
+Detailed contract: `docs/contracts/fulfillment-handoff-contract.md`.

@@ -12,6 +12,7 @@ import { AuthModule } from './auth/auth.module';
 import { JwtRolesGuard } from './auth/jwt-roles.guard';
 import { SuppliersModule } from './suppliers/suppliers.module';
 import { ObservabilityModule } from './observability/observability.module';
+import { FulfillmentModule } from './fulfillment/fulfillment.module';
 import { createWarehouseTypeOrmOptions } from './database/typeorm-data-source';
 
 /**
@@ -35,6 +36,7 @@ import { createWarehouseTypeOrmOptions } from './database/typeorm-data-source';
     MovementsModule,
     ReservationsModule,
     SuppliersModule,
+    FulfillmentModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtRolesGuard },

@@ -18,6 +18,7 @@
 
 ## Completed
 <!-- AI appends here. Never modifies previous entries. -->
+- [x] 2026-07-02 WH-G16-T1 Added paid fulfillment handoff/pick-ticket contract; validation passed with `npm test -- --runInBand` (10 suites / 69 tests), `npm run build`, and `git diff --check`. No deployment or push performed.
 - [x] 2026-06-13 WH-G14-T1 Added product logistics route read model; validation passed with npm test, npm run build, and git diff --check.
 - [x] 2026-06-13 WH-G13-T1 Added admin inventory topology visibility; validation passed with node --check, npm run build, and git diff --check.
 - [x] 2026-06-13 WH-G12-T1 Added Warehouse inventory topology read model; validation passed with npm test, npm run build, and git diff --check.

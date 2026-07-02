@@ -1,0 +1,134 @@
+import { Type } from 'class-transformer';
+import {
+  ArrayNotEmpty,
+  IsArray,
+  IsEmail,
+  IsInt,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  MaxLength,
+  Min,
+  ValidateNested,
+} from 'class-validator';
+import { StockMutationAuditDto } from '../../stock/dto/stock-mutation.dto';
+
+export class FulfillmentDeliveryAddressDto {
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  name?: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(300)
+  street: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(100)
+  city: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(20)
+  postalCode: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(2)
+  country: string;
+}
+
+export class FulfillmentCustomerContactDto {
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  name?: string;
+
+  @IsOptional()
+  @IsEmail()
+  @MaxLength(200)
+  email?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(50)
+  phone?: string;
+}
+
+export class FulfillmentOrderItemDto {
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(200)
+  orderItemId: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(200)
+  reservationId: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(200)
+  productId: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  sku?: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(500)
+  title: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(200)
+  warehouseId: string;
+
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  quantity: number;
+}
+
+export class CreateFulfillmentOrderDto extends StockMutationAuditDto {
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(200)
+  orderId: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  orderNumber?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  channel?: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(100)
+  shippingMethod: string;
+
+  @ValidateNested()
+  @Type(() => FulfillmentDeliveryAddressDto)
+  deliveryAddress: FulfillmentDeliveryAddressDto;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => FulfillmentCustomerContactDto)
+  customerContact?: FulfillmentCustomerContactDto;
+
+  @IsArray()
+  @ArrayNotEmpty()
+  @ValidateNested({ each: true })
+  @Type(() => FulfillmentOrderItemDto)
+  items: FulfillmentOrderItemDto[];
+}
+
+export class FulfillmentOrderTransitionDto extends StockMutationAuditDto {}

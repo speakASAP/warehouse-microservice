@@ -29,6 +29,7 @@ This matrix preserves the chain from original warehouse intent to executable imp
 | Stock origin must distinguish own physical stock from supplier/dropship stock without ownership drift. | Invariants 1, 2, 6 | WH-G11 | active, WH-G11-T1 done | docs/intent-preservation/validation-reports/VAL-WH-G11-T1.md |
 | Inventory topology must show local and supplier-managed warehouses with stock totals. | Invariants 1, 2, 6 | WH-G12 | done | docs/intent-preservation/validation-reports/VAL-WH-G12.md |
 | Product logistics must explain local fulfillment, supplier replenishment, and dropship paths. | Invariants 1, 2, 6, 9 | WH-G14 | done | docs/intent-preservation/validation-reports/VAL-WH-G14.md |
+| Paid Orders must hand Warehouse enough data to pick, pack, and dispatch reserved items. | Invariants 1, 4, 6, 7, 9 | WH-G16 | source implemented, validation pending | docs/intent-preservation/validation-reports/VAL-WH-G16.md |
 | Stock events must notify channel services without creating another stock truth. | Invariant 10 | WH-G2 | done | `docs/IMPLEMENTATION_STATE.md` WH-G2 evidence |
 | Stock mutations must be authorized, auditable, and reasoned. | Invariants 6, 7, 8, 11 | WH-G3 | done | `TASKS.md` WH-G3 evidence |
 | Checkout/payment/cancel/return must preserve stock state. | Invariant 9 | WH-G4 | done | `TASKS.md` WH-G4 evidence |
@@ -53,6 +54,7 @@ This matrix preserves the chain from original warehouse intent to executable imp
 | WH-G11-OUTBOX | WH-G11-OUTBOX-T1 | `docs/intent-preservation/tasks/WH-G11-OUTBOX-T1.md` | `docs/intent-preservation/execution-plans/EP-WH-G11-OUTBOX.md` | `docs/intent-preservation/context-packages/CP-WH-G11-OUTBOX.md` | `docs/intent-preservation/coding-prompts/PROMPT-WH-G11-OUTBOX.md` | `docs/intent-preservation/validation-reports/VAL-WH-G11-OUTBOX.md` |
 | WH-G13-CONFLICTS | WH-G13-CONFLICTS-T1 | `docs/intent-preservation/tasks/WH-G13-CONFLICTS-T1.md` | `docs/intent-preservation/execution-plans/EP-WH-G13-CONFLICTS.md` | `docs/intent-preservation/context-packages/CP-WH-G13-CONFLICTS.md` | `docs/intent-preservation/coding-prompts/PROMPT-WH-G13-CONFLICTS.md` | `docs/intent-preservation/validation-reports/VAL-WH-G13-CONFLICTS.md` |
 | WH-G14-AUTH | WH-G14-AUTH-T1 | `docs/intent-preservation/tasks/WH-G14-AUTH-T1.md` | `docs/intent-preservation/execution-plans/EP-WH-G14-AUTH.md` | `docs/intent-preservation/context-packages/CP-WH-G14-AUTH.md` | `docs/intent-preservation/coding-prompts/PROMPT-WH-G14-AUTH.md` | `docs/intent-preservation/validation-reports/VAL-WH-G14-AUTH.md` |
+| WH-G16 | WH-G16-T1 | `docs/intent-preservation/tasks/WH-G16-T1.md` | `docs/intent-preservation/execution-plans/EP-WH-G16.md` | `docs/intent-preservation/context-packages/CP-WH-G16.md` | `docs/intent-preservation/coding-prompts/PROMPT-WH-G16.md` | `docs/intent-preservation/validation-reports/VAL-WH-G16.md` |
 | Future owner-approved goal | future tasks | create before coding | create before coding | create before coding | create before coding | create before completion |
 
 ## Protected Boundaries

@@ -7,6 +7,8 @@ import { StockEventOutbox } from '../stock/stock-event-outbox.entity';
 import { Stock } from '../stock/stock.entity';
 import { SupplierStockReconciliation } from '../suppliers/supplier-stock-reconciliation.entity';
 import { Warehouse } from '../warehouses/warehouse.entity';
+import { FulfillmentOrderLine } from '../fulfillment/fulfillment-order-line.entity';
+import { FulfillmentOrder } from '../fulfillment/fulfillment-order.entity';
 
 config({ path: '.env' });
 
@@ -22,6 +24,8 @@ export function createWarehouseTypeOrmOptions(): DataSourceOptions {
       StockReservation,
       StockEventOutbox,
       SupplierStockReconciliation,
+      FulfillmentOrder,
+      FulfillmentOrderLine,
     ],
     migrations: [__dirname + '/../migrations/*{.ts,.js}'],
     migrationsTableName: 'warehouse_migrations',

@@ -30,6 +30,8 @@ To print the current checkpoint:
 12. `GOAL-12-inventory-topology-read-model.md` - operator inventory topology read model.
 13. `GOAL-13-admin-inventory-topology.md` - admin console topology visibility.
 14. `GOAL-14-product-logistics-route-read-model.md` - product logistics route read model.
+15. `GOAL-15-batch-logistics-contract.md` - batch product logistics contract.
+16. `GOAL-16-fulfillment-handoff.md` - paid order fulfillment handoff and pick-ticket contract.
 
 ## Safe Sequence
 

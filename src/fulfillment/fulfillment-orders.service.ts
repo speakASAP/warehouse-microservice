@@ -1,0 +1,350 @@
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { DataSource, EntityManager, In, Repository } from 'typeorm';
+import { LoggerService } from '../logger/logger.service';
+import { StockReservation } from '../reservations/stock-reservation.entity';
+import { CreateFulfillmentOrderDto, FulfillmentOrderItemDto, FulfillmentOrderTransitionDto } from './dto/fulfillment-order.dto';
+import { FulfillmentOrderLine } from './fulfillment-order-line.entity';
+import {
+  FulfillmentCustomerContact,
+  FulfillmentDeliveryAddress,
+  FulfillmentOrder,
+  FulfillmentOrderStatus,
+} from './fulfillment-order.entity';
+
+interface FulfillmentOrderCommand extends CreateFulfillmentOrderDto {
+  actor?: string;
+}
+
+interface FulfillmentTransitionCommand extends FulfillmentOrderTransitionDto {
+  actor?: string;
+}
+
+interface NormalizedFulfillmentOrder {
+  orderId: string;
+  orderNumber?: string;
+  channel?: string;
+  shippingMethod: string;
+  deliveryAddress: FulfillmentDeliveryAddress;
+  customerContact?: FulfillmentCustomerContact;
+  items: NormalizedFulfillmentItem[];
+  reasonCode: string;
+  actor: string;
+  reference?: string;
+}
+
+interface NormalizedFulfillmentItem {
+  orderItemId: string;
+  reservationId: string;
+  productId: string;
+  sku?: string;
+  title: string;
+  warehouseId: string;
+  quantity: number;
+}
+
+@Injectable()
+export class FulfillmentOrdersService {
+  constructor(
+    @InjectRepository(FulfillmentOrder)
+    private readonly fulfillmentOrderRepository: Repository<FulfillmentOrder>,
+    private readonly dataSource: DataSource,
+    private readonly logger: LoggerService,
+  ) {}
+
+  async findByOrder(orderId: string): Promise<FulfillmentOrder> {
+    const order = await this.fulfillmentOrderRepository.findOne({
+      where: { orderId },
+      relations: ['lines'],
+    });
+
+    if (!order) {
+      throw new NotFoundException(`Fulfillment order not found for order ${orderId}`);
+    }
+
+    return order;
+  }
+
+  async createHandoff(body: FulfillmentOrderCommand): Promise<FulfillmentOrder> {
+    const normalized = this.normalizeCreateCommand(body);
+    return this.dataSource.transaction(async (manager) => {
+      const orderRepository = manager.getRepository(FulfillmentOrder);
+      const lineRepository = manager.getRepository(FulfillmentOrderLine);
+      const existing = await orderRepository.findOne({
+        where: { orderId: normalized.orderId },
+        relations: ['lines'],
+      });
+
+      if (existing) {
+        if (this.isEquivalentHandoff(existing, normalized)) {
+          return existing;
+        }
+        throw new ConflictException(`Fulfillment order already exists for order ${normalized.orderId}`);
+      }
+
+      await this.assertReservationsReady(manager, normalized);
+      await this.assertReservationIdsUnused(lineRepository, normalized.items.map((item) => item.reservationId));
+
+      const order = orderRepository.create({
+        orderId: normalized.orderId,
+        orderNumber: normalized.orderNumber,
+        channel: normalized.channel,
+        status: 'requested',
+        shippingMethod: normalized.shippingMethod,
+        deliveryAddress: normalized.deliveryAddress,
+        customerContact: normalized.customerContact,
+        reasonCode: normalized.reasonCode,
+        requestedBy: normalized.actor,
+        reference: normalized.reference,
+        lines: normalized.items.map((item) => lineRepository.create({
+          orderItemId: item.orderItemId,
+          reservationId: item.reservationId,
+          productId: item.productId,
+          sku: item.sku,
+          title: item.title,
+          warehouseId: item.warehouseId,
+          quantity: item.quantity,
+        })),
+      });
+
+      const saved = await orderRepository.save(order);
+      this.logger.log(
+        `fulfillment_order status=requested orderId=${normalized.orderId} lines=${normalized.items.length}`,
+        'FulfillmentOrdersService',
+      );
+      return saved;
+    });
+  }
+
+  async cancel(orderId: string, body: FulfillmentTransitionCommand): Promise<FulfillmentOrder> {
+    return this.transition(orderId, 'cancelled', body);
+  }
+
+  async returnOrder(orderId: string, body: FulfillmentTransitionCommand): Promise<FulfillmentOrder> {
+    return this.transition(orderId, 'returned', body);
+  }
+
+  private async transition(
+    orderId: string,
+    status: Extract<FulfillmentOrderStatus, 'cancelled' | 'returned'>,
+    body: FulfillmentTransitionCommand,
+  ): Promise<FulfillmentOrder> {
+    this.validateRequiredString(body.reasonCode, 'reasonCode');
+    this.validateRequiredString(body.actor, 'actor');
+
+    return this.dataSource.transaction(async (manager) => {
+      const orderRepository = manager.getRepository(FulfillmentOrder);
+      const order = await orderRepository.findOne({
+        where: { orderId },
+        relations: ['lines'],
+      });
+
+      if (!order) {
+        throw new NotFoundException(`Fulfillment order not found for order ${orderId}`);
+      }
+
+      if (order.status === status) {
+        return order;
+      }
+
+      if (order.status !== 'requested') {
+        throw new BadRequestException(`Fulfillment order ${orderId} is already ${order.status}`);
+      }
+
+      order.status = status;
+      order.statusReasonCode = body.reasonCode;
+      order.statusActor = body.actor;
+      order.statusReference = body.reference;
+      if (status === 'cancelled') {
+        order.cancelledAt = new Date();
+      } else {
+        order.returnedAt = new Date();
+      }
+
+      return orderRepository.save(order);
+    });
+  }
+
+  private async assertReservationsReady(manager: EntityManager, normalized: NormalizedFulfillmentOrder): Promise<void> {
+    const reservationRepository = manager.getRepository(StockReservation);
+    const reservationIds = normalized.items.map((item) => item.reservationId);
+    const reservations = await reservationRepository.find({
+      where: { id: In(reservationIds) },
+    } as any);
+    const reservationsById = new Map(reservations.map((reservation) => [reservation.id, reservation]));
+
+    for (const item of normalized.items) {
+      const reservation = reservationsById.get(item.reservationId);
+      if (!reservation) {
+        throw new BadRequestException(`Reservation ${item.reservationId} was not found for fulfillment handoff`);
+      }
+
+      if (reservation.orderId !== normalized.orderId) {
+        throw new BadRequestException(`Reservation ${item.reservationId} does not belong to order ${normalized.orderId}`);
+      }
+
+      if (reservation.status !== 'fulfilled') {
+        throw new BadRequestException(`Reservation ${item.reservationId} must be fulfilled before warehouse handoff`);
+      }
+
+      if (reservation.productId !== item.productId || reservation.warehouseId !== item.warehouseId) {
+        throw new BadRequestException(`Reservation ${item.reservationId} does not match the fulfillment line product and warehouse`);
+      }
+
+      if (reservation.quantity !== item.quantity) {
+        throw new BadRequestException(`Reservation ${item.reservationId} quantity does not match the fulfillment line`);
+      }
+    }
+  }
+
+  private async assertReservationIdsUnused(
+    lineRepository: Repository<FulfillmentOrderLine>,
+    reservationIds: string[],
+  ): Promise<void> {
+    const existingLine = await lineRepository.findOne({
+      where: { reservationId: In(reservationIds) },
+    } as any);
+
+    if (existingLine) {
+      throw new ConflictException(`Reservation ${existingLine.reservationId} is already attached to a fulfillment order`);
+    }
+  }
+
+  private normalizeCreateCommand(body: FulfillmentOrderCommand): NormalizedFulfillmentOrder {
+    this.validateRequiredString(body.orderId, 'orderId');
+    this.validateRequiredString(body.shippingMethod, 'shippingMethod');
+    this.validateRequiredString(body.reasonCode, 'reasonCode');
+    this.validateRequiredString(body.actor, 'actor');
+
+    if (!body.deliveryAddress) {
+      throw new BadRequestException('deliveryAddress is required');
+    }
+
+    if (!Array.isArray(body.items) || body.items.length === 0) {
+      throw new BadRequestException('items must contain at least one fulfillment line');
+    }
+
+    const items = body.items.map((item, index) => this.normalizeItem(item, index));
+    this.assertNoDuplicateReservationIds(items);
+
+    return {
+      orderId: body.orderId.trim(),
+      orderNumber: this.normalizeOptionalString(body.orderNumber),
+      channel: this.normalizeOptionalString(body.channel),
+      shippingMethod: body.shippingMethod.trim(),
+      deliveryAddress: {
+        name: this.normalizeOptionalString(body.deliveryAddress.name),
+        street: this.normalizeRequiredNestedString(body.deliveryAddress.street, 'deliveryAddress.street'),
+        city: this.normalizeRequiredNestedString(body.deliveryAddress.city, 'deliveryAddress.city'),
+        postalCode: this.normalizeRequiredNestedString(body.deliveryAddress.postalCode, 'deliveryAddress.postalCode'),
+        country: this.normalizeRequiredNestedString(body.deliveryAddress.country, 'deliveryAddress.country'),
+      },
+      customerContact: body.customerContact ? {
+        name: this.normalizeOptionalString(body.customerContact.name),
+        email: this.normalizeOptionalString(body.customerContact.email),
+        phone: this.normalizeOptionalString(body.customerContact.phone),
+      } : undefined,
+      items,
+      reasonCode: body.reasonCode.trim(),
+      actor: body.actor.trim(),
+      reference: this.normalizeOptionalString(body.reference),
+    };
+  }
+
+  private normalizeItem(item: FulfillmentOrderItemDto, index: number): NormalizedFulfillmentItem {
+    if (!item) {
+      throw new BadRequestException(`items[${index}] is required`);
+    }
+
+    if (!Number.isInteger(item.quantity) || item.quantity <= 0) {
+      throw new BadRequestException(`items[${index}].quantity must be a positive integer`);
+    }
+
+    return {
+      orderItemId: this.normalizeRequiredNestedString(item.orderItemId, `items[${index}].orderItemId`),
+      reservationId: this.normalizeRequiredNestedString(item.reservationId, `items[${index}].reservationId`),
+      productId: this.normalizeRequiredNestedString(item.productId, `items[${index}].productId`),
+      sku: this.normalizeOptionalString(item.sku),
+      title: this.normalizeRequiredNestedString(item.title, `items[${index}].title`),
+      warehouseId: this.normalizeRequiredNestedString(item.warehouseId, `items[${index}].warehouseId`),
+      quantity: item.quantity,
+    };
+  }
+
+  private assertNoDuplicateReservationIds(items: NormalizedFulfillmentItem[]): void {
+    const seen = new Set<string>();
+    for (const item of items) {
+      if (seen.has(item.reservationId)) {
+        throw new BadRequestException(`Duplicate reservationId ${item.reservationId} in fulfillment handoff`);
+      }
+      seen.add(item.reservationId);
+    }
+  }
+
+  private isEquivalentHandoff(existing: FulfillmentOrder, normalized: NormalizedFulfillmentOrder): boolean {
+    return JSON.stringify(this.toComparable(existing)) === JSON.stringify({
+      orderId: normalized.orderId,
+      orderNumber: normalized.orderNumber ?? null,
+      channel: normalized.channel ?? null,
+      shippingMethod: normalized.shippingMethod,
+      deliveryAddress: this.compactObject(normalized.deliveryAddress),
+      customerContact: normalized.customerContact ? this.compactObject(normalized.customerContact) : null,
+      items: this.sortItems(normalized.items),
+    });
+  }
+
+  private toComparable(existing: FulfillmentOrder): Record<string, unknown> {
+    return {
+      orderId: existing.orderId,
+      orderNumber: existing.orderNumber ?? null,
+      channel: existing.channel ?? null,
+      shippingMethod: existing.shippingMethod,
+      deliveryAddress: this.compactObject(existing.deliveryAddress),
+      customerContact: existing.customerContact ? this.compactObject(existing.customerContact) : null,
+      items: this.sortItems((existing.lines || []).map((line) => ({
+        orderItemId: line.orderItemId,
+        reservationId: line.reservationId,
+        productId: line.productId,
+        sku: line.sku,
+        title: line.title,
+        warehouseId: line.warehouseId,
+        quantity: line.quantity,
+      }))),
+    };
+  }
+
+  private sortItems(items: NormalizedFulfillmentItem[]): NormalizedFulfillmentItem[] {
+    return [...items]
+      .map((item) => ({
+        orderItemId: item.orderItemId,
+        reservationId: item.reservationId,
+        productId: item.productId,
+        sku: item.sku ?? null,
+        title: item.title,
+        warehouseId: item.warehouseId,
+        quantity: item.quantity,
+      } as any))
+      .sort((left, right) => left.reservationId.localeCompare(right.reservationId));
+  }
+
+  private compactObject(value: object): Record<string, unknown> {
+    return Object.fromEntries(Object.entries(value).filter(([, entry]) => entry !== undefined));
+  }
+
+  private normalizeOptionalString(value?: string): string | undefined {
+    if (typeof value !== 'string') return undefined;
+    const trimmed = value.trim();
+    return trimmed.length > 0 ? trimmed : undefined;
+  }
+
+  private normalizeRequiredNestedString(value: string | undefined, fieldName: string): string {
+    this.validateRequiredString(value, fieldName);
+    return value.trim();
+  }
+
+  private validateRequiredString(value: string | undefined, fieldName: string): void {
+    if (typeof value !== 'string' || value.trim().length === 0) {
+      throw new BadRequestException(`${fieldName} is required`);
+    }
+  }
+}

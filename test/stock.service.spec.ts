@@ -449,6 +449,37 @@ describe('StockService mutation invariants', () => {
     }));
   });
 
+  it('does not deduct stock again when a fulfillment webhook is replayed', async () => {
+    const reservation: Partial<StockReservation> = {
+      productId: 'product-1',
+      warehouseId: 'warehouse-1',
+      orderId: 'order-1',
+      channel: 'flipflop',
+      quantity: 3,
+      status: 'fulfilled',
+    };
+    const { service, stockRepository, reservationRepository, movementRepository, outboxRepository } = createService({
+      productId: 'product-1',
+      warehouseId: 'warehouse-1',
+      quantity: 7,
+      reserved: 0,
+      available: 7,
+      lowStockThreshold: 5,
+    }, [reservation]);
+
+    const stock = await service.fulfillReservation('product-1', 'warehouse-1', 'order-1', context, 'flipflop');
+
+    expect(stock).toEqual(expect.objectContaining({
+      quantity: 7,
+      reserved: 0,
+      available: 7,
+    }));
+    expect(stockRepository.save).not.toHaveBeenCalled();
+    expect(reservationRepository.save).not.toHaveBeenCalled();
+    expect(movementRepository.save).not.toHaveBeenCalled();
+    expect(outboxRepository.save).not.toHaveBeenCalled();
+  });
+
   it('expires a timed-out reservation and releases reserved stock', async () => {
     const reservation: Partial<StockReservation> = {
       productId: 'product-1',
