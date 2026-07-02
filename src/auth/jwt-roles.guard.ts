@@ -99,13 +99,13 @@ export class JwtRolesGuard implements CanActivate {
     const cliplotToken = process.env.CLIPLOT_WAREHOUSE_SERVICE_TOKEN;
     if (cliplotToken && this.safeEqual(token, cliplotToken)) {
       return {
-        sub: 'cliplot-service',
+        sub: 'cliplot',
         type: 'service',
         authMethod: 'warehouse-static-service-token',
         roles: ['internal:warehouse-microservice:admin'],
-        service: 'cliplot-service',
-        serviceName: 'cliplot-service',
-        clientId: 'cliplot-service',
+        service: 'cliplot',
+        serviceName: 'cliplot',
+        clientId: 'cliplot',
       };
     }
 

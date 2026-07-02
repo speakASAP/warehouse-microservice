@@ -179,22 +179,22 @@ describe('JwtRolesGuard central Auth validation', () => {
     expect(mockedAxios.post).not.toHaveBeenCalled();
     expect(request).toMatchObject({
       user: {
-        sub: 'cliplot-service',
+        sub: 'cliplot',
         type: 'service',
         authMethod: 'warehouse-static-service-token',
         roles: ['internal:warehouse-microservice:admin'],
-        service: 'cliplot-service',
-        serviceName: 'cliplot-service',
-        clientId: 'cliplot-service',
+        service: 'cliplot',
+        serviceName: 'cliplot',
+        clientId: 'cliplot',
       },
       serviceActor: {
-        sub: 'cliplot-service',
+        sub: 'cliplot',
         type: 'service',
         authMethod: 'warehouse-static-service-token',
         roles: ['internal:warehouse-microservice:admin'],
-        service: 'cliplot-service',
-        serviceName: 'cliplot-service',
-        clientId: 'cliplot-service',
+        service: 'cliplot',
+        serviceName: 'cliplot',
+        clientId: 'cliplot',
       },
     });
   });
