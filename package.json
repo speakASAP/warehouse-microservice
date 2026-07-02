@@ -4,7 +4,7 @@
   "description": "Centralized warehouse and stock management - tracks stock across all warehouses with real-time updates via RabbitMQ",
   "main": "dist/src/main.js",
   "scripts": {
-    "build": "nest build",
+    "build": "tsc -p tsconfig.json --incremental false",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "typeorm": "typeorm-ts-node-commonjs -d src/database/typeorm-data-source.ts",
     "migration:show": "npm run typeorm -- migration:show",

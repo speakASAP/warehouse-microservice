@@ -23,6 +23,8 @@ Source-level unit tests, build, and diff hygiene. No deployment or live stock mu
 
 ## Evidence
 
+- Pre-deploy migration readiness hardening passed: `npm run build` now uses full non-incremental TypeScript emit; `node -e "require('./dist/src/database/typeorm-data-source.js')"` loaded the production TypeORM data source; `npm test -- --runInBand test/fulfillment-orders.service.spec.ts` passed 1 suite / 6 tests; `git diff --check` passed.
+- Live read-only DB checks found `warehouse_migrations` rows for `InitialWarehouseSchema1781200000000`, `StockEventOutbox1781300000000`, and `AddSupplierConflictReviewMetadata1781400000000`; `fulfillment_orders` and `fulfillment_order_lines` are absent, so `CreateFulfillmentOrders1781500000000` remains pending.
 - `npm test -- --runInBand` passed: 10 suites, 69 tests.
 - `npm run build` passed.
 - `git diff --check` passed with no output.
@@ -62,4 +64,4 @@ None planned.
 
 ## Recommendation
 
-Ready for Orders O1 client integration. Do not deploy Warehouse until owner approves deployment and migration execution.
+Ready for owner-approved WH-G16 deployment and migration execution after Orders event outbox deploy is approved. Do not deploy Warehouse until owner approves deployment and migration execution.

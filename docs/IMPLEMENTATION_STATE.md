@@ -1,5 +1,18 @@
 # Warehouse Implementation State
 
+2026-07-02: WH-G16 pre-deploy migration readiness was hardened. `npm run build`
+now performs a full non-incremental TypeScript emit so the production TypeORM data
+source includes entity files required by migration jobs; prior incremental host
+build output could omit `dist/src/warehouses/warehouse.entity.js` and make
+`migration:show:prod` fail before DB access. Validation passed: `npm run build`,
+`node -e "require('./dist/src/database/typeorm-data-source.js')"`,
+`npm test -- --runInBand test/fulfillment-orders.service.spec.ts`, and
+`git diff --check`. Live read-only DB checks showed `warehouse_migrations`
+contains the first three migrations and `fulfillment_orders` /
+`fulfillment_order_lines` are not present, so `CreateFulfillmentOrders1781500000000`
+remains pending. No deployment, migration execution, live stock/order mutation,
+secret value print, or production row dump was performed.
+
 2026-07-02: WH-G16 paid fulfillment handoff is implemented and source-validated
 without deployment or push. Discovery confirmed `POST /api/reservations/fulfill`
 only finalizes stock/reservation/movement state and does not persist delivery
@@ -40,7 +53,7 @@ WAREHOUSE ORCHESTRATOR: define next goal
 ## Current Status
 
 - Active goal: none
-- Current wave: Wave 12 - WH-G16 source-only fulfillment handoff completed, no deploy
+- Current wave: Wave 12 - WH-G16 source-only fulfillment handoff completed; pre-deploy migration readiness hardened; no deploy
 - Completed goals: WH-G1 Deployment And Truthful Health, WH-G2 RabbitMQ Stock Events, WH-G3 Stock Mutation Invariants, WH-G4 Reservation Lifecycle, WH-G5 Catalog And Availability Contracts, WH-G6 Supplier Reconciliation, WH-G7 Production Observability, WH-G8 Database Migration Discipline, WH-G9 Production Admin Console, WH-G10 Landing Page And Authenticated Admin Entry, WH-G11 Stock Origin Visibility, WH-G12 Inventory Topology Read Model, WH-G13 Admin Inventory Topology Visibility, WH-G14 Product Logistics Route Read Model, WH-G15 Batch Product Logistics Contract, WH-G16 Paid Fulfillment Handoff
 - Running goals: none
 - Blocked goals: none
@@ -74,7 +87,7 @@ WAREHOUSE ORCHESTRATOR: define next goal
 | WH-G13 | `implementation-goals/GOAL-13-admin-inventory-topology.md` | done | WH-G12 | Admin console displays topology totals and origin rows for operators. |
 | WH-G14 | `implementation-goals/GOAL-14-product-logistics-route-read-model.md` | done | WH-G12 | Warehouse explains product logistics route options by stock origin. |
 | WH-G15 | `implementation-goals/GOAL-15-batch-logistics-contract.md` | done | WH-G14 | Catalog can consume Warehouse-owned logistics routes in one batch call. |
-| WH-G16 | `implementation-goals/GOAL-16-fulfillment-handoff.md` | source validated, not deployed | WH-G4 | Orders can send a paid-order pick/pack/dispatch handoff after reservation fulfillment. |
+| WH-G16 | `implementation-goals/GOAL-16-fulfillment-handoff.md` | source validated, pre-deploy hardened, not deployed | WH-G4 | Orders can send a paid-order pick/pack/dispatch handoff after reservation fulfillment. |
 
 ## Execution Waves
 
@@ -113,6 +126,7 @@ Changed files:
 Append newest entries at the top.
 
 ```text
+2026-07-02: WH-G16 pre-deploy readiness hardened. Full non-incremental build now emits TypeORM entity files required by production migration commands; data-source require check passed; focused fulfillment-orders spec passed; live read-only DB checks confirmed the fulfillment tables are absent and migration remains pending. No deploy or migration run.
 2026-07-02: WH-G16 completed in source. Added fulfillment order/pick-ticket contract at `POST /api/fulfillment-orders`, read-by-order, cancel, and return handoff endpoints; added `fulfillment_orders` and `fulfillment_order_lines` migration; documented exact Orders handoff contract. Verification passed: `npm test -- --runInBand` (10 suites / 69 tests), `npm run build`, and `git diff --check`. No deployment or push performed.
 2026-06-15: Natural reservation-expiry CronJob monitoring passed. Scheduled jobs `warehouse-reservation-expiry-29691965`, `warehouse-reservation-expiry-29691970`, and `warehouse-reservation-expiry-29691975` completed successfully; each returned `success:true`, `examined=0`, `expired=0`, and `failed=0`. Final source validation also passed: `git diff --check`, `npm test -- --runInBand` (8 suites / 50 tests), and `npm run build`.
 2026-06-13: WH-G15 completed in source. Added batch product logistics contract for Catalog/channel consumers. Verification passed: npm test -- --runInBand, npm run build, and git diff --check. No production deployment performed.
