@@ -31,7 +31,15 @@ Evidence:
 - Warehouse sends bounded status payloads to Orders with `x-service-name=warehouse-microservice` and the runtime service token; token values are never logged or documented.
 - Tests cover successful status advance plus Orders callback headers/payload, invalid jump rejection, and existing cancel/return behavior.
 
-Runtime evidence: [PENDING: deploy and live smoke]
+Runtime evidence:
+
+- Deployed Warehouse image `localhost:5000/warehouse-microservice:65e53c6`; deploy completed migrations, rollout, and in-pod health with database and RabbitMQ `up`.
+- Runtime env check confirmed `ORDERS_SERVICE_URL=http://orders-microservice.statex-apps.svc.cluster.local:3203` and a service token are present without printing token values.
+- Deployed Orders image `localhost:5000/orders-microservice:7bcfadd` first so the internal status callback endpoint and Warehouse token mapping were live.
+- Live smoke order `94ce9a4b-7c6a-4625-85c7-8d1b13228b2d` advanced fulfillment order `6ada14af-20f8-4928-9a37-94a331d97be2` from `requested` to `collecting` through `POST /api/fulfillment-orders/order/:orderId/status`.
+- Orders persisted `warehouseHandoff.fulfillmentOrderHandoff.warehouseStatus=collecting` and logged `order.warehouse_fulfillment_status.update` with `resultingStatus=warehouse_collecting`.
+- Notifications Orders-events health after the smoke showed `received=2`, `sent=2`, `failed=0`, proving the Orders lifecycle event reached the notification pipeline.
+- Provider-specific tracking/courier adapter remains `[MISSING: approved delivery provider contract]`; this lane intentionally uses Warehouse-owned operational fulfillment statuses only.
 
 Last updated: 2026-06-15.
 

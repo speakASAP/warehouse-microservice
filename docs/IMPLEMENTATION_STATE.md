@@ -1,3 +1,5 @@
+2026-07-03: Fulfillment delivery status source deployed and live-smoked. Warehouse image `localhost:5000/warehouse-microservice:65e53c6` rolled out healthy after migrations; runtime config has `ORDERS_SERVICE_URL=http://orders-microservice.statex-apps.svc.cluster.local:3203` and a service token present. Smoke order `94ce9a4b-7c6a-4625-85c7-8d1b13228b2d` / fulfillment order `6ada14af-20f8-4928-9a37-94a331d97be2` advanced from `requested` to `collecting`; Orders persisted `warehouseStatus=collecting`, logged `resultingStatus=warehouse_collecting`, and Notifications Orders-events health showed `received=2`, `sent=2`, `failed=0`. Provider-specific courier tracking remains gated on `[MISSING: approved delivery provider contract]`.
+
 # Warehouse Implementation State
 
 2026-07-02: WH-G16 pre-deploy migration readiness was hardened. `npm run build`
