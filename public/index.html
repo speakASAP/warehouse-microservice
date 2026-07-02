@@ -11,7 +11,7 @@
     <header class="site-header">
       <a class="brand" href="/" aria-label="Warehouse home"><span class="brand-mark">W</span><span>Warehouse</span></a>
       <nav class="site-nav" aria-label="Primary">
-        <a href="#product">Product</a><a href="#operations">Operations</a><a href="#security">Security</a><a href="#pricing">Pricing</a>
+        <a href="#product">Product</a><a href="#operations">Operations</a><a href="#seller-network">Seller network</a><a href="#security">Security</a><a href="#pricing">Pricing</a>
       </nav>
       <a class="button primary" href="/admin">Sign in</a>
     </header>
@@ -19,7 +19,7 @@
       <section class="hero" id="product">
         <div class="hero-copy">
           <h1>Warehouse</h1>
-          <p class="hero-lede">A stock authority for multi-channel commerce: inventory, reservations, supplier dropship reconciliation, and operational readiness in one service.</p>
+          <p class="hero-lede">A stock authority for multi-channel commerce: own inventory, supplier offers, community resale stock, reservations, and operational readiness in one service.</p>
           <div class="hero-actions"><a class="button primary" href="/admin">Sign in</a><a class="button" href="/admin#register">Request access</a></div>
         </div>
         <div class="hero-visual" aria-label="Warehouse operations dashboard preview">
@@ -34,6 +34,10 @@
         <article><h3>Reservations</h3><p>Hold stock for pending orders and release, fulfill, cancel, expire, or return it through auditable workflows.</p></article>
         <article><h3>Supplier reconciliation</h3><p>Bring dropship quantities into the warehouse authority with conflict evidence when supplier stock falls below reserved stock.</p></article>
         <article><h3>Readiness signals</h3><p>Expose database, RabbitMQ, event publishing, and mutation health so operations teams know when the service is safe to use.</p></article>
+      </section>
+      <section class="seller-network" id="seller-network">
+        <div><h2>Inventory for the Alfares seller network</h2><p>Warehouse supports the commercial promise behind every marketplace landing: a registered seller can sell products from their own stock, Alfares supplier offers, or products that other users make available for resale.</p></div>
+        <div class="network-panel"><article><h3>Supplier offers</h3><p>Discounted company-approved supplier products can be exposed as sellable stock without forcing each seller to negotiate sourcing first.</p></article><article><h3>Community resale</h3><p>When product owners opt in, other sellers can offer the same stock pool through Alfares marketplaces or their connected channels.</p></article><article><h3>Automated operations</h3><p>Alfares keeps marketplace publication, availability signals, payment/order handoff, and sales operations connected while sellers focus on shipping and product decisions.</p></article></div>
       </section>
       <section class="security-section" id="security">
         <div><h2>Admin access is role-gated</h2><p>Warehouse uses the shared Auth service for registration, login, JWTs, and RBAC. The admin console opens only for users with a warehouse admin role, and every protected API call still requires bearer authorization.</p></div>
