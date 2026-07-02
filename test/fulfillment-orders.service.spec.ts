@@ -1,9 +1,12 @@
 import 'reflect-metadata';
+import axios from 'axios';
 import { BadRequestException, ConflictException } from '@nestjs/common';
 import { StockReservation } from '../src/reservations/stock-reservation.entity';
 import { FulfillmentOrderLine } from '../src/fulfillment/fulfillment-order-line.entity';
 import { FulfillmentOrder } from '../src/fulfillment/fulfillment-order.entity';
 import { FulfillmentOrdersService } from '../src/fulfillment/fulfillment-orders.service';
+
+jest.mock('axios');
 
 describe('FulfillmentOrdersService', () => {
   const fulfilledReservation: Partial<StockReservation> = {
@@ -196,6 +199,72 @@ describe('FulfillmentOrdersService', () => {
       ...createPayload,
       shippingMethod: 'pickup',
     })).rejects.toThrow(ConflictException);
+  });
+
+  it('advances fulfillment status and syncs the bounded status to Orders', async () => {
+    const originalEnv = process.env;
+    process.env = {
+      ...originalEnv,
+      ORDERS_SERVICE_URL: 'http://orders-microservice:3203',
+      JWT_TOKEN: 'warehouse-token',
+    };
+    (axios.put as jest.Mock).mockResolvedValue({ data: { success: true } });
+    const existingOrder = {
+      id: 'fulfillment-order-1',
+      orderId: 'order-1',
+      status: 'requested' as const,
+      lines: [createPayload.items[0]],
+    };
+    const { service, fulfillmentOrderRepository } = createService({ existingOrder });
+
+    await service.updateStatus('order-1', {
+      status: 'collecting',
+      reasonCode: 'WAREHOUSE_PICK_STARTED',
+      actor: 'warehouse-operator',
+      reference: 'pick-1',
+    });
+
+    expect(fulfillmentOrderRepository.save).toHaveBeenCalledWith(expect.objectContaining({
+      status: 'collecting',
+      statusReasonCode: 'WAREHOUSE_PICK_STARTED',
+      statusActor: 'warehouse-operator',
+      statusReference: 'pick-1',
+    }));
+    expect(axios.put).toHaveBeenCalledWith(
+      'http://orders-microservice:3203/api/orders/order-1/warehouse-fulfillment-status',
+      expect.objectContaining({
+        status: 'collecting',
+        reasonCode: 'WAREHOUSE_PICK_STARTED',
+        actor: 'warehouse-operator',
+        reference: 'pick-1',
+        fulfillmentOrderId: 'fulfillment-order-1',
+      }),
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          'x-service-name': 'warehouse-microservice',
+          'x-internal-service-token': 'warehouse-token',
+        }),
+      }),
+    );
+    process.env = originalEnv;
+  });
+
+  it('rejects invalid fulfillment status jumps', async () => {
+    const existingOrder = {
+      id: 'fulfillment-order-1',
+      orderId: 'order-1',
+      status: 'requested' as const,
+      lines: [createPayload.items[0]],
+    };
+    const { service, fulfillmentOrderRepository } = createService({ existingOrder });
+
+    await expect(service.updateStatus('order-1', {
+      status: 'in_delivery',
+      reasonCode: 'JUMP',
+      actor: 'warehouse-operator',
+    })).rejects.toThrow(BadRequestException);
+
+    expect(fulfillmentOrderRepository.save).not.toHaveBeenCalled();
   });
 
   it('keeps cancel and return handoff states explicit without stock mutation calls', async () => {

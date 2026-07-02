@@ -10,6 +10,29 @@ Next action: keep runtime provisioning approval-gated; after the Auth-owned Cata
 
 # Warehouse Orchestrator Status
 
+## 2026-07-03 - Fulfillment Delivery Status Source For Orders
+
+Intent chain:
+
+- Vision: Warehouse fulfillment progress should become the bounded source for post-handoff delivery lifecycle stages while Orders remains the customer-visible lifecycle authority.
+- Goal Impact: Warehouse can now advance fulfillment orders from requested through pick/pack/delivery stages and notify Orders so marketplace cabinets receive updated lifecycle projections.
+- System: Warehouse owns fulfillment-order operational status; Orders owns order lifecycle read models/events; delivery-provider integration remains future work unless a concrete provider is approved.
+- Feature: protected `POST /api/fulfillment-orders/order/:orderId/status` with ordered status transitions and best-effort Orders sync.
+- Task: extend fulfillment order statuses, enforce transition order, call Orders internal `PUT /api/orders/:id/warehouse-fulfillment-status`, and validate callback payload.
+- Execution Plan: do not add a fake courier provider; represent Warehouse operational stages first and leave provider-specific tracking as a separate adapter.
+- Coding Prompt: no secret logging, no customer payload dumps, no stock mutation in status transitions, preserve fulfilled-reservation handoff rules.
+- Code: fulfillment entity/DTO/controller/service, config `ORDERS_SERVICE_URL`, focused fulfillment service tests.
+- Validation: `npm run build`, `npm test -- --runInBand test/fulfillment-orders.service.spec.ts`, and `git diff --check` passed.
+
+Evidence:
+
+- Allowed progress statuses are `collecting`, `forming`, `formed`, `handed_to_delivery`, `in_delivery`, `delivered`, and `not_delivered`.
+- Transition order is guarded: `requested -> collecting -> forming -> formed -> handed_to_delivery -> in_delivery -> delivered/not_delivered`, with explicit cancel/return paths preserved.
+- Warehouse sends bounded status payloads to Orders with `x-service-name=warehouse-microservice` and the runtime service token; token values are never logged or documented.
+- Tests cover successful status advance plus Orders callback headers/payload, invalid jump rejection, and existing cancel/return behavior.
+
+Runtime evidence: [PENDING: deploy and live smoke]
+
 Last updated: 2026-06-15.
 
 Current state:

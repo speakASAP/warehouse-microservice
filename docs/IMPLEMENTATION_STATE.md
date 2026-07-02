@@ -201,3 +201,5 @@ docs/contracts/fulfillment-handoff-contract.md
 TASKS.md
 STATE.json
 ```
+
+2026-07-03: Fulfillment delivery status source implemented in source. Warehouse fulfillment orders now support ordered progress statuses and best-effort Orders sync through `PUT /api/orders/:id/warehouse-fulfillment-status`; validation passed with build, focused fulfillment-order tests, and diff hygiene. Runtime deploy/smoke pending.
