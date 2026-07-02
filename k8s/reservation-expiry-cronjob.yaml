@@ -42,17 +42,12 @@ spec:
               args:
                 - |
                   (async () => {
-                    const jwt = require('jsonwebtoken');
                     const baseUrl = process.env.WAREHOUSE_BASE_URL || 'http://warehouse-microservice:3201';
-                    const serviceName = process.env.SERVICE_NAME || 'warehouse-microservice';
                     const limit = Number.parseInt(process.env.RESERVATION_EXPIRY_LIMIT || '100', 10);
-                    if (!process.env.JWT_SECRET) {
-                      throw new Error('JWT_SECRET is required for reservation expiry CronJob');
+                    const token = process.env.CLIPLOT_WAREHOUSE_SERVICE_TOKEN;
+                    if (!token) {
+                      throw new Error('CLIPLOT_WAREHOUSE_SERVICE_TOKEN is required for reservation expiry CronJob');
                     }
-                    const token = jwt.sign({
-                      sub: 'warehouse-reservation-expiry-cron',
-                      roles: [`internal:${serviceName}:admin`],
-                    }, process.env.JWT_SECRET, { expiresIn: '5m' });
                     const response = await fetch(`${baseUrl}/api/reservations/expire-due`, {
                       method: 'POST',
                       headers: {
