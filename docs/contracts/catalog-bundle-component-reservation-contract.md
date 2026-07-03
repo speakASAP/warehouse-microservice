@@ -2,7 +2,7 @@
 
 ```yaml
 id: WH-CATALOG-BUNDLE-COMPONENT-RESERVATION
-status: accepted-source-verified-no-deploy
+status: accepted-source-verified-no-deploy-paid-provider-blocked
 owner: warehouse-reservation-owner
 created: 2026-07-03
 scope: Warehouse reservation behavior for Catalog catalog.bundle.v1 first ecosystem bundle selling
@@ -16,7 +16,7 @@ upstream:
 Vision -> Goal Impact -> System -> Feature -> Task -> Execution Plan -> Coding Prompt -> Code -> Validation -> State Update
 
 - Vision: Warehouse remains the stock and reservation authority for existing sellable Catalog product lines without taking bundle merchandising, checkout, order, or payment ownership.
-- Goal Impact: resolves `[MISSING: Warehouse approval that first ecosystem bundle selling reserves component lines only]` for Catalog `catalog.bundle.v1` while keeping bundle identity in Catalog and order/payment effects in their owning services.
+- Goal Impact: resolves `[MISSING: Warehouse approval that first ecosystem bundle selling reserves component lines only]` for Catalog `catalog.bundle.v1` while keeping bundle identity in Catalog and order/payment effects in their owning services; narrows `[MISSING: owner-approved paid/provider checkout smoke with stock and refund/cancel rollback plan]` to cross-service owner approval because Warehouse can only approve the component-line stock lifecycle boundary.
 - System: Catalog owns `bundleId` and component metadata; Orders/checkout submit normal product lines; Warehouse reserves stock rows by existing `productId`, `warehouseId`, quantity, order id, channel, actor, and reason; Payments remains amount/currency owner only through its accepted caller contract.
 - Feature: source-verified Warehouse sign-off for first bundle-selling reservation semantics.
 - Task: document and verify that bundle selling uses existing component-line reservation lifecycle and that bundle aggregate reservation attempts fail closed.
@@ -24,7 +24,7 @@ Vision -> Goal Impact -> System -> Feature -> Task -> Execution Plan -> Coding P
 - Coding Prompt: reject `bundleId`, synthetic bundle SKU/stock, and bundle contract evidence as Warehouse reservation identity; prove existing component product reservation remains compatible.
 - Code: `ReserveStockDto` and reservation lifecycle DTOs inherit explicit forbidden bundle aggregate fields; tests cover rejection and component-line forwarding; verifier checks source/docs boundaries.
 - Validation: non-mutating local source validation only: focused Jest, static verifier, build, and `git diff --check`.
-- State Update: `[RESOLVED: Warehouse approval that first ecosystem bundle selling reserves component lines only]`; runtime checkout smoke remains gated by cross-service owner approvals.
+- State Update: `[RESOLVED: Warehouse approval that first ecosystem bundle selling reserves component lines only]`; `[MISSING: owner-approved paid/provider checkout smoke with stock and refund/cancel rollback plan]` remains blocked beyond existing pending-order reservation/release evidence.
 
 ## Accepted Reservation Behavior
 
@@ -46,6 +46,18 @@ Warehouse must reserve, release, fulfill, cancel, expire, and return each compon
 
 Warehouse must not reserve `bundleId`, create synthetic bundle SKU/stock, infer bundle eligibility, calculate bundle pricing, mutate live stock in validation, or call Orders, Payments, FlipFlop, Catalog, or marketplace services from this sign-off. If any component reservation fails, the caller-owned checkout/order workflow must fail closed and compensate already reserved component lines using the existing release/cancel lifecycle.
 
+## Paid/Provider Checkout Smoke Boundary
+
+Warehouse cannot approve a paid/provider bundle checkout smoke beyond the already recorded pending-order reservation and release evidence unless the integration owner provides an owner-approved cross-service plan. The Warehouse-owned part of that plan is limited to component-line stock effects:
+
+- pending checkout: create or update `active` component reservations only after Orders/checkout submits normal product lines with `productId`, `warehouseId`, `quantity`, `orderId`, `channel`, actor, and reason evidence;
+- payment/provider success: transition each active component reservation to `fulfilled`, which decrements `reserved` and `quantity` transactionally for that component line;
+- payment failure, provider cancel, or checkout timeout before fulfillment: transition each active component reservation through `release`, `cancel`, or `expire`, which removes the hold without decrementing stock;
+- refund/cancel after fulfillment: use the existing fulfilled-reservation reversal path (`cancel` or `return`) only after Orders/Payments define the refund/cancel source event, idempotency key, and business approval state;
+- partial component failure: fail closed at the caller-owned workflow layer and compensate any prior component-line holds through Warehouse release/cancel calls.
+
+Warehouse does not own provider payment status, refund authorization, order cancellation policy, bundle pricing, external marketplace publication, customer communication, or the end-to-end paid smoke decision. Until those owner-approved inputs exist, runtime paid/provider progression for `catalog.bundle.v1` remains blocked and must not be inferred from this source sign-off.
+
 ## Fail-Closed Source Boundary
 
 The reservation DTO boundary explicitly rejects these aggregate identity fields when present on reservation or reservation-lifecycle requests:
@@ -61,12 +73,15 @@ Normal component reservation compatibility is preserved: existing `productId`, `
 
 ## Remaining Blockers
 
-- `[MISSING: Orders additive bundleEvidence metadata contract on create-order and idempotent replay]`
-- `[MISSING: Payments bounded bundle metadata allowlist test covering free-shipping evidence without pricing authority]`
-- `[MISSING: FlipFlop adoption contract for catalog.bundle.v1 read/display before ecosystem checkout]`
-- `[MISSING: owner-approved Catalog bundle aggregate migration application/deploy/runtime smoke]`
-- `[MISSING: owner-approved Rung 1 non-mutating real checkout smoke credentials and target products]`
-- `[MISSING: owner-approved Rung 2 live pending-order smoke plan if production order/reservation evidence is required]`
+- `[RESOLVED: Orders additive bundleEvidence metadata contract on create-order and idempotent replay]`
+- `[RESOLVED: Payments bounded bundle metadata allowlist test covering free-shipping evidence without pricing authority]`
+- `[RESOLVED: FlipFlop adoption contract for catalog.bundle.v1 read/display before ecosystem checkout]`
+- `[RESOLVED: owner-approved Catalog bundle aggregate migration application/deploy/runtime smoke]`
+- `[RESOLVED: owner-approved Rung 1 non-mutating real checkout smoke credentials and target products]`
+- `[RESOLVED: owner-approved Rung 2 live pending-order smoke proved pending Orders create, Warehouse reservation, and payment-status cleanup release]`
+- `[MISSING: owner-approved paid/provider checkout smoke with stock and refund/cancel rollback plan]`
+- `[MISSING: Orders/Payments provider-success, provider-cancel, refund, and post-fulfillment cancellation event contract that maps to Warehouse fulfill/cancel/return calls]`
+- `[MISSING: final integration owner approval before any live Warehouse reservation, fulfillment, decrement, cancel, return, or release smoke]`
 
 ## Parallel Execution
 
@@ -75,7 +90,7 @@ Normal component reservation compatibility is preserved: existing `productId`, `
 | Warehouse component reservation sign-off | ready for integration after source validation | Warehouse reservation owner | this contract, DTO guard, focused tests, static verifier | Catalog `catalog.bundle.v1` contracts | focused Jest, verifier, build, diff check | Safe to hand to Catalog/Orders integration as Warehouse approval. |
 | Orders bundle evidence contract | dependency-gated outside this repo | Orders contract owner | additive order metadata only | Warehouse sign-off plus Catalog aggregate | `[MISSING: Orders validation evidence]` | Must preserve normal item lines. |
 | Payments metadata allowlist | dependency-gated outside this repo | Payments boundary owner | audit metadata only | Orders metadata contract | `[MISSING: Payments validation evidence]` | Must preserve caller-owned amount/currency. |
-| Final checkout smoke | final integration | Commerce integration validator | non-mutating Rung 1 first | Catalog/Orders/Warehouse/Payments/FlipFlop contracts and owner credentials | `[MISSING: owner-approved smoke evidence]` | No Warehouse mutation in Rung 1. |
+| Final checkout smoke | final integration | Commerce integration validator | paid/provider smoke with rollback plan | Catalog/Orders/Warehouse/Payments/FlipFlop contracts, provider/refund/cancel mapping, owner credentials | `[MISSING: owner-approved paid/provider checkout smoke with stock and refund/cancel rollback plan]` | Warehouse must not run or approve live stock effects outside the owner-approved integration plan. |
 
 Shared contracts: Catalog bundle aggregate/commerce contracts, Orders create-order metadata contract, Payments payment-validation metadata contract, and Warehouse reservation lifecycle.
 

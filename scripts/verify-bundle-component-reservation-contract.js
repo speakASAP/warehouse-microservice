@@ -19,5 +19,9 @@ assert(tests.includes('fails closed when a caller tries to reserve a Catalog bun
 assert(contract.includes('[RESOLVED: Warehouse approval that first ecosystem bundle selling reserves component lines only]'), 'resolved blocker marker is missing');
 assert(contract.includes('must not reserve `bundleId`'), 'Warehouse bundleId prohibition is missing');
 assert(contract.includes('mutate live stock in validation'), 'non-mutating validation statement is missing');
+assert(contract.includes('[MISSING: owner-approved paid/provider checkout smoke with stock and refund/cancel rollback plan]'), 'paid/provider smoke blocker is missing');
+assert(contract.includes('paid/provider bundle checkout smoke beyond the already recorded pending-order reservation and release evidence'), 'paid/provider fail-closed boundary is missing');
+assert(contract.includes('transition each active component reservation to `fulfilled`'), 'paid/provider fulfillment stock-effect boundary is missing');
+assert(contract.includes('refund/cancel after fulfillment'), 'refund/cancel rollback boundary is missing');
 
 console.log('catalog.bundle.v1 Warehouse component reservation boundary verified');
