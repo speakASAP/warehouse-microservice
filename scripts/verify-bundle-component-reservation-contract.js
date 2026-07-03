@@ -15,6 +15,7 @@ const stockTests = read('test/stock.service.spec.ts');
 const stockService = read('src/stock/stock.service.ts');
 const contract = read('docs/contracts/catalog-bundle-component-reservation-contract.md');
 const validation = read('docs/intent-preservation/validation-reports/VAL-WH-G24-BUNDLE-COMPONENT-RESERVATION.md');
+const approvalPacket = read('docs/contracts/goal24-warehouse-cleanup-approval-packet.md');
 
 assertIncludes(dto, 'BundleAggregateReservationBoundaryDto', 'DTO boundary class is missing');
 assertIncludes(dto, 'bundleId is forbidden; reserve existing component productId lines only', 'bundleId fail-closed validation is missing');
@@ -95,6 +96,34 @@ const validationMarkers = [
 ];
 for (const marker of validationMarkers) {
   assertIncludes(validation, marker, `validation marker is missing: ${marker}`);
+}
+
+
+const approvalPacketMarkers = [
+  'WH-G24-WAREHOUSE-CLEANUP-APPROVAL-PACKET',
+  '[MISSING: owner-approved Warehouse stock hold/release window and max quantity]',
+  '[MISSING: owner-approved post-fulfillment cancellation/return workflow that maps a Payments refund or correction to Orders and Warehouse without inferring stock effects]',
+  'A refund alone is not inventory-return evidence',
+  'Do not fulfill Warehouse reservations unless Orders receives a Payments-owned completed status through the approved `orders.payment-status.v1` path.',
+  'Do not release fulfilled reservations. Use `release` only for active holds before stock decrement.',
+  'Do not call Warehouse `cancel` after fulfillment unless the approved event is order/provider cancellation or reversal',
+  'Do not call Warehouse `return` after fulfillment unless the approved event is an inventory-return workflow.',
+  '[MISSING: deterministic Warehouse component reservation state for cleanup]',
+  'Agent-Ready Approval Request',
+  'Merge order: Payments provider evidence, Orders correction approval, Warehouse cleanup packet, channel/canary dry-run, final integration smoke.',
+];
+for (const marker of approvalPacketMarkers) {
+  assertIncludes(approvalPacket, marker, `approval packet marker is missing: ${marker}`);
+}
+
+const cleanupRefreshMarkers = [
+  'Warehouse Cleanup Approval Packet Refresh',
+  '[MISSING: owner-approved Warehouse stock hold/release window and max quantity]` remains unresolved',
+  '[MISSING: owner-approved post-fulfillment cancellation/return workflow that maps a Payments refund or correction to Orders and Warehouse without inferring stock effects]` remains unresolved',
+  'It grants no runtime permission.',
+];
+for (const marker of cleanupRefreshMarkers) {
+  assertIncludes(validation, marker, `cleanup refresh marker is missing: ${marker}`);
 }
 
 console.log('catalog.bundle.v1 Warehouse component-line rollback boundary verified');

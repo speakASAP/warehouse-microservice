@@ -120,3 +120,33 @@ Parallel execution:
 | Warehouse source rollback evidence | complete | Warehouse reservation owner | docs/static verifier over component-line lifecycle source/tests | Catalog contract record | verifier, focused tests/build/diff | Ready for Catalog integration status as source evidence only. |
 | Orders/Payments status-to-stock mapping | dependency-gated | Orders/Payments integration owner | provider-success/cancel/refund/post-fulfillment event mapping | approved payment mode, central Orders UUID proof | `[MISSING: Orders/Payments validation evidence]` | Required before live Warehouse stock effects. |
 | Owner-approved live canary | final integration | commerce validation owner | one bounded paid/provider smoke and rollback packet | target ids, max amount, stock window, status mapping, cleanup plan | `[MISSING: owner-approved paid/provider checkout smoke with stock and refund/cancel rollback plan]` | Stop if rollback cannot be proven before mutation. |
+
+## 2026-07-03 Warehouse Cleanup Approval Packet Refresh
+
+Scope: Warehouse-owned docs/static verifier only. No live checkout, payment creation, provider callback, refund, correction, Orders mutation, Warehouse reservation, stock mutation, fulfillment, release, cancel, return, deployment, migration, secret read, or production DB mutation was performed.
+
+Intent Preservation Chain: Vision -> Goal Impact -> System -> Feature -> Task -> Execution Plan -> Coding Prompt -> Code -> Validation -> State Update.
+
+- Vision: paid/provider `catalog.bundle.v1` validation must remain rollback-capable without unapproved stock effects.
+- Goal Impact: addresses the two remaining Warehouse cleanup blockers as far as source/docs can prove, while preserving fail-closed runtime gates.
+- System: Warehouse owns component-line stock effects; Orders owns lifecycle/correction approval; Payments owns provider/refund/correction evidence.
+- Feature: owner-ready Warehouse cleanup approval packet.
+- Task: produce an agent-ready packet for stock hold/release window, max quantity, and post-fulfillment cancel/return workflow approvals.
+- Execution Plan: inspect Warehouse docs/source, Orders docs/source read-only, Payments docs read-only, update Warehouse packet/contract/verifier only, and run focused non-mutating validation.
+- Coding Prompt: do not invent owner approvals, provider rollback contracts, stock windows, max quantities, or refund-to-stock effects.
+- Code: `docs/contracts/goal24-warehouse-cleanup-approval-packet.md`, `docs/contracts/catalog-bundle-component-reservation-contract.md`, `scripts/verify-bundle-component-reservation-contract.js`, this report.
+- Validation: static verifier, focused tests, build, and `git diff --check`.
+- State Update: source-policy operation selection remains resolved/narrowed; both requested owner approvals remain explicit `[MISSING]` until signed by the correct owners.
+
+Read-only cross-service findings:
+
+- Orders evidence says `completed` payment status can drive Warehouse `fulfill`, while `failed` and `cancelled` before fulfillment can drive Warehouse `release`; refund-like statuses and paid downgrades remain rejected and require a separate owner-approved correction workflow.
+- Payments evidence says source-verified `completed`, `failed`, and `cancelled` statuses can be bridged to Orders, but completed-payment refund/correction and post-fulfillment cancellation/return still require provider-side refund/reversal evidence plus Orders/Warehouse correction approval. The Payments repo had unresolved conflicts during this pass, so Payments docs were treated as read-only context rather than clean integration evidence.
+
+Decision:
+
+- `[MISSING: owner-approved Warehouse stock hold/release window and max quantity]` remains unresolved.
+- `[MISSING: owner-approved post-fulfillment cancellation/return workflow that maps a Payments refund or correction to Orders and Warehouse without inferring stock effects]` remains unresolved.
+- `[RESOLVED/NARROWED: Warehouse source-policy operation selection for release/cancel/return by component reservation state]` remains valid source evidence only.
+
+The new approval packet lists the exact required owner facts, fail-closed runtime rules, agent-ready approval request, parallel execution ownership, shared contracts, validation owner, and merge order. It grants no runtime permission.
