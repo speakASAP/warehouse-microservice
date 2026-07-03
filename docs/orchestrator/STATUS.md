@@ -1,3 +1,25 @@
+# 2026-07-03 - Worker H Allegro Shipment Snapshot Consumer Contract
+
+Intent chain:
+
+- Vision: customers and operators should see accurate post-handoff delivery progress without Orders or Warehouse storing raw Allegro shipment payloads, tracking numbers, tracking URLs, credentials, or customer data.
+- Goal Impact: Allegro-origin orders now have a Warehouse-owned documentation contract for consuming read-only shipment status snapshots once runtime gates are approved.
+- System: Allegro owns provider reads and `allegro.shipment_status_snapshot.v1`; Warehouse owns fulfillment status validation, transition enforcement, and future consumer/ledger decisions; Orders owns lifecycle projection through the existing Warehouse callback.
+- Feature: bounded Warehouse consumer contract for read-only Allegro shipment status snapshots after `handed_to_delivery`.
+- Task: document accepted snapshot envelope, status mapping, idempotency/ledger expectations, redaction policy, rejection rules, Orders callback role, and exact runtime gates.
+- Execution Plan: docs-only; do not implement runtime consumer code, DB migrations, secrets, deploy changes, live calls, or Allegro/Orders edits.
+- Coding Prompt: remote-only on Alfares, Warehouse `docs/**` only, no `src/**`.
+- Code: `docs/contracts/fulfillment-provider-status-intake-contract.md`, `docs/contracts/fulfillment-handoff-contract.md`, `docs/intent-preservation/validation-reports/VAL-WH-ALLEGRO-SNAPSHOT-CONSUMER.md`, state/status docs.
+- Validation: `git diff --check`; safe static checker `npm run check:hosted-auth`.
+
+Evidence:
+
+- Read-only source inspection confirmed Warehouse status transition graph and `reference`/`statusReference` path in `src/fulfillment/**`.
+- The contract records Allegro commit `e626e5c` as the upstream source-only verifier for `allegro.shipment_status_snapshot.v1`.
+- Snapshot intake is constrained to hashed account/order/shipment/waybill identities, bounded source-read status/reason, `packageCount`, `latestStatus`, `latestStatusAt`, and `trackingUpdatedAt`.
+- The contract rejects raw provider payloads, tracking numbers/URLs, credentials, customer/contact/address fields, labels, documents, and raw marketplace shipment/package objects.
+- Remaining gates include `[MISSING: Warehouse consumer/runtime adapter for read-only shipment snapshots]`, `[MISSING: approved Warehouse shipment snapshot ledger or adapter-owned durable idempotency store]`, and `[MISSING: approved correlation source between Allegro hashed order/shipment/waybill identity and exactly one Warehouse fulfillment order]`.
+
 # 2026-06-29 - TASK-STOCK-004 Catalog Service Principal Receiver Coverage
 
 Change: added focused Warehouse regression coverage for the Auth-compatible Catalog-to-Warehouse service principal. The guard spec now proves an Auth `/auth/validate` response with `serviceName=service=clientId=catalog-microservice`, `authMethod=auth-service-jwt`, and role `internal:warehouse-microservice:admin` passes the default Warehouse guard and attaches `serviceActor`; the actor spec proves Warehouse mutation actor derivation becomes `service:catalog-microservice`.

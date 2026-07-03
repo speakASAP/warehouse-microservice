@@ -1,17 +1,22 @@
-# Fulfillment Provider Status Intake Contract
+# Fulfillment Provider Status Intake And Allegro Snapshot Consumer Contract
 
 ```yaml
-id: WH-FULFILLMENT-PROVIDER-STATUS-INTAKE
+id: WH-ALLEGRO-SHIPMENT-SNAPSHOT-CONSUMER
 status: draft-contract-gated
 owner: warehouse-fulfillment-owner
 created: 2026-07-03
 last_updated: 2026-07-03
 completeness_level: partial
+source_contract:
+  provider: allegro
+  name: allegro.shipment_status_snapshot.v1
+  source_commit: e626e5c
 upstream:
   - docs/contracts/fulfillment-handoff-contract.md
   - docs/orchestrator/STATUS.md
   - src/fulfillment/fulfillment-order.entity.ts
   - src/fulfillment/fulfillment-orders.service.ts
+  - allegro-service commit e626e5c source-only snapshot verifier
   - orders-microservice/docs/orchestrator/2026-07-03-delivery-provider-shipment-status-plan.md
 downstream:
   - docs/orchestrator/STATUS.md
@@ -21,15 +26,15 @@ related_adrs: []
 
 ## Intent Chain
 
-- Vision: customers and operators should see accurate delivery progress after Warehouse hands a parcel to a carrier without making Orders or Warehouse store raw provider payloads or credentials.
-- Goal Impact: Allegro-origin orders can later move from Warehouse handoff into delivery lifecycle updates through a bounded Warehouse intake before Orders projection.
-- System: Allegro/provider owner owns provider API calls, OAuth scopes, credentials, raw shipment payloads, and provider retry semantics; Warehouse owns fulfillment-order status; Orders owns lifecycle projection and events.
-- Feature: Warehouse-owned bounded intake for provider shipment status updates after `handed_to_delivery`.
-- Task: define accepted payload, status mapping, idempotency, validation, and sensitive-field rejection while Worker E resolves exact Allegro shipment contract facts.
-- Execution Plan: documentation-only until the Allegro status source contract, sanitized fixture set, and sensitive-data policy are approved; do not add fake provider code or persist raw provider payloads.
-- Coding Prompt: remote-only on Alfares; allowed files are Warehouse fulfillment docs/status docs and narrow `src/fulfillment/**` tests only after contract facts are known; forbidden changes include Orders/Allegro edits, DB migrations, deploys, secrets, broad lifecycle schemas, and raw tracking persistence.
+- Vision: customers and operators should see accurate delivery progress after Warehouse hands a parcel to a carrier without making Orders or Warehouse store raw provider payloads, tracking numbers, tracking URLs, customer data, or credentials.
+- Goal Impact: Allegro-origin orders can later move from Warehouse handoff into delivery lifecycle updates through a bounded Warehouse consumer for read-only Allegro shipment status snapshots.
+- System: Allegro owns provider API calls, OAuth scopes, credentials, raw shipment payloads, snapshot verification, provider retry semantics, and redaction before cross-service handoff. Warehouse owns fulfillment-order status, snapshot intake validation, transition enforcement, and any Warehouse-side ledger decision. Orders owns lifecycle projection/events through the existing Warehouse fulfillment status callback.
+- Feature: Warehouse-owned consumer contract for `allegro.shipment_status_snapshot.v1` after Warehouse fulfillment reaches `handed_to_delivery`.
+- Task: define accepted snapshot envelope, status mapping, idempotency/ledger expectations, redaction policy, rejection rules, Orders lifecycle callback role, and exact gates before runtime implementation.
+- Execution Plan: documentation-only in this Worker H slice. Do not add runtime consumer code, DB migrations, fake provider calls, deploy changes, secrets, or live calls. Implementation remains blocked until the missing Warehouse consumer/runtime adapter and ledger/correlation decisions are approved.
+- Coding Prompt: remote-only on Alfares; allowed files are Warehouse docs/status docs only. Forbidden changes include Orders or Allegro repo edits, `src/**`, migrations, Kubernetes/deploy scripts, package scripts, DB/secret reads, live Allegro calls, and raw tracking persistence.
 - Code: documentation only in this slice.
-- Validation: `git diff --check` plus read-only inspection of Warehouse fulfillment status model, Warehouse fulfillment API, and Orders callback DTO/lifecycle mapping.
+- Validation: `git diff --check`, repository docs/source inspection around fulfillment status intake and fulfillment order service, and any safe docs-only/static checks discovered in repo scripts.
 
 ## Current Evidence
 
@@ -38,97 +43,193 @@ Warehouse already owns the fulfillment-order status model:
 - `src/fulfillment/fulfillment-order.entity.ts` includes `handed_to_delivery`, `in_delivery`, `delivered`, `not_delivered`, `returned`, and `statusReference`.
 - `src/fulfillment/fulfillment-orders.service.ts` guards transitions as `formed -> handed_to_delivery -> in_delivery -> delivered/not_delivered`, with `returned` allowed from post-handoff states.
 - `POST /api/fulfillment-orders/order/:orderId/status` stores bounded status metadata and best-effort syncs to Orders.
-- Orders read-only evidence shows `PUT /api/orders/:id/warehouse-fulfillment-status` accepts only bounded Warehouse statuses, `reasonCode`, `actor`, `reference`, `fulfillmentOrderId`, and `occurredAt`, then maps `in_delivery -> in_delivery`, `delivered -> received`, and `not_delivered -> not_received`.
+- Orders read-only evidence in the existing Warehouse docs says `PUT /api/orders/:id/warehouse-fulfillment-status` accepts bounded Warehouse statuses, `reasonCode`, `actor`, `reference`, `fulfillmentOrderId`, and `occurredAt`, then maps `in_delivery -> in_delivery`, `delivered -> received`, and `not_delivered -> not_received`.
 
-## Accepted Bounded Payload
+Allegro now has a source-only verifier contract in commit `e626e5c`:
 
-The provider-owned adapter must call Warehouse with a normalized internal command, not a raw Allegro webhook or polling response. The contract target is:
+- Contract name: `allegro.shipment_status_snapshot.v1`.
+- Snapshot identity fields are hashed for account, order, shipment, and waybill ids.
+- Snapshot statuses are bounded by the Allegro verifier before Warehouse sees them.
+- Snapshot includes `sourceRead.status`, `sourceRead.reason`, `packageCount`, `latestStatus`, `latestStatusAt`, and `trackingUpdatedAt`.
+- Snapshot excludes raw provider payloads, tracking numbers, tracking URLs, and provider document URLs.
+
+Warehouse has not implemented a runtime consumer, provider-status ledger, correlation layer, or snapshot adapter. Orders still lists `[MISSING: Warehouse consumer/runtime adapter for read-only shipment snapshots]`.
+
+## Accepted Snapshot Envelope
+
+The future Warehouse consumer must accept a normalized read-only snapshot envelope, not a raw Allegro webhook, raw polling response, or provider shipment object.
+
+Contract target:
 
 ```json
 {
-  "orderId": "central-orders-uuid",
-  "status": "in_delivery",
-  "reasonCode": "PROVIDER_STATUS_UPDATE",
-  "statusReference": "allegro-status-event-or-poll-id",
-  "occurredAt": "2026-07-03T00:00:00.000Z",
+  "contract": "allegro.shipment_status_snapshot.v1",
   "provider": "allegro",
-  "sourceChannel": "allegro"
+  "sourceChannel": "allegro",
+  "identity": {
+    "accountIdHash": "sha256:...",
+    "orderIdHash": "sha256:...",
+    "shipmentIdHash": "sha256:...",
+    "waybillIdHash": "sha256:..."
+  },
+  "sourceRead": {
+    "status": "ok",
+    "reason": "shipment_status_read"
+  },
+  "packageCount": 1,
+  "latestStatus": "IN_TRANSIT",
+  "latestStatusAt": "2026-07-03T00:00:00.000Z",
+  "trackingUpdatedAt": "2026-07-03T00:00:00.000Z",
+  "observedAt": "2026-07-03T00:00:01.000Z"
 }
 ```
 
-Rules:
+Warehouse consumer rules:
 
-- `orderId` is the central Orders id already tied to the Warehouse fulfillment order.
-- `provider` must be `allegro` for this first source lane.
-- `sourceChannel` must be `allegro`; non-Allegro-origin orders are out of scope.
-- `status` must be one of the accepted post-handoff statuses below.
-- `reasonCode` must be a stable internal reason, normally `PROVIDER_STATUS_UPDATE` unless Worker E defines a narrower bounded reason list.
-- `statusReference` must be an opaque, stable provider event id, poll observation id, or deterministic adapter id. It must not be a tracking number, tracking URL, token, full provider shipment JSON, email address, phone number, customer name, address, or credential-derived value.
-- `occurredAt` must be an ISO timestamp from the provider event when available; otherwise the adapter must use its observation time and document that choice.
+- `contract` must be exactly `allegro.shipment_status_snapshot.v1` until a new version is approved.
+- `provider` and `sourceChannel` must both be `allegro`.
+- `identity.accountIdHash`, `identity.orderIdHash`, `identity.shipmentIdHash`, and `identity.waybillIdHash` must be hash strings from the Allegro verifier, not raw identifiers.
+- `sourceRead.status` and `sourceRead.reason` must be bounded verifier outputs; Warehouse must not infer success from transport success alone.
+- `latestStatus` must map to a Warehouse post-handoff status through the bounded mapping table below.
+- `latestStatusAt`, `trackingUpdatedAt`, and `observedAt` must be ISO timestamps when present.
+- `packageCount` must be a non-negative integer. Multiple packages do not create multiple Warehouse fulfillment orders unless a future approved mapping says so.
+- The snapshot must not include provider payload blobs, tracking numbers, tracking URLs, customer identity/address/contact fields, labels, documents, OAuth credentials, cookies, authorization headers, or raw marketplace shipment/package objects.
 
-Current implementation note: Warehouse's existing status endpoint names the persisted reference field `reference` in the request DTO and stores it as `statusReference`. A future adapter can map `statusReference -> reference` without a DB migration, but exact endpoint/DTO naming remains `[MISSING: Worker E final Allegro-to-Warehouse command naming decision]`.
+## Correlation To Fulfillment Orders
 
-## Status Mapping
+Warehouse status updates still require the central `fulfillment_orders.order_id` and existing status transition guard. The Allegro snapshot contract only exposes hashed provider identities, so Warehouse cannot safely update a fulfillment order from the snapshot alone.
 
-Accepted provider adapter output after Warehouse reaches `handed_to_delivery`:
+Required correlation gate:
 
-| Current Warehouse status | Accepted next provider status | Orders lifecycle projection | Notes |
+- `[MISSING: Warehouse consumer/runtime adapter for read-only shipment snapshots that resolves a verified Allegro snapshot to exactly one Warehouse fulfillment order without persisting raw provider identifiers.]`
+- `[MISSING: approved correlation source between Allegro hashed order/shipment/waybill identity and fulfillment_orders.order_id or an approved Warehouse-owned shipment correlation table.]`
+- `[MISSING: collision/replay handling when a snapshot hash set matches zero or more than one fulfillment order.]`
+
+Until those gates are closed, the only approved Warehouse action is documentation and offline contract review.
+
+## Status Mapping After `handed_to_delivery`
+
+Warehouse must ignore or reject snapshot status updates unless the matched fulfillment order is already `handed_to_delivery` or later.
+
+Accepted mapping after `handed_to_delivery`:
+
+| Allegro snapshot class | Warehouse status | Orders lifecycle projection | Notes |
 | --- | --- | --- | --- |
-| `handed_to_delivery` | `in_delivery` | `in_delivery` | Normal courier movement after carrier handoff. |
-| `handed_to_delivery` | `returned` | `returned` | Use only for provider-confirmed return before in-delivery scan. |
-| `in_delivery` | `delivered` | `received` | Successful terminal delivery projection in Orders. |
-| `in_delivery` | `not_delivered` | `not_received` | Failed delivery projection in Orders. |
-| `in_delivery` | `returned` | `returned` | Return after in-delivery state. |
-| `delivered` | `returned` | `returned` | Post-delivery return remains explicit. |
-| `not_delivered` | `returned` | `returned` | Return after failed delivery remains explicit. |
+| source read unavailable or not authorized | no status transition | unchanged | Record only in adapter/ledger diagnostics after approval; do not call Orders. |
+| shipment created but no carrier movement | no status transition | unchanged | Warehouse remains `handed_to_delivery`; do not regress or invent movement. |
+| in transit / carrier accepted / delivery in progress | `in_delivery` | `in_delivery` | Normal movement after carrier handoff. |
+| delivered / picked up by recipient | `delivered` | `received` | Terminal successful delivery. |
+| delivery failed / not delivered / refused / undeliverable | `not_delivered` | `not_received` | Terminal failed delivery unless a later return is confirmed. |
+| returned / return in progress / returned to sender | `returned` | `returned` | Return remains explicit and may follow post-handoff states. |
+
+Existing Warehouse transition constraints still apply:
+
+- `handed_to_delivery -> in_delivery`
+- `handed_to_delivery -> returned`
+- `in_delivery -> delivered`
+- `in_delivery -> not_delivered`
+- `in_delivery -> returned`
+- `delivered -> returned`
+- `not_delivered -> returned`
 
 Rejected transitions:
 
-- Any provider update before Warehouse status is `handed_to_delivery`.
-- Direct `handed_to_delivery -> delivered` or `handed_to_delivery -> not_delivered` unless Worker E proves Allegro has no reliable in-delivery equivalent and an explicit exception is approved.
+- Any snapshot update before Warehouse status is `handed_to_delivery`.
+- Direct `handed_to_delivery -> delivered` or `handed_to_delivery -> not_delivered` unless an explicit mapping exception is approved for Allegro statuses that lack a reliable in-delivery equivalent.
 - Reverse movement such as `in_delivery -> handed_to_delivery`, `delivered -> in_delivery`, or `not_delivered -> in_delivery`.
-- Any provider status outside `in_delivery`, `delivered`, `not_delivered`, and `returned` for this intake lane.
+- Any Allegro `latestStatus` that cannot be mapped to `in_delivery`, `delivered`, `not_delivered`, `returned`, or no-op.
+- Any update where `sourceRead.status` indicates the source was not read successfully, except for approved diagnostics/ledger storage that does not call Orders.
 
-## Idempotency And `statusReference`
+## Idempotency And Ledger Expectations
 
-The logical idempotency key is:
+The future consumer must be idempotent before it calls the existing Warehouse status endpoint.
+
+Minimum logical idempotency key:
 
 ```text
-provider + sourceChannel + orderId + statusReference
+contract + provider + sourceChannel + accountIdHash + orderIdHash + shipmentIdHash + waybillIdHash + latestStatus + latestStatusAt + trackingUpdatedAt
 ```
 
 Required semantics:
 
-- Replaying the same key with the same normalized `status` is idempotent.
-- Replaying the same key with a different normalized `status` is a conflict.
-- A new key with a valid forward transition may advance the fulfillment order.
-- A new key with a stale or reverse transition must be rejected.
-- If `statusReference` is missing, the provider adapter must not call Warehouse unless Worker E approves a deterministic fallback key such as a provider shipment id plus normalized status plus occurredAt.
+- Replaying the same key with the same normalized Warehouse status is idempotent.
+- Replaying the same key with different normalized status, timestamps, package count, or source-read result is a conflict and must not call Orders.
+- A new key with a valid forward transition may advance the fulfillment order once correlation is approved.
+- A new key with stale timestamps or reverse movement must be rejected or recorded as no-op, not projected to Orders.
+- `sourceRead.status != ok` must be deduped separately from successful status snapshots and must not advance Warehouse fulfillment status.
+- Snapshot dedupe must survive process restarts before runtime implementation is accepted.
 
-Current implementation gap: Warehouse stores only the latest `statusReference` on `fulfillment_orders`; it does not have a provider-status event ledger. Strong replay conflict detection across older references is `[MISSING: approved event-ledger design or adapter-owned dedupe contract]`. Until that is resolved, the provider adapter must own durable dedupe before retrying Warehouse updates.
+Current implementation gap: Warehouse stores only the latest `statusReference` on `fulfillment_orders`; it does not have a provider-status event ledger. Strong replay conflict detection across older references is `[MISSING: approved Warehouse shipment snapshot ledger or adapter-owned durable idempotency store]`. Until that is resolved, any runtime adapter must own durable dedupe before retrying Warehouse updates.
 
-## Validation And Sensitive-Field Rejection
+## Redaction Policy
 
-Warehouse intake must reject or ignore provider-owned/raw fields before persistence or Orders sync:
+Warehouse must treat the Allegro verifier output as already redacted but still fail closed if unsafe fields appear.
 
+Allowed snapshot fields:
+
+- contract/version
+- provider/source channel
+- hashed account/order/shipment/waybill ids
+- bounded `sourceRead.status` and `sourceRead.reason`
+- bounded `latestStatus`
+- `packageCount`
+- `latestStatusAt`
+- `trackingUpdatedAt`
+- `observedAt`
+
+Forbidden fields:
+
+- raw Allegro account id, order id, shipment id, waybill id, package id, or provider event id
 - tracking number
 - tracking URL
-- carrier raw payload
 - provider webhook body
-- OAuth token, refresh token, API key, secret, cookie, authorization header
-- customer address, customer name, email, phone, buyer account id
-- provider label/document URL or binary document reference
+- provider polling response body
 - marketplace raw shipment/package object
+- carrier raw payload
+- provider label/document URL or binary document reference
+- OAuth token, refresh token, API key, secret, cookie, authorization header
+- customer address, customer name, email, phone, buyer account id, recipient identity, or delivery address
 
-The bounded Warehouse status sync to Orders must continue to include only status, reason, actor/service identity, bounded reference, fulfillment order id, and timestamp. Orders lifecycle events and Notifications must not receive raw tracking fields.
+The bounded Warehouse status sync to Orders must continue to include only Warehouse status, reason, actor/service identity, bounded reference, fulfillment order id, and timestamp. Orders lifecycle events and Notifications must not receive Allegro snapshot identity hashes unless an explicit Orders event contract is approved.
 
-## Blockers Waiting On Worker E
+## Rejection Rules
 
-- `[MISSING: Allegro shipment status source contract: endpoint or polling source, OAuth scopes, authentication method, retry/error semantics, timestamp semantics, and sanitized sample payloads.]`
-- `[MISSING: mapping from Allegro shipment/package/fulfillment statuses to Warehouse statuses when Allegro skips or combines in-delivery states.]`
-- `[MISSING: approved tracking number/URL visibility policy by role and explicit event-exclusion rule.]`
-- `[MISSING: provider adapter durable idempotency store or Warehouse provider-status event ledger decision.]`
-- `[MISSING: sanitized fixture set proving sensitive provider fields are rejected or excluded.]`
+The future consumer must reject and not persist/project a snapshot when any of these are true:
+
+- Unknown `contract` or version.
+- Provider or source channel is not `allegro`.
+- Required identity hash is missing, malformed, or raw-looking.
+- Any forbidden raw provider, tracking, credential, or customer field is present.
+- `sourceRead.status` is missing, unknown, or not successful for a status-advancing update.
+- `latestStatus` is missing or cannot map to a bounded Warehouse status/no-op.
+- Timestamp fields are malformed or violate approved stale/replay limits.
+- `packageCount` is negative or not an integer.
+- Snapshot correlation finds zero fulfillment orders, more than one fulfillment order, or a fulfillment order not yet at `handed_to_delivery`.
+- The normalized Warehouse transition would violate the existing fulfillment transition graph.
+- The idempotency ledger detects a same-key/different-content conflict.
+
+## Role Of Orders Lifecycle Callback
+
+Orders must not consume Allegro shipment snapshots directly in this lane. The expected runtime flow after missing gates close is:
+
+1. Allegro verifies and redacts `allegro.shipment_status_snapshot.v1`.
+2. Warehouse consumer validates snapshot contract, redaction, correlation, idempotency, and status mapping.
+3. Warehouse advances only its own fulfillment order status when the transition is valid.
+4. Existing Warehouse callback calls Orders `PUT /api/orders/:id/warehouse-fulfillment-status` with bounded Warehouse metadata.
+5. Orders projects lifecycle/events from Warehouse status only.
+
+This keeps Orders lifecycle callback as the projection bridge and avoids moving provider API ownership or raw shipment data into Orders.
+
+## Exact Missing Gates
+
+- `[MISSING: Warehouse consumer/runtime adapter for read-only shipment snapshots]`
+- `[MISSING: approved Warehouse shipment snapshot ledger or adapter-owned durable idempotency store]`
+- `[MISSING: approved correlation source between Allegro hashed order/shipment/waybill identity and exactly one Warehouse fulfillment order]`
+- `[MISSING: approved Allegro latestStatus to Warehouse status mapping fixture set for in-delivery, delivered, not-delivered, returned, and no-op classes]`
+- `[MISSING: explicit exception decision for direct handed_to_delivery -> delivered/not_delivered if Allegro lacks an in-delivery equivalent]`
+- `[MISSING: rejection test fixtures proving raw tracking numbers, URLs, provider payloads, credentials, and customer/contact/address fields are excluded]`
+- `[MISSING: Orders lifecycle callback verification after Warehouse consumer implementation, proving no Allegro snapshot hashes/raw fields enter Orders events]`
+- `[MISSING: owner-approved runtime implementation task before any Warehouse src/**, migration, secret, deploy, or live-call work]`
 
 ## Validation Commands
 
@@ -136,10 +237,12 @@ Validation run for this slice:
 
 ```bash
 git diff --check
-npm test -- --runInBand test/fulfillment-orders.service.spec.ts
+npm run check:hosted-auth
 ```
 
-Recommended implementation validation after Worker E unblocks source-specific tests:
+`npm run check:hosted-auth` is not shipment-specific; it is the only discovered safe repository static checker and remains a general Auth contract smoke.
+
+Recommended implementation validation after the missing gates close:
 
 ```bash
 npm test -- --runInBand test/fulfillment-orders.service.spec.ts
@@ -151,14 +254,17 @@ git diff --check
 
 | Workstream | Status | Owner role | Allowed files | Forbidden files/actions | Dependencies | Expected output | Validation evidence | Handoff notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Worker E Allegro source contract | dependency-gated | Allegro provider owner | `allegro` docs and narrow read-only adapter/tests after contract approval | Orders/Warehouse edits, fake simulator, Vault mutation, deploy, shipment label/document writes | approved source premise exists; exact payload facts missing | endpoint/source choice, sanitized payload, status mapping, idempotency source | provider fixture tests and sensitive scan | Must return bounded command to Warehouse only. |
-| Worker F Warehouse intake contract | ready now, docs-only complete in this slice | Warehouse fulfillment owner | `docs/contracts/fulfillment-provider-status-intake-contract.md`, status docs | Orders/Allegro edits, DB migrations, deploys, secrets, raw provider persistence | Worker E for implementation | bounded accepted payload, transition/idempotency/rejection rules | `git diff --check` | No source change until missing facts are resolved. |
-| Orders verification | final integration | Orders lifecycle owner | Orders verifier/docs only if status enum changes | raw tracking fields, DB migrations, deploys | Worker E plus Worker F implementation evidence | lifecycle/event projection still bounded | Orders verifier/event contract tests | Existing callback already accepts current Warehouse statuses. |
+| Allegro source verifier | complete upstream premise | Allegro provider owner | Allegro source/docs in commit `e626e5c` | Warehouse/Orders edits from that lane | none for docs; runtime still gated | `allegro.shipment_status_snapshot.v1` with hashed ids and redacted bounded fields | Allegro source-only verifier evidence from upstream commit | Warehouse treats this as input contract only, not runtime readiness. |
+| Worker H Warehouse consumer contract | complete in this docs-only slice | Warehouse fulfillment owner | `docs/**` | `src/**`, migrations, deploys, secrets, live calls, Orders/Allegro repos | Allegro verifier premise from `e626e5c` | bounded consumer contract, mapping, redaction, idempotency/ledger expectations, rejection rules, gates | `git diff --check`, safe static checker | No runtime code until missing gates close. |
+| Warehouse runtime consumer | blocked | Warehouse fulfillment owner | future approved `src/**`, tests, migration only if ledger approved | fake provider calls, raw provider persistence, deploy without owner approval | all missing gates above | implemented consumer/ledger/correlation with tests | focused tests, build, diff check, sensitive-field fixtures | Must preserve existing fulfillment transition graph. |
+| Orders lifecycle verification | final integration | Orders lifecycle owner | Orders verifier/docs only after Warehouse consumer implementation | direct Allegro snapshot ingestion, raw tracking fields, DB migrations unless approved | Warehouse runtime evidence | proof Orders receives only bounded Warehouse callback | Orders callback/event tests | Existing callback remains the projection bridge. |
 
+Shared contracts: Allegro snapshot verifier contract, Warehouse fulfillment status transition graph, Orders fulfillment status callback.
 Integration owner: Orders lifecycle orchestrator.
-Validation owner: final integration lane after Worker E provides provider fixtures and Warehouse implementation evidence.
-Merge order: Worker E contract, Worker F implementation/tests if needed, Orders verifier, Notifications verification if event copy changes.
+Validation owner: final integration lane after Warehouse runtime implementation exists.
+Merge order: Allegro verifier contract, Warehouse docs contract, Warehouse runtime consumer/ledger if approved, Orders lifecycle verifier, Notifications/event verification if event copy changes.
 
-## Change Note
+## Change Notes
 
-2026-07-03: Created documentation-only bounded Warehouse intake contract for Allegro-origin provider status updates. Source implementation remains blocked on Worker E missing Allegro shipment contract facts.
+- 2026-07-03: Worker F created the documentation-only bounded Warehouse intake contract for generic Allegro-origin provider status updates.
+- 2026-07-03: Worker H updated the contract for Allegro's `allegro.shipment_status_snapshot.v1` source-only verifier, documenting hashed identity fields, source-read status, package/status timestamps, redaction, rejection rules, idempotency/ledger expectations, Orders callback role, and runtime gates.

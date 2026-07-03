@@ -88,18 +88,21 @@ If Orders does not yet have reservation ids from the reserve response, it can re
 
 ## Provider Shipment Status Intake
 
-Warehouse's bounded provider-status intake contract for after `handed_to_delivery` is documented in `docs/contracts/fulfillment-provider-status-intake-contract.md`.
+Warehouse's bounded Allegro shipment snapshot consumer contract for after `handed_to_delivery` is documented in `docs/contracts/fulfillment-provider-status-intake-contract.md`.
 
 Summary:
 
-- Allegro is the approved initial provider source only for Allegro-origin orders.
-- Raw Allegro shipment payloads, tracking numbers/URLs, credentials, customer address/contact fields, labels, and provider response bodies must not be sent to Orders or persisted in Warehouse fulfillment status metadata.
-- Accepted post-handoff statuses are constrained to `in_delivery`, `delivered`, `not_delivered`, and `returned` with the existing Warehouse transition order.
-- `statusReference` is the bounded idempotency reference; the current Warehouse status endpoint stores this via request field `reference` as `statusReference`.
+- Allegro commit `e626e5c` defines the source-only verifier contract `allegro.shipment_status_snapshot.v1`.
+- The source verifier emits hashed account/order/shipment/waybill ids, bounded source-read status/reason, `packageCount`, `latestStatus`, `latestStatusAt`, and `trackingUpdatedAt`.
+- Raw Allegro shipment payloads, tracking numbers/URLs, credentials, customer address/contact fields, labels, provider response bodies, and raw marketplace shipment/package objects must not be sent to Orders or persisted in Warehouse fulfillment status metadata.
+- Accepted post-handoff Warehouse statuses are constrained to `in_delivery`, `delivered`, `not_delivered`, and `returned`, plus documented no-op classes, with the existing Warehouse transition order.
+- Warehouse still lacks the consumer/runtime adapter, correlation source, and ledger/idempotency decision required to consume snapshots.
+- Orders lifecycle updates must continue through the existing Warehouse fulfillment status callback; Orders must not consume Allegro snapshots directly.
 
 ## Missing Contracts
 
-- `[MISSING: Worker E Allegro shipment status source contract after Warehouse hands the parcel to a carrier, including endpoint/polling choice, OAuth scopes, timestamp semantics, retry/error semantics, and sanitized fixtures.]`
-- `[MISSING: Allegro-to-Warehouse status mapping for provider statuses that skip or combine in-delivery states.]`
-- `[MISSING: provider adapter durable idempotency store or Warehouse provider-status event ledger decision.]`
-- `[MISSING: approved tracking number/URL visibility policy by role and explicit event-exclusion rule.]`
+- `[MISSING: Warehouse consumer/runtime adapter for read-only shipment snapshots]`
+- `[MISSING: approved Warehouse shipment snapshot ledger or adapter-owned durable idempotency store]`
+- `[MISSING: approved correlation source between Allegro hashed order/shipment/waybill identity and exactly one Warehouse fulfillment order]`
+- `[MISSING: approved Allegro latestStatus to Warehouse status mapping fixture set for in-delivery, delivered, not-delivered, returned, and no-op classes]`
+- `[MISSING: Orders lifecycle callback verification after Warehouse consumer implementation, proving no Allegro snapshot hashes/raw fields enter Orders events]`
