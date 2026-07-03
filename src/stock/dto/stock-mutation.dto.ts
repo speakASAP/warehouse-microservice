@@ -3,6 +3,7 @@ import {
   ArrayMaxSize,
   ArrayNotEmpty,
   IsArray,
+  Equals,
   IsDateString,
   IsInt,
   IsNotEmpty,
@@ -11,6 +12,7 @@ import {
   Max,
   MaxLength,
   Min,
+  ValidateIf,
 } from 'class-validator';
 
 export class StockMutationAuditDto {
@@ -31,7 +33,25 @@ export class StockMutationAuditDto {
   reference?: string;
 }
 
-export class BaseStockMutationDto extends StockMutationAuditDto {
+export class BundleAggregateReservationBoundaryDto extends StockMutationAuditDto {
+  @ValidateIf((_body, value) => value !== undefined)
+  @Equals(undefined, { message: 'bundleId is forbidden; reserve existing component productId lines only' })
+  bundleId?: never;
+
+  @ValidateIf((_body, value) => value !== undefined)
+  @Equals(undefined, { message: 'bundleSku is forbidden; Warehouse does not own synthetic bundle stock in catalog.bundle.v1' })
+  bundleSku?: never;
+
+  @ValidateIf((_body, value) => value !== undefined)
+  @Equals(undefined, { message: 'bundleStockId is forbidden; Warehouse reserves component stock rows only' })
+  bundleStockId?: never;
+
+  @ValidateIf((_body, value) => value !== undefined)
+  @Equals(undefined, { message: 'bundleContractVersion is forbidden; Catalog bundle evidence must not become Warehouse stock identity' })
+  bundleContractVersion?: never;
+}
+
+export class BaseStockMutationDto extends BundleAggregateReservationBoundaryDto {
   @IsString()
   @IsNotEmpty()
   @MaxLength(200)
@@ -75,7 +95,7 @@ export class ReserveStockDto extends PositiveStockMutationDto {
 
 export class UnreserveStockDto extends ReserveStockDto {}
 
-export class ReservationLifecycleDto extends StockMutationAuditDto {
+export class ReservationLifecycleDto extends BundleAggregateReservationBoundaryDto {
   @IsString()
   @IsNotEmpty()
   @MaxLength(200)

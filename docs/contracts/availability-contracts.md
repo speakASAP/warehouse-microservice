@@ -236,3 +236,9 @@ Payment confirmation:
 - Channel services should use the batch endpoint before feed/publication sync and consume `stock.updated` events for incremental refreshes.
 - Orders should use reservation lifecycle endpoints for payment success, failure, expiry, cancellation, and return flows.
 - Consumers must treat `totalAvailable` as display/check availability, not as a guarantee after checkout begins; reservation lifecycle is the authority for holds.
+
+## Catalog bundle component reservation boundary
+
+For Catalog `catalog.bundle.v1`, Warehouse accepts only existing component `productId` reservation lines. Bundle aggregate evidence may travel in Catalog/Orders metadata after those owners approve their contracts, but it must not become Warehouse stock identity. Reservation and reservation-lifecycle DTOs fail closed for `bundleId`, `bundleSku`, `bundleStockId`, and `bundleContractVersion` fields.
+
+Resolved blocker: `[RESOLVED: Warehouse approval that first ecosystem bundle selling reserves component lines only]`. Validation is source-only and does not mutate live stock.

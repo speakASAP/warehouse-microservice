@@ -1,6 +1,9 @@
 import 'reflect-metadata';
+import { plainToInstance } from 'class-transformer';
+import { validateSync } from 'class-validator';
 import { StockReservation } from '../src/reservations/stock-reservation.entity';
 import { ReservationsService } from '../src/reservations/reservations.service';
+import { ReserveStockDto } from '../src/stock/dto/stock-mutation.dto';
 
 describe('ReservationsService automatic expiry', () => {
   function createService(reservations: Partial<StockReservation>[], expireReservation = jest.fn().mockResolvedValue({})) {
@@ -117,5 +120,70 @@ describe('ReservationsService automatic expiry', () => {
       '',
       'ReservationsService',
     );
+  });
+});
+
+
+describe('ReservationsService catalog.bundle.v1 component-line boundary', () => {
+  const componentReservation = {
+    productId: 'catalog-component-product-1',
+    warehouseId: 'warehouse-1',
+    quantity: 2,
+    orderId: 'order-1',
+    channel: 'flipflop',
+    reasonCode: 'CHECKOUT_HOLD',
+    actor: 'orders-microservice',
+    reference: 'cart-1',
+  };
+
+  function validationMessages(errors: unknown): string {
+    return JSON.stringify(errors);
+  }
+
+  it('keeps normal component product line reservation compatible with existing stock lifecycle calls', async () => {
+    const stockService = {
+      reserveStock: jest.fn().mockResolvedValue({
+        productId: componentReservation.productId,
+        warehouseId: componentReservation.warehouseId,
+        quantity: 10,
+        reserved: 2,
+        available: 8,
+      }),
+    };
+    const service = new ReservationsService({} as any, stockService as any, { log: jest.fn(), error: jest.fn() } as any);
+
+    await service.reserve(componentReservation);
+
+    expect(stockService.reserveStock).toHaveBeenCalledWith(
+      'catalog-component-product-1',
+      'warehouse-1',
+      2,
+      'order-1',
+      {
+        reasonCode: 'CHECKOUT_HOLD',
+        actor: 'orders-microservice',
+        reference: 'cart-1',
+      },
+      {
+        channel: 'flipflop',
+        expiresAt: undefined,
+      },
+    );
+  });
+
+  it('fails closed when a caller tries to reserve a Catalog bundle aggregate as Warehouse stock identity', () => {
+    const dto = plainToInstance(ReserveStockDto, {
+      ...componentReservation,
+      bundleId: 'catalog-bundle-1',
+      bundleContractVersion: 'catalog.bundle.v1',
+    });
+
+    const errors = validateSync(dto, {
+      whitelist: true,
+      forbidNonWhitelisted: true,
+    });
+
+    expect(validationMessages(errors)).toContain('bundleId is forbidden; reserve existing component productId lines only');
+    expect(validationMessages(errors)).toContain('bundleContractVersion is forbidden; Catalog bundle evidence must not become Warehouse stock identity');
   });
 });

@@ -8,8 +8,8 @@
   "tasks_active": 0,
   "tasks_failed_last_cycle": 0,
   "open_task_ids": [],
-  "last_milestone": "Warehouse shipment correlation producer surface source-validated",
-  "next_focus": "Approve deployment/migration and channel producer call for shipment correlations before status-mutating provider consumer.",
+  "last_milestone": "Warehouse catalog.bundle.v1 component-line reservation sign-off source-validated",
+  "next_focus": "Integrate Warehouse sign-off with Orders/Payments/FlipFlop bundle evidence contracts before any owner-approved checkout smoke.",
   "blockers": [],
   "budget_units_used": 0,
   "metrics": {
@@ -113,10 +113,13 @@
       "fulfillment_provider_shipment_correlation": "source_registry_resolver_validated_no_deploy",
       "fulfillment_provider_shipment_correlation_validation": "focused_jest_35_passed_build_passed_diff_check_passed",
       "fulfillment_provider_shipment_correlation_endpoint": "source_validated_no_deploy",
-      "fulfillment_provider_shipment_correlation_endpoint_validation": "focused_jest_30_passed_build_passed_diff_check_passed"
+      "fulfillment_provider_shipment_correlation_endpoint_validation": "focused_jest_30_passed_build_passed_diff_check_passed",
+      "catalog_bundle_component_reservation_contract": "docs/contracts/catalog-bundle-component-reservation-contract.md",
+      "catalog_bundle_component_reservation_boundary": "component_product_lines_only_bundle_identity_forbidden",
+      "catalog_bundle_component_reservation_validation": "focused_jest_4_passed_full_jest_112_passed_verifier_passed_build_passed_diff_check_passed"
     }
   },
-  "project_status": "correlation_producer_surface_source_validated_no_deploy",
+  "project_status": "catalog_bundle_component_reservation_signoff_source_validated_no_deploy",
   "completed_at": "2026-06-21",
   "frozen_at": "2026-06-21",
   "updated_at": "2026-07-03"

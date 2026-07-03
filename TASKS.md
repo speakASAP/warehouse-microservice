@@ -18,6 +18,7 @@
 
 ## Completed
 <!-- AI appends here. Never modifies previous entries. -->
+- [x] 2026-07-03 WH-G24-BUNDLE-COMPONENT-RESERVATION-T1 Added source-verified Warehouse sign-off that Catalog bundle selling reserves component lines only; no deploy, migration, live stock mutation, or external service call performed.
 - [x] 2026-07-03 WH-SHIPMENT-CORRELATION-ENDPOINT-SOURCE-T1 Added source-only correlation registration endpoint for existing fulfillment orders; no deploy, migration run, status mutation, live call, or raw provider payload persistence performed.
 - [x] 2026-07-03 WH-SHIPMENT-CORRELATION-SOURCE-T1 Added source-only provider shipment correlation registry/resolver and adapter resolver wiring; no deploy, migration run, status mutation, live call, or raw provider payload persistence performed.
 - [x] 2026-07-03 WH-ALLEGRO-SNAPSHOT-ADAPTER-SOURCE-T1 Added source-only sanitized Allegro shipment snapshot adapter mapper and focused tests; no correlation resolver, status mutation, deploy, live call, or provider payload persistence performed.
