@@ -124,7 +124,7 @@
       "catalog_bundle_reserved_timeout_cleanup_narrowing": "source_policy_defined_reserved_fulfilled_return_partial_timeout_max_quantity_window_missing",
       "catalog_bundle_reserved_timeout_cleanup_validation": "verifier_passed_focused_jest_22_passed_build_passed_diff_check_passed",
       "catalog_bundle_deterministic_cleanup_packet": "source_defined_component_line_lookup_packet_no_live_mutation",
-      "catalog_bundle_deterministic_cleanup_packet_validation": "verifier_passed_focused_jest_22_passed_build_passed_diff_check_pending"
+      "catalog_bundle_deterministic_cleanup_packet_validation": "verifier_passed_focused_jest_22_passed_build_passed_diff_check_passed"
     }
   },
   "project_status": "goal24_deterministic_cleanup_packet_source_defined_no_deploy",
