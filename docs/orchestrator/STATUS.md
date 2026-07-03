@@ -10,6 +10,28 @@ Next action: keep runtime provisioning approval-gated; after the Auth-owned Cata
 
 # Warehouse Orchestrator Status
 
+## 2026-07-03 - Allegro Fulfillment Provider Status Intake Contract
+
+Intent chain:
+
+- Vision: customers and operators should see accurate post-handoff delivery progress without Orders or Warehouse becoming raw courier-payload stores.
+- Goal Impact: Allegro-origin orders can later advance delivery lifecycle status through Warehouse's bounded fulfillment status authority.
+- System: Allegro/provider owner owns raw shipment APIs, credentials, provider payloads, and adapter dedupe; Warehouse owns fulfillment-order status; Orders owns lifecycle projection/events.
+- Feature: bounded Warehouse intake contract for provider shipment status updates after `handed_to_delivery`.
+- Task: define accepted payload, allowed transitions, idempotency/statusReference semantics, sensitive-field rejection, and blockers for Worker E.
+- Execution Plan: documentation-only until Allegro source payloads, mapping, fixtures, and sensitive-data policy are approved; do not add fake provider code.
+- Coding Prompt: remote-only, Warehouse docs/status files only, no Orders/Allegro edits, no deploys, no migrations, no secrets, no raw tracking persistence.
+- Code: `docs/contracts/fulfillment-provider-status-intake-contract.md` plus fulfillment handoff contract link.
+- Validation: read-only inspection of Warehouse fulfillment model/API, read-only Orders callback DTO/lifecycle mapping, and `git diff --check`.
+
+Evidence:
+
+- Warehouse model already has `handed_to_delivery`, `in_delivery`, `delivered`, `not_delivered`, `returned`, and `statusReference`.
+- Current transition guard permits `handed_to_delivery -> in_delivery/returned`, `in_delivery -> delivered/not_delivered/returned`, and return from terminal delivery statuses.
+- Orders callback accepts bounded Warehouse status metadata only and maps `in_delivery -> in_delivery`, `delivered -> received`, and `not_delivered -> not_received`.
+- New contract rejects tracking numbers/URLs, raw provider payloads, credentials/tokens, customer address/contact data, label/document references, and marketplace shipment/package objects.
+- Implementation remains blocked on `[MISSING: Worker E Allegro shipment status source contract]`, `[MISSING: Allegro-to-Warehouse status mapping]`, and `[MISSING: provider adapter durable idempotency store or Warehouse provider-status event ledger decision]`.
+
 ## 2026-07-03 - Fulfillment Delivery Status Source For Orders
 
 Intent chain:

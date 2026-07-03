@@ -86,7 +86,20 @@ The cancel and return handoff endpoints do not mutate stock. Stock effects remai
 
 If Orders does not yet have reservation ids from the reserve response, it can read them through `GET /api/reservations/order/:orderId` before creating the handoff.
 
+## Provider Shipment Status Intake
+
+Warehouse's bounded provider-status intake contract for after `handed_to_delivery` is documented in `docs/contracts/fulfillment-provider-status-intake-contract.md`.
+
+Summary:
+
+- Allegro is the approved initial provider source only for Allegro-origin orders.
+- Raw Allegro shipment payloads, tracking numbers/URLs, credentials, customer address/contact fields, labels, and provider response bodies must not be sent to Orders or persisted in Warehouse fulfillment status metadata.
+- Accepted post-handoff statuses are constrained to `in_delivery`, `delivered`, `not_delivered`, and `returned` with the existing Warehouse transition order.
+- `statusReference` is the bounded idempotency reference; the current Warehouse status endpoint stores this via request field `reference` as `statusReference`.
+
 ## Missing Contracts
 
-- `[MISSING: delivery provider or shipment-status source contract after Warehouse hands the parcel to a carrier.]`
-- `[MISSING: Orders client update that sends this new handoff payload after payment fulfillment.]`
+- `[MISSING: Worker E Allegro shipment status source contract after Warehouse hands the parcel to a carrier, including endpoint/polling choice, OAuth scopes, timestamp semantics, retry/error semantics, and sanitized fixtures.]`
+- `[MISSING: Allegro-to-Warehouse status mapping for provider statuses that skip or combine in-delivery states.]`
+- `[MISSING: provider adapter durable idempotency store or Warehouse provider-status event ledger decision.]`
+- `[MISSING: approved tracking number/URL visibility policy by role and explicit event-exclusion rule.]`
