@@ -5,23 +5,80 @@ function read(path) {
   return fs.readFileSync(path, 'utf8');
 }
 
+function assertIncludes(source, marker, message) {
+  assert(source.includes(marker), message);
+}
+
 const dto = read('src/stock/dto/stock-mutation.dto.ts');
-const tests = read('test/reservations.service.spec.ts');
+const reservationTests = read('test/reservations.service.spec.ts');
+const stockTests = read('test/stock.service.spec.ts');
+const stockService = read('src/stock/stock.service.ts');
 const contract = read('docs/contracts/catalog-bundle-component-reservation-contract.md');
+const validation = read('docs/intent-preservation/validation-reports/VAL-WH-G24-BUNDLE-COMPONENT-RESERVATION.md');
 
-assert(dto.includes('BundleAggregateReservationBoundaryDto'), 'DTO boundary class is missing');
-assert(dto.includes('bundleId is forbidden; reserve existing component productId lines only'), 'bundleId fail-closed validation is missing');
-assert(dto.includes('bundleSku is forbidden; Warehouse does not own synthetic bundle stock'), 'bundleSku fail-closed validation is missing');
-assert(dto.includes('bundleStockId is forbidden; Warehouse reserves component stock rows only'), 'bundleStockId fail-closed validation is missing');
-assert(dto.includes('bundleContractVersion is forbidden; Catalog bundle evidence must not become Warehouse stock identity'), 'bundle contract-version fail-closed validation is missing');
-assert(tests.includes('keeps normal component product line reservation compatible'), 'component-line compatibility test is missing');
-assert(tests.includes('fails closed when a caller tries to reserve a Catalog bundle aggregate'), 'bundle aggregate rejection test is missing');
-assert(contract.includes('[RESOLVED: Warehouse approval that first ecosystem bundle selling reserves component lines only]'), 'resolved blocker marker is missing');
-assert(contract.includes('must not reserve `bundleId`'), 'Warehouse bundleId prohibition is missing');
-assert(contract.includes('mutate live stock in validation'), 'non-mutating validation statement is missing');
-assert(contract.includes('[MISSING: owner-approved paid/provider checkout smoke with stock and refund/cancel rollback plan]'), 'paid/provider smoke blocker is missing');
-assert(contract.includes('paid/provider bundle checkout smoke beyond the already recorded pending-order reservation and release evidence'), 'paid/provider fail-closed boundary is missing');
-assert(contract.includes('transition each active component reservation to `fulfilled`'), 'paid/provider fulfillment stock-effect boundary is missing');
-assert(contract.includes('refund/cancel after fulfillment'), 'refund/cancel rollback boundary is missing');
+assertIncludes(dto, 'BundleAggregateReservationBoundaryDto', 'DTO boundary class is missing');
+assertIncludes(dto, 'bundleId is forbidden; reserve existing component productId lines only', 'bundleId fail-closed validation is missing');
+assertIncludes(dto, 'bundleSku is forbidden; Warehouse does not own synthetic bundle stock', 'bundleSku fail-closed validation is missing');
+assertIncludes(dto, 'bundleStockId is forbidden; Warehouse reserves component stock rows only', 'bundleStockId fail-closed validation is missing');
+assertIncludes(dto, 'bundleContractVersion is forbidden; Catalog bundle evidence must not become Warehouse stock identity', 'bundle contract-version fail-closed validation is missing');
+assertIncludes(reservationTests, 'keeps normal component product line reservation compatible', 'component-line compatibility test is missing');
+assertIncludes(reservationTests, 'fails closed when a caller tries to reserve a Catalog bundle aggregate', 'bundle aggregate rejection test is missing');
 
-console.log('catalog.bundle.v1 Warehouse component reservation boundary verified');
+const stockLifecycleEvidence = [
+  ['reserve hold test', 'creates a reservation row and increases reserved stock on checkout hold'],
+  ['release test', 'releases reserved stock on payment failure'],
+  ['fulfill/decrement test', 'deducts stock and clears the hold on payment success'],
+  ['fulfill replay test', 'does not deduct stock again when a fulfillment webhook is replayed'],
+  ['expiry release test', 'expires a timed-out reservation and releases reserved stock'],
+  ['post-fulfillment cancel restock test', 'restocks a fulfilled reservation when an order cancellation is reversed'],
+  ['return restock test', 'restocks inventory for a fulfilled reservation return'],
+];
+for (const [label, marker] of stockLifecycleEvidence) {
+  assertIncludes(stockTests, marker, `${label} is missing`);
+}
+
+const stockServiceEvidence = [
+  ['reserve stock effect', 'stock.reserved += reserveDelta'],
+  ['release stock effect', 'stock.reserved -= quantity'],
+  ['fulfill reserved decrement', 'stock.reserved -= quantity'],
+  ['fulfill quantity decrement', 'stock.quantity -= quantity'],
+  ['cancel active release branch', "const wasActive = reservation.status === 'active'"],
+  ['cancel fulfilled restock branch', 'stock.quantity += quantity'],
+  ['return fulfilled restock', 'async returnReservation'],
+  ['return quantity increment', 'stock.quantity += quantity'],
+  ['idempotent transition guard', 'assertIdempotentReservationTransition'],
+];
+for (const [label, marker] of stockServiceEvidence) {
+  assertIncludes(stockService, marker, `${label} source evidence is missing`);
+}
+
+const contractMarkers = [
+  '[RESOLVED: Warehouse approval that first ecosystem bundle selling reserves component lines only]',
+  '[RESOLVED: Warehouse source evidence for component-line stock hold/release/fulfill/cancel/return mapping]',
+  'Component-Line Stock Effect Evidence',
+  'must not reserve `bundleId`',
+  'mutate live stock in validation',
+  '[MISSING: owner-approved paid/provider checkout smoke with stock and refund/cancel rollback plan]',
+  'paid/provider bundle checkout smoke beyond the already recorded pending-order reservation and release evidence',
+  'transition each active component reservation to `fulfilled`',
+  'refund/cancel after fulfillment',
+  'Orders/Payments provider-success, provider-cancel, refund, and post-fulfillment cancellation event contract',
+];
+for (const marker of contractMarkers) {
+  assertIncludes(contract, marker, `contract marker is missing: ${marker}`);
+}
+
+const validationMarkers = [
+  'Component-Line Rollback Evidence Refresh',
+  'Hold: `StockService.reserveStock`',
+  'Release: `StockService.unreserveStock`',
+  'Fulfill/decrement: `StockService.fulfillReservation`',
+  'Cancel after fulfillment: `StockService.cancelReservation`',
+  'Return after fulfillment: `StockService.returnReservation`',
+  '[MISSING: approved Warehouse stock hold/release window and max quantity]',
+];
+for (const marker of validationMarkers) {
+  assertIncludes(validation, marker, `validation marker is missing: ${marker}`);
+}
+
+console.log('catalog.bundle.v1 Warehouse component-line rollback boundary verified');

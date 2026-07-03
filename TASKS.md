@@ -18,6 +18,7 @@
 
 ## Completed
 <!-- AI appends here. Never modifies previous entries. -->
+- [x] 2026-07-03 WH-G24-BUNDLE-COMPONENT-ROLLBACK-EVIDENCE-T1 Hardened Warehouse component-line stock rollback evidence docs/verifier for catalog.bundle.v1 hold/release/fulfill/cancel/return mapping; no live checkout, stock decrement, reservation/release mutation, deploy, migration, provider flow, secret read, or production DB mutation performed.
 - [x] 2026-07-03 WH-G24-PAID-PROVIDER-ROLLBACK-READINESS-T1 Hardened Warehouse paid/provider bundle rollback readiness docs/verifier; no live stock, reservation, fulfillment, release, provider, Orders, Payments, deploy, migration, or secret mutation performed.
 - [x] 2026-07-03 WH-G24-BUNDLE-COMPONENT-RESERVATION-T1 Added source-verified Warehouse sign-off that Catalog bundle selling reserves component lines only; no deploy, migration, live stock mutation, or external service call performed.
 - [x] 2026-07-03 WH-SHIPMENT-CORRELATION-ENDPOINT-SOURCE-T1 Added source-only correlation registration endpoint for existing fulfillment orders; no deploy, migration run, status mutation, live call, or raw provider payload persistence performed.

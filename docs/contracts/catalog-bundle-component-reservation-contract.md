@@ -46,6 +46,22 @@ Warehouse must reserve, release, fulfill, cancel, expire, and return each compon
 
 Warehouse must not reserve `bundleId`, create synthetic bundle SKU/stock, infer bundle eligibility, calculate bundle pricing, mutate live stock in validation, or call Orders, Payments, FlipFlop, Catalog, or marketplace services from this sign-off. If any component reservation fails, the caller-owned checkout/order workflow must fail closed and compensate already reserved component lines using the existing release/cancel lifecycle.
 
+## Component-Line Stock Effect Evidence
+
+This source-only readiness pass proves the Warehouse-owned rollback mapping for each component product line, not an end-to-end paid/provider checkout. Evidence is static source plus unit coverage only; it does not prove live provider, Orders, Payments, refund, or checkout orchestration behavior.
+
+| Component-line stage | Warehouse source path | Stock effect | Source evidence | Paid/provider readiness result |
+| --- | --- | --- | --- | --- |
+| Checkout hold | `StockService.reserveStock` | increases `reserved`, decreases `available`, writes `active` reservation and `reserve` movement | `test/stock.service.spec.ts` covers `creates a reservation row and increases reserved stock on checkout hold`; `test/reservations.service.spec.ts` covers component-line forwarding | source-proven for component lines |
+| Pre-fulfillment release/payment failure | `StockService.unreserveStock` / `ReservationsService.release` | decreases `reserved`, restores `available`, writes `released` reservation and `unreserve` movement | `test/stock.service.spec.ts` covers `releases reserved stock on payment failure`; Catalog Rung 2 proved pending-order cleanup release only | source-proven; live paid/provider release still gated |
+| Payment/provider success fulfillment | `StockService.fulfillReservation` | decreases both `reserved` and `quantity`, keeps `available` consistent, writes `fulfilled` reservation and `fulfill` movement | `test/stock.service.spec.ts` covers `deducts stock and clears the hold on payment success` and replay no-op | source-proven only; live provider success mapping remains `[MISSING: ...]` |
+| Timeout before fulfillment | `StockService.expireReservation` | decreases `reserved`, restores `available`, writes `expired` reservation | `test/stock.service.spec.ts` covers `expires a timed-out reservation and releases reserved stock` | source-proven for component holds |
+| Cancel after fulfillment | `StockService.cancelReservation` | restocks `quantity`, keeps `reserved=0`, writes `cancelled` reservation | `test/stock.service.spec.ts` covers `restocks a fulfilled reservation when an order cancellation is reversed` | source-proven only; business approval and refund source event remain `[MISSING: ...]` |
+| Return after fulfillment | `StockService.returnReservation` | restocks `quantity`, keeps `reserved=0`, writes `returned` reservation and `return` movement | `test/stock.service.spec.ts` covers `restocks inventory for a fulfilled reservation return` | source-proven only; provider/refund/return authorization remains `[MISSING: ...]` |
+| Aggregate bundle identity attempt | `ReserveStockDto` / `ReservationLifecycleDto` | rejected before stock identity mutation | `test/reservations.service.spec.ts` covers bundle aggregate rejection; verifier checks DTO forbidden fields | fail-closed source boundary |
+
+Result: `[RESOLVED: Warehouse source evidence for component-line stock hold/release/fulfill/cancel/return mapping]` for existing component product reservations. The original runtime blocker is only narrowed, not globally cleared: `[MISSING: owner-approved paid/provider checkout smoke with stock and refund/cancel rollback plan]` and `[MISSING: Orders/Payments provider-success, provider-cancel, refund, and post-fulfillment cancellation event contract that maps to Warehouse fulfill/cancel/return calls]` still block any live paid/provider stock effect.
+
 ## Paid/Provider Checkout Smoke Boundary
 
 Warehouse cannot approve a paid/provider bundle checkout smoke beyond the already recorded pending-order reservation and release evidence unless the integration owner provides an owner-approved cross-service plan. The Warehouse-owned part of that plan is limited to component-line stock effects:
@@ -87,7 +103,8 @@ Normal component reservation compatibility is preserved: existing `productId`, `
 
 | Workstream | Status | Owner role | Scope | Dependencies | Validation evidence | Handoff notes |
 | --- | --- | --- | --- | --- | --- | --- |
-| Warehouse component reservation sign-off | ready for integration after source validation | Warehouse reservation owner | this contract, DTO guard, focused tests, static verifier | Catalog `catalog.bundle.v1` contracts | focused Jest, verifier, build, diff check | Safe to hand to Catalog/Orders integration as Warehouse approval. |
+| Warehouse component reservation sign-off | complete | Warehouse reservation owner | this contract, DTO guard, focused tests, static verifier | Catalog `catalog.bundle.v1` contracts | focused Jest, stock-service lifecycle tests, verifier, build, diff check | Safe to hand to Catalog/Orders integration as Warehouse component-line source evidence. |
+| Warehouse paid/provider rollback verifier | dependency-gated | Warehouse reservation owner | prove source mapping for hold/release/fulfill/cancel/return without live mutation | Orders/Payments status mapping and approved stock window | stock-service lifecycle tests, verifier, build, diff check | Runtime smoke remains blocked until owner-approved canary facts and rollback packet exist. |
 | Orders bundle evidence contract | dependency-gated outside this repo | Orders contract owner | additive order metadata only | Warehouse sign-off plus Catalog aggregate | `[MISSING: Orders validation evidence]` | Must preserve normal item lines. |
 | Payments metadata allowlist | dependency-gated outside this repo | Payments boundary owner | audit metadata only | Orders metadata contract | `[MISSING: Payments validation evidence]` | Must preserve caller-owned amount/currency. |
 | Final checkout smoke | final integration | Commerce integration validator | paid/provider smoke with rollback plan | Catalog/Orders/Warehouse/Payments/FlipFlop contracts, provider/refund/cancel mapping, owner credentials | `[MISSING: owner-approved paid/provider checkout smoke with stock and refund/cancel rollback plan]` | Warehouse must not run or approve live stock effects outside the owner-approved integration plan. |
