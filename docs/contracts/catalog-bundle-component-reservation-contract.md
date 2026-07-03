@@ -115,6 +115,13 @@ The global Nest validation pipe uses `whitelist: true` and `forbidNonWhitelisted
 
 Normal component reservation compatibility is preserved: existing `productId`, `warehouseId`, `quantity`, `orderId`, `channel`, `reasonCode`, `actor`, and `reference` fields continue to forward to `StockService.reserveStock` unchanged.
 
+## Goal 24 Warehouse Cleanup Approval Packet
+
+The Warehouse-owned approval packet for the remaining stock-window and post-fulfillment cleanup blockers lives at `docs/contracts/goal24-warehouse-cleanup-approval-packet.md`. Its decision is fail-closed:
+
+- `[MISSING: owner-approved Warehouse stock hold/release window and max quantity]` remains unresolved because source evidence does not approve target stock rows, a live hold duration, maximum quantity, or canary cleanup ownership.
+- `[MISSING: owner-approved post-fulfillment cancellation/return workflow that maps a Payments refund or correction to Orders and Warehouse without inferring stock effects]` remains unresolved because a refund/correction alone is not Warehouse inventory evidence; an approved Orders/Payments business event must choose `cancel` or `return`.
+
 ## Remaining Blockers
 
 - `[RESOLVED: Orders additive bundleEvidence metadata contract on create-order and idempotent replay]`
