@@ -13,6 +13,15 @@ describe('FulfillmentOrdersController', () => {
         orderId: 'order-1',
         status: 'in_delivery',
       })),
+      recordInternalDeliveryStatus: jest.fn(async () => ({
+        observation: { id: 'internal-observation-1' },
+        fulfillmentOrder: {
+          id: '11111111-1111-4111-8111-111111111111',
+          orderId: 'order-1',
+          status: 'in_delivery',
+        },
+        statusMutationApplied: true,
+      })),
     };
     const providerShipmentCorrelationService = {
       registerCorrelation: jest.fn(async (command) => ({
@@ -122,5 +131,26 @@ describe('FulfillmentOrdersController', () => {
 
     expect(fulfillmentOrdersService.updateStatus).not.toHaveBeenCalled();
     expect(response.data.statusMutationApplied).toBe(false);
+  });
+
+  it('records internal delivery status through Warehouse-owned provider path', async () => {
+    const { controller, fulfillmentOrdersService, request } = createController();
+
+    const response = await controller.recordInternalDeliveryStatus('order-1', {
+      statusClass: 'IN_DELIVERY',
+      reasonCode: 'WAREHOUSE_INTERNAL_DELIVERY_OBSERVED',
+      deliveryReference: 'internal-delivery-proof',
+    }, request as any);
+
+    expect(fulfillmentOrdersService.recordInternalDeliveryStatus).toHaveBeenCalledWith('order-1', expect.objectContaining({
+      statusClass: 'IN_DELIVERY',
+      reasonCode: 'WAREHOUSE_INTERNAL_DELIVERY_OBSERVED',
+      deliveryReference: 'internal-delivery-proof',
+      actor: 'service:allegro-service',
+    }));
+    expect(response).toEqual(expect.objectContaining({
+      success: true,
+      data: expect.objectContaining({ statusMutationApplied: true }),
+    }));
   });
 });

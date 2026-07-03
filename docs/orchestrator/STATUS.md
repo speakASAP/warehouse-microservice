@@ -1,3 +1,20 @@
+## 2026-07-03 - Warehouse Internal Delivery Status Source Implemented
+
+Result: Warehouse now has a source-implemented internal delivery status intake for Alfares-owned delivery operations, so the Orders reliability goal is no longer blocked on an external courier/provider owner for our own orders. The new endpoint is POST /api/fulfillment-orders/order/:orderId/internal-delivery-status, guarded by internal:warehouse-microservice:admin. It records a sanitized provider-status ledger observation under warehouse.internal_delivery_status.v1 and applies the existing Warehouse transition graph for IN_DELIVERY, DELIVERED, NOT_DELIVERED, and RETURNED; UNKNOWN records a no-op observation and does not call Orders.
+
+IPS chain: Vision -> Alfares-owned delivery status must update customer/admin order lifecycle without waiting for external carriers; Goal Impact -> internal delivery source path is implemented in Warehouse and can drive existing Orders callbacks after deploy; System -> Warehouse owns fulfillment/delivery status validation and ledger, Orders owns lifecycle projection, marketplaces/frontends read Orders state; Feature -> Warehouse internal delivery status intake; Task -> add DTO/controller/service/tests/docs; Execution Plan -> source validation first, then deploy/runtime smoke; Coding Prompt -> no raw provider/customer/tracking/credential persistence; Code -> src/fulfillment/dto/fulfillment-order.dto.ts, src/fulfillment/fulfillment-orders.controller.ts, src/fulfillment/fulfillment-orders.service.ts; Validation -> focused Jest suites, build, diff check.
+
+Validation:
+
+- npm test -- --runInBand test/fulfillment-orders.service.spec.ts test/fulfillment-orders.controller.spec.ts test/fulfillment-provider-status-ledger.service.spec.ts passed: 3 suites / 20 tests.
+- npm run build passed.
+- git diff --check passed.
+
+Remaining gates:
+
+- [MISSING: deploy new Warehouse image.]
+- [MISSING: bounded runtime smoke with one safe fulfillment order proving Warehouse status mutation and Orders callback/projection.]
+- [MISSING: customer/admin frontend read-path verification across selling surfaces after Orders projection.]
 ## 2026-07-03 - Catalog Bundle Paid Cleanup Semantics Source-Verified
 
 IPS: Vision -> paid/provider bundle cleanup must preserve Warehouse stock authority; Goal Impact -> Orders Goal 24 Warehouse-owned cleanup blockers are resolved/narrowed to source-policy operation mapping while live smoke remains blocked; System -> Warehouse owns component reservation state and stock effects, Orders owns lifecycle/cancellation gates, Payments owns provider/refund evidence, Catalog owns bundle identity; Feature -> `catalog.bundle.v1` component-line cleanup operation matrix; Task -> define future Orders `release`/`cancel`/`return` usage by component-line state; Execution Plan -> Warehouse docs/verifier/state only; Coding Prompt -> no live mutation, no invented provider facts, no aggregate bundle cleanup; Code -> bundle reservation contract, validation report, verifier, state/status; Validation -> focused Jest, static verifier, build, diff check.

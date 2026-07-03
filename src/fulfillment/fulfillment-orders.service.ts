@@ -1,10 +1,11 @@
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { createHash } from 'crypto';
 import { InjectRepository } from '@nestjs/typeorm';
 import axios from 'axios';
 import { DataSource, EntityManager, In, Repository } from 'typeorm';
 import { LoggerService } from '../logger/logger.service';
 import { StockReservation } from '../reservations/stock-reservation.entity';
-import { CreateFulfillmentOrderDto, FulfillmentOrderItemDto, FulfillmentOrderStatusTransitionDto, FulfillmentOrderTransitionDto } from './dto/fulfillment-order.dto';
+import { CreateFulfillmentOrderDto, FulfillmentOrderItemDto, FulfillmentOrderStatusTransitionDto, FulfillmentOrderTransitionDto, InternalDeliveryStatusClass, InternalDeliveryStatusUpdateDto } from './dto/fulfillment-order.dto';
 import { FulfillmentOrderLine } from './fulfillment-order-line.entity';
 import {
   FulfillmentCustomerContact,
@@ -12,6 +13,7 @@ import {
   FulfillmentOrder,
   FulfillmentOrderStatus,
 } from './fulfillment-order.entity';
+import { FulfillmentProviderStatusLedgerService } from './fulfillment-provider-status-ledger.service';
 
 interface FulfillmentOrderCommand extends CreateFulfillmentOrderDto {
   actor?: string;
@@ -22,6 +24,10 @@ interface FulfillmentTransitionCommand extends FulfillmentOrderTransitionDto {
 }
 
 interface FulfillmentStatusTransitionCommand extends FulfillmentOrderStatusTransitionDto {
+  actor?: string;
+}
+
+interface InternalDeliveryStatusCommand extends InternalDeliveryStatusUpdateDto {
   actor?: string;
 }
 
@@ -55,6 +61,7 @@ export class FulfillmentOrdersService {
     private readonly fulfillmentOrderRepository: Repository<FulfillmentOrder>,
     private readonly dataSource: DataSource,
     private readonly logger: LoggerService,
+    private readonly providerStatusLedgerService: FulfillmentProviderStatusLedgerService,
   ) {}
 
   async findByOrder(orderId: string): Promise<FulfillmentOrder> {
@@ -151,6 +158,72 @@ export class FulfillmentOrdersService {
     return saved;
   }
 
+  async recordInternalDeliveryStatus(orderId: string, body: InternalDeliveryStatusCommand): Promise<{
+    observation: unknown;
+    fulfillmentOrder: FulfillmentOrder | null;
+    statusMutationApplied: boolean;
+  }> {
+    this.validateRequiredString(body.actor, 'actor');
+    this.validateRequiredString(body.reasonCode, 'reasonCode');
+    const order = await this.findByOrder(orderId);
+    const observedAt = this.normalizeObservedAt(body.observedAt);
+    const normalizedWarehouseStatus = this.mapInternalDeliveryStatus(body.statusClass);
+    const idempotencyKey = this.normalizeOptionalString(body.idempotencyKey)
+      || [
+        'warehouse-internal-delivery:v1',
+        order.orderId,
+        body.statusClass,
+        observedAt,
+        this.normalizeOptionalString(body.deliveryReference) || 'no-reference',
+      ].join(':');
+    const sourceReferenceHash = this.hashStableJson({
+      orderId: order.orderId,
+      fulfillmentOrderId: order.id,
+      deliveryReference: this.normalizeOptionalString(body.deliveryReference),
+    });
+    const observation = await this.providerStatusLedgerService.recordObservation({
+      idempotencyKey,
+      contentHash: this.hashStableJson({
+        orderId: order.orderId,
+        fulfillmentOrderId: order.id,
+        statusClass: body.statusClass,
+        observedAt,
+        deliveryReference: this.normalizeOptionalString(body.deliveryReference),
+      }),
+      provider: 'warehouse-internal-delivery',
+      sourceChannel: 'internal-delivery-status',
+      centralOrderId: order.orderId,
+      fulfillmentOrderId: order.id,
+      sourceReferenceHash,
+      normalizedWarehouseStatus,
+      sourceStatusClass: body.statusClass,
+      statusObservedAt: observedAt,
+      sourceUpdatedAt: observedAt,
+      observedAt,
+      decision: normalizedWarehouseStatus === 'noop' ? 'noop' : 'accepted',
+      rejectionReason: normalizedWarehouseStatus === 'noop' ? 'INTERNAL_DELIVERY_STATUS_NOOP' : undefined,
+      sourceMetadata: {
+        contract: 'warehouse.internal_delivery_status.v1',
+        statusClass: body.statusClass,
+        deliveryReference: this.normalizeOptionalString(body.deliveryReference),
+      },
+    });
+    let fulfillmentOrder: FulfillmentOrder | null = null;
+    if (observation.decision === 'accepted' && normalizedWarehouseStatus !== 'noop') {
+      fulfillmentOrder = await this.updateStatus(orderId, {
+        status: normalizedWarehouseStatus,
+        reasonCode: body.reasonCode,
+        actor: body.actor,
+        reference: this.normalizeOptionalString(body.deliveryReference) || idempotencyKey.slice(0, 200),
+      });
+    }
+    return {
+      observation,
+      fulfillmentOrder,
+      statusMutationApplied: Boolean(fulfillmentOrder),
+    };
+  }
+
   async cancel(orderId: string, body: FulfillmentTransitionCommand): Promise<FulfillmentOrder> {
     return this.transition(orderId, 'cancelled', body);
   }
@@ -175,6 +248,28 @@ export class FulfillmentOrdersService {
     if (!allowed[current]?.includes(next)) {
       throw new BadRequestException(`Invalid fulfillment order transition: ${current} -> ${next}`);
     }
+  }
+
+  private mapInternalDeliveryStatus(statusClass: InternalDeliveryStatusClass): FulfillmentStatusTransitionCommand['status'] | 'noop' {
+    const mapping: Record<InternalDeliveryStatusClass, FulfillmentStatusTransitionCommand['status'] | 'noop'> = {
+      IN_DELIVERY: 'in_delivery',
+      DELIVERED: 'delivered',
+      NOT_DELIVERED: 'not_delivered',
+      RETURNED: 'returned',
+      UNKNOWN: 'noop',
+    };
+    return mapping[statusClass] || 'noop';
+  }
+
+  private normalizeObservedAt(value?: string): string {
+    if (!value) {
+      return new Date().toISOString();
+    }
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) {
+      throw new BadRequestException('observedAt must be a valid timestamp');
+    }
+    return parsed.toISOString();
   }
 
   private async notifyOrdersStatus(
@@ -419,12 +514,6 @@ export class FulfillmentOrdersService {
     return Object.fromEntries(Object.entries(value).filter(([, entry]) => entry !== undefined));
   }
 
-  private normalizeOptionalString(value?: string): string | undefined {
-    if (typeof value !== 'string') return undefined;
-    const trimmed = value.trim();
-    return trimmed.length > 0 ? trimmed : undefined;
-  }
-
   private normalizeRequiredNestedString(value: string | undefined, fieldName: string): string {
     this.validateRequiredString(value, fieldName);
     return value.trim();
@@ -434,5 +523,15 @@ export class FulfillmentOrdersService {
     if (typeof value !== 'string' || value.trim().length === 0) {
       throw new BadRequestException(`${fieldName} is required`);
     }
+  }
+
+  private normalizeOptionalString(value: string | undefined | null): string | undefined {
+    if (typeof value !== 'string') return undefined;
+    const normalized = value.trim();
+    return normalized.length > 0 ? normalized : undefined;
+  }
+
+  private hashStableJson(value: unknown): string {
+    return `sha256:${createHash('sha256').update(JSON.stringify(value)).digest('hex')}`;
   }
 }

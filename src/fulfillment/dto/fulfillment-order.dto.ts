@@ -143,13 +143,43 @@ export const FULFILLMENT_ORDER_PROGRESS_STATUSES: FulfillmentOrderStatus[] = [
   'in_delivery',
   'delivered',
   'not_delivered',
+  'returned',
 ];
 
 export class FulfillmentOrderStatusTransitionDto extends StockMutationAuditDto {
   @IsIn(FULFILLMENT_ORDER_PROGRESS_STATUSES)
-  status: Extract<FulfillmentOrderStatus, 'collecting' | 'forming' | 'formed' | 'handed_to_delivery' | 'in_delivery' | 'delivered' | 'not_delivered'>;
+  status: Extract<FulfillmentOrderStatus, 'collecting' | 'forming' | 'formed' | 'handed_to_delivery' | 'in_delivery' | 'delivered' | 'not_delivered' | 'returned'>;
 }
 
+export const INTERNAL_DELIVERY_STATUS_CLASSES = [
+  'IN_DELIVERY',
+  'DELIVERED',
+  'NOT_DELIVERED',
+  'RETURNED',
+  'UNKNOWN',
+] as const;
+
+export type InternalDeliveryStatusClass = typeof INTERNAL_DELIVERY_STATUS_CLASSES[number];
+
+export class InternalDeliveryStatusUpdateDto extends StockMutationAuditDto {
+  @IsIn(INTERNAL_DELIVERY_STATUS_CLASSES)
+  statusClass: InternalDeliveryStatusClass;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  deliveryReference?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(80)
+  idempotencyKey?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(80)
+  observedAt?: string;
+}
 
 export class ProviderShipmentCorrelationDto extends StockMutationAuditDto {
   @IsString()

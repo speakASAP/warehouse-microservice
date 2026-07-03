@@ -5,7 +5,7 @@ import { Roles } from '../auth/roles.decorator';
 import { LoggerService } from '../logger/logger.service';
 import { FulfillmentProviderShipmentCorrelationService } from './fulfillment-provider-shipment-correlation.service';
 import { FulfillmentProviderStatusSnapshotAdapterService } from './fulfillment-provider-status-snapshot-adapter.service';
-import { CreateFulfillmentOrderDto, FulfillmentOrderStatusTransitionDto, FulfillmentOrderTransitionDto, ProviderShipmentCorrelationDto } from './dto/fulfillment-order.dto';
+import { CreateFulfillmentOrderDto, FulfillmentOrderStatusTransitionDto, FulfillmentOrderTransitionDto, InternalDeliveryStatusUpdateDto, ProviderShipmentCorrelationDto } from './dto/fulfillment-order.dto';
 import { FulfillmentOrdersService } from './fulfillment-orders.service';
 
 @Controller('fulfillment-orders')
@@ -105,6 +105,21 @@ export class FulfillmentOrdersController {
       actor: getAuthenticatedMutationActor(request),
     });
     return { success: true, data: fulfillmentOrder };
+  }
+
+  @Post('order/:orderId/internal-delivery-status')
+  @Roles('internal:warehouse-microservice:admin')
+  async recordInternalDeliveryStatus(
+    @Param('orderId') orderId: string,
+    @Body() body: InternalDeliveryStatusUpdateDto,
+    @Req() request: Request,
+  ) {
+    this.logger.log(`POST /api/fulfillment-orders/order/${orderId}/internal-delivery-status`, 'FulfillmentOrdersController');
+    const result = await this.fulfillmentOrdersService.recordInternalDeliveryStatus(orderId, {
+      ...body,
+      actor: getAuthenticatedMutationActor(request),
+    });
+    return { success: true, data: result };
   }
 
   @Post('order/:orderId/cancel')

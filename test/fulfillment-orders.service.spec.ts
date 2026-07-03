@@ -92,14 +92,24 @@ describe('FulfillmentOrdersService', () => {
     const dataSource = {
       transaction: jest.fn(async (callback) => callback(manager)),
     };
-    const logger = { log: jest.fn() };
+    const logger = { log: jest.fn(), warn: jest.fn(), error: jest.fn() };
+    const providerStatusLedgerService = {
+      recordObservation: jest.fn(async (command) => ({
+        id: 'provider-observation-1',
+        decision: command.decision || 'accepted',
+        normalizedWarehouseStatus: command.normalizedWarehouseStatus,
+        centralOrderId: command.centralOrderId,
+        idempotencyKey: command.idempotencyKey,
+      })),
+    };
 
     return {
-      service: new FulfillmentOrdersService(fulfillmentOrderRepository as any, dataSource as any, logger as any),
+      service: new FulfillmentOrdersService(fulfillmentOrderRepository as any, dataSource as any, logger as any, providerStatusLedgerService as any),
       fulfillmentOrderRepository,
       lineRepository,
       reservationRepository,
       dataSource,
+      providerStatusLedgerService,
     };
   }
 
@@ -265,6 +275,70 @@ describe('FulfillmentOrdersService', () => {
     })).rejects.toThrow(BadRequestException);
 
     expect(fulfillmentOrderRepository.save).not.toHaveBeenCalled();
+  });
+
+  it('records internal delivery status in the provider ledger and advances fulfillment status', async () => {
+    const existingOrder = {
+      id: 'fulfillment-order-1',
+      orderId: 'order-1',
+      status: 'handed_to_delivery' as const,
+      lines: [createPayload.items[0]],
+    };
+    const { service, fulfillmentOrderRepository, providerStatusLedgerService } = createService({ existingOrder });
+
+    const result = await service.recordInternalDeliveryStatus('order-1', {
+      statusClass: 'IN_DELIVERY',
+      reasonCode: 'WAREHOUSE_INTERNAL_DELIVERY_OBSERVED',
+      actor: 'warehouse-operator',
+      deliveryReference: 'internal-delivery-proof',
+      observedAt: '2026-07-03T12:00:00.000Z',
+    });
+
+    expect(providerStatusLedgerService.recordObservation).toHaveBeenCalledWith(expect.objectContaining({
+      provider: 'warehouse-internal-delivery',
+      sourceChannel: 'internal-delivery-status',
+      centralOrderId: 'order-1',
+      fulfillmentOrderId: 'fulfillment-order-1',
+      normalizedWarehouseStatus: 'in_delivery',
+      sourceStatusClass: 'IN_DELIVERY',
+      decision: 'accepted',
+      sourceMetadata: expect.objectContaining({
+        contract: 'warehouse.internal_delivery_status.v1',
+        statusClass: 'IN_DELIVERY',
+        deliveryReference: 'internal-delivery-proof',
+      }),
+    }));
+    expect(fulfillmentOrderRepository.save).toHaveBeenCalledWith(expect.objectContaining({
+      status: 'in_delivery',
+      statusReasonCode: 'WAREHOUSE_INTERNAL_DELIVERY_OBSERVED',
+      statusActor: 'warehouse-operator',
+      statusReference: 'internal-delivery-proof',
+    }));
+    expect(result.statusMutationApplied).toBe(true);
+  });
+
+  it('records UNKNOWN internal delivery status as a no-op observation', async () => {
+    const existingOrder = {
+      id: 'fulfillment-order-1',
+      orderId: 'order-1',
+      status: 'handed_to_delivery' as const,
+      lines: [createPayload.items[0]],
+    };
+    const { service, fulfillmentOrderRepository, providerStatusLedgerService } = createService({ existingOrder });
+
+    const result = await service.recordInternalDeliveryStatus('order-1', {
+      statusClass: 'UNKNOWN',
+      reasonCode: 'WAREHOUSE_INTERNAL_DELIVERY_OBSERVED',
+      actor: 'warehouse-operator',
+    });
+
+    expect(providerStatusLedgerService.recordObservation).toHaveBeenCalledWith(expect.objectContaining({
+      provider: 'warehouse-internal-delivery',
+      normalizedWarehouseStatus: 'noop',
+      decision: 'noop',
+    }));
+    expect(fulfillmentOrderRepository.save).not.toHaveBeenCalled();
+    expect(result.statusMutationApplied).toBe(false);
   });
 
   it('keeps cancel and return handoff states explicit without stock mutation calls', async () => {
