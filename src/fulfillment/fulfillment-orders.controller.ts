@@ -2,13 +2,15 @@ import { Body, Controller, Get, Param, Post, Req } from '@nestjs/common';
 import { Request } from 'express';
 import { getAuthenticatedMutationActor } from '../auth/authenticated-actor';
 import { LoggerService } from '../logger/logger.service';
-import { CreateFulfillmentOrderDto, FulfillmentOrderStatusTransitionDto, FulfillmentOrderTransitionDto } from './dto/fulfillment-order.dto';
+import { FulfillmentProviderShipmentCorrelationService } from './fulfillment-provider-shipment-correlation.service';
+import { CreateFulfillmentOrderDto, FulfillmentOrderStatusTransitionDto, FulfillmentOrderTransitionDto, ProviderShipmentCorrelationDto } from './dto/fulfillment-order.dto';
 import { FulfillmentOrdersService } from './fulfillment-orders.service';
 
 @Controller('fulfillment-orders')
 export class FulfillmentOrdersController {
   constructor(
     private readonly fulfillmentOrdersService: FulfillmentOrdersService,
+    private readonly providerShipmentCorrelationService: FulfillmentProviderShipmentCorrelationService,
     private readonly logger: LoggerService,
   ) {}
 
@@ -27,6 +29,34 @@ export class FulfillmentOrdersController {
     this.logger.log(`GET /api/fulfillment-orders/order/${orderId}`, 'FulfillmentOrdersController');
     const fulfillmentOrder = await this.fulfillmentOrdersService.findByOrder(orderId);
     return { success: true, data: fulfillmentOrder };
+  }
+
+
+  @Post('order/:orderId/provider-shipment-correlations')
+  async registerProviderShipmentCorrelation(
+    @Param('orderId') orderId: string,
+    @Body() body: ProviderShipmentCorrelationDto,
+    @Req() request: Request,
+  ) {
+    this.logger.log(
+      `POST /api/fulfillment-orders/order/${orderId}/provider-shipment-correlations`,
+      'FulfillmentOrdersController',
+    );
+    const fulfillmentOrder = await this.fulfillmentOrdersService.findByOrder(orderId);
+    const correlation = await this.providerShipmentCorrelationService.registerCorrelation({
+      provider: body.provider,
+      sourceChannel: body.sourceChannel,
+      centralOrderId: fulfillmentOrder.orderId,
+      fulfillmentOrderId: fulfillmentOrder.id,
+      accountIdHash: body.accountIdHash,
+      externalOrderIdHash: body.externalOrderIdHash,
+      shipmentIdHash: body.shipmentIdHash,
+      waybillIdHash: body.waybillIdHash,
+      sourceReferenceHash: body.sourceReferenceHash,
+      reasonCode: body.reasonCode,
+      actor: getAuthenticatedMutationActor(request),
+    });
+    return { success: true, data: correlation };
   }
 
   @Post('order/:orderId/status')

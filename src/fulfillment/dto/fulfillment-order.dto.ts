@@ -149,3 +149,41 @@ export class FulfillmentOrderStatusTransitionDto extends StockMutationAuditDto {
   @IsIn(FULFILLMENT_ORDER_PROGRESS_STATUSES)
   status: Extract<FulfillmentOrderStatus, 'collecting' | 'forming' | 'formed' | 'handed_to_delivery' | 'in_delivery' | 'delivered' | 'not_delivered'>;
 }
+
+
+export class ProviderShipmentCorrelationDto extends StockMutationAuditDto {
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(100)
+  provider: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(100)
+  sourceChannel: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(80)
+  accountIdHash?: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(80)
+  externalOrderIdHash: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(80)
+  shipmentIdHash?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(80)
+  waybillIdHash?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(80)
+  sourceReferenceHash?: string;
+}

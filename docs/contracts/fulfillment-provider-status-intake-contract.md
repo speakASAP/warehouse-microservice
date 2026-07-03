@@ -53,7 +53,7 @@ Allegro now has a source-only verifier contract in commit `e626e5c`:
 - Snapshot includes `sourceRead.status`, `sourceRead.reason`, `packageCount`, `latestStatus`, `latestStatusAt`, and `trackingUpdatedAt`.
 - Snapshot excludes raw provider payloads, tracking numbers, tracking URLs, and provider document URLs.
 
-Warehouse now has a source-only provider-status ledger, sanitized snapshot adapter mapper, and shipment correlation registry/resolver. It still has no runtime consumer loop, deployed migration, status mutation path, runtime correlation population path, or live provider intake. Orders must continue to treat runtime shipment-status consumption as gated.
+Warehouse now has a source-only provider-status ledger, sanitized snapshot adapter mapper, shipment correlation registry/resolver, and a source-only producer endpoint for registering correlations against existing fulfillment orders. It still has no deployed migration, enabled runtime producer, status mutation path, runtime consumer loop, or live provider intake. Orders must continue to treat runtime shipment-status consumption as gated.
 
 ## Accepted Snapshot Envelope
 
@@ -102,10 +102,10 @@ Warehouse status updates still require the central `fulfillment_orders.order_id`
 Required correlation gate:
 
 - `[MISSING: Warehouse consumer/runtime adapter for read-only shipment snapshots that resolves a verified Allegro snapshot to exactly one Warehouse fulfillment order without persisting raw provider identifiers.]`
-- `[PARTIAL: source-only Warehouse-owned shipment correlation table/resolver exists; runtime producer/population path remains missing.]`
+- `[PARTIAL: source-only Warehouse-owned shipment correlation table/resolver and registration endpoint exist; deploy and channel producer call remain missing.]`
 - `[MISSING: collision/replay handling when a snapshot hash set matches zero or more than one fulfillment order.]`
 
-Until the runtime producer/population and deploy gates are closed, the approved Warehouse action remains source validation only; no status-mutating consumer is enabled.
+Until deploy/migration and channel producer-call gates are closed, the approved Warehouse action remains source validation only; no status-mutating consumer is enabled.
 
 ## Status Mapping After `handed_to_delivery`
 
@@ -296,4 +296,19 @@ The resolver:
 - fails closed when zero or multiple active mappings are found;
 - can be used by `FulfillmentProviderStatusSnapshotAdapterService.recordResolvedAllegroShipmentSnapshot` before ledger recording.
 
-This does not populate correlations in runtime, deploy migrations, mutate fulfillment status, call Orders, read provider APIs, or expose tracking data.
+The source-only endpoint `POST /api/fulfillment-orders/order/:orderId/provider-shipment-correlations` can populate correlations after deployment approval, but no deployment or migration run has happened. It does not mutate fulfillment status, call Orders, read provider APIs, or expose tracking data.
+
+
+## Source Producer Surface Checkpoint
+
+Warehouse source now exposes `POST /api/fulfillment-orders/order/:orderId/provider-shipment-correlations`.
+
+The endpoint:
+
+- resolves the existing Warehouse fulfillment order by central Orders id;
+- derives the authenticated actor from the request;
+- accepts only provider/source hash fields through `ProviderShipmentCorrelationDto`;
+- registers the correlation through `FulfillmentProviderShipmentCorrelationService`;
+- does not update fulfillment status, call Orders, read provider APIs, or persist raw tracking/customer/provider payloads.
+
+The endpoint is not deployed and its backing migration has not been run in production. A channel producer call from Allegro or Orders remains a separate gated follow-up.
