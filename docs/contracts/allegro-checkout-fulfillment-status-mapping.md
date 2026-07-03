@@ -120,7 +120,7 @@ A future runtime adapter must fail closed and not mutate Warehouse when any of t
 For the Allegro source-contract worker:
 
 - Provide sanitized fixture examples for checkout-form `status`, `paymentStatus`, `fulfillment.status`, `updatedAt`, and raw payload hash/evidence without raw customer, shipment, package, or tracking fields.
-- Confirm whether `fulfillment.status` enum values observed in production are limited to `NEW`, `PROCESSING`, `SENT`, `DELIVERED`, or include other values.
+- Observed fulfillment statuses in the current local projection are `PICKED_UP`, `SENT`, `CANCELLED`, and `RETURNED`; no `NEW`, `PROCESSING`, or `DELIVERED` values were present in the 117-row sample from Allegro `fc94b5d`.
 - Keep `/order/checkout-forms/{id}/shipments`, shipment-management, carrier tracking, labels, pickup, cancel commands, and One Fulfillment outside this checkout-form mapping.
 
 For the Orders worker:
@@ -132,7 +132,7 @@ For the Orders worker:
 
 ## Exact Missing Facts
 
-- [MISSING: sanitized checkout-form fulfillment.status fixture set and approved enum/class list]
+- [LANDED: sanitized checkout-form fulfillment.status fixture set in allegro commit fc94b5d; approved runtime enum/class list remains adapter-gated]
 - [MISSING: sanitized shipment payloads, package ids, waybill ids, carrier tracking statuses, and redaction proof for package/parcels/tracking domains]
 - [MISSING: reliable tracking id source; current AllegroOrder.trackingNumber is nullable and importer writes null]
 - [MISSING: timestamp semantics for Allegro checkout-form updatedAt, provider status occurrence time, local observation time, Warehouse transition occurredAt, stale-event rejection, and replay ordering]
@@ -145,7 +145,7 @@ For the Orders worker:
 
 | Workstream | Status | Owner role | Allowed files | Forbidden files/actions | Dependencies | Expected output | Validation evidence | Handoff notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Allegro checkout-form fixtures | ready now | Allegro source-contract worker | Allegro docs/fixtures only | Warehouse runtime edits, raw PII/tracking payload publication | Current checkout-form importer/source evidence | sanitized enum/value fixtures and timestamp evidence | docs/source inspection, fixture review | Needed before Warehouse mapping can be approved. |
+| Allegro checkout-form fixtures | landed in Allegro `fc94b5d` | Allegro source-contract worker | Allegro docs/fixtures only | Warehouse runtime edits, raw PII/tracking payload publication | Current checkout-form importer/source evidence | sanitized enum/value fixtures and timestamp evidence | docs/source inspection, fixture review | Needed before Warehouse mapping can be approved. |
 | Orders source-reference preservation | ready now | Orders worker | Orders docs/source contract only | direct Warehouse stock mutations, raw Allegro shipment metadata | central Orders forwarding/read model | proof central order preserves Allegro source evidence and reservation ids | Orders contract tests/docs evidence | Provides Warehouse join path. |
 | Warehouse mapping contract | complete in this slice | Warehouse status mapping owner | `docs/contracts/allegro-checkout-fulfillment-status-mapping.md` | `src/**`, migrations, deploys, secrets, live provider calls | Warehouse fulfillment docs/source and Allegro source facts | provisional mapping, non-mapping, missing gates | `git diff --check` | Runtime remains blocked. |
 | Warehouse runtime adapter | blocked | Warehouse fulfillment owner | future approved adapter/tests/ledger files | fake providers, raw tracking persistence, deploy without owner approval | all missing facts above | idempotent adapter with durable ledger and fixtures | focused tests, build, diff check | Must preserve Warehouse transition graph. |

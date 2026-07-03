@@ -1,3 +1,38 @@
+# 2026-07-03 - Allegro Checkout Fulfillment Enum Fixtures Integrated
+
+Intent chain:
+
+- Vision: Warehouse must only consume Allegro checkout-form status evidence after the source enum shapes are known and sensitive fields remain excluded.
+- Goal Impact: the sanitized Allegro fixture gate moved from missing to landed, narrowing future Warehouse adapter work to source-reference, ledger, timestamp/replay, and owner-approval gates.
+- System: Allegro owns checkout-form polling and fixture evidence; Warehouse owns mapping and future fulfillment transition validation; Orders owns central lifecycle and paid handoff.
+- Feature: Allegro checkout-form fulfillment enum fixture integration.
+- Task: integrate Allegro commit `fc94b5d` into Warehouse mapping state.
+- Execution Plan: documentation-only; do not implement runtime adapter, DB schema, migration, deploy, live provider call, or stock/order mutation.
+- Coding Prompt: no raw checkout-form ids, buyer fields, addresses, raw payloads, tracking values, tokens, or provider response bodies.
+- Code: Allegro `fc94b5d docs: record checkout fulfillment fixtures`; Warehouse docs checkpoint in this commit.
+- Validation: Allegro sanitized probe, Allegro pre-commit, Warehouse `git diff --check`.
+
+Evidence:
+
+- Allegro sampled 117 local projected checkout-form rows from the live `allegro-service` runtime.
+- Observed checkout `status`: `READY_FOR_PROCESSING=103`, `CANCELLED=14`.
+- Observed `paymentStatus`: `PAID=112`, `[NULL]=5`.
+- Observed `fulfillmentStatus`: `PICKED_UP=61`, `SENT=32`, `CANCELLED=22`, `RETURNED=2`.
+- `trackingNumberPresent=0`, `rawShipmentFieldsPresent=0`, and `ordersWithForwardedCentralId=0`.
+- Timestamp shapes are ISO-like for local `orderDate`/`updatedAt` and raw `updatedAt`; raw `createdAt` is absent in sampled rows.
+
+Remaining gates:
+
+- `[LANDED: sanitized Allegro checkout-form fulfillment enum fixtures in allegro commit fc94b5d.]`
+- `[MISSING: Orders source-reference preservation evidence proving Allegro-origin central orders preserve source evidence and fulfilled reservation ids for Warehouse joins.]`
+- `[MISSING: approved durable Warehouse adapter ledger for checkout-form status observations.]`
+- `[MISSING: approved timestamp ordering/replay semantics for Allegro updatedAt, local observation time, and Warehouse transition occurredAt.]`
+- `[MISSING: owner approval before any Warehouse runtime adapter, src/** mutation, migration, deploy, or production fulfillment-row mutation.]`
+
+Next action:
+
+- Verify Orders source-reference preservation for Allegro-origin Warehouse handoff joins.
+
 # 2026-07-03 - Allegro Checkout Fulfillment Status Mapping Contract
 
 Intent chain:
