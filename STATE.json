@@ -4,12 +4,12 @@
   "stage": "production",
   "health": "ok",
   "cycle": 20,
-  "last_cycle_at": "2026-07-02T15:31:03Z",
+  "last_cycle_at": "2026-07-03T00:00:00Z",
   "tasks_active": 0,
   "tasks_failed_last_cycle": 0,
   "open_task_ids": [],
-  "last_milestone": "WH-G16 paid fulfillment handoff source validated without deployment",
-  "next_focus": "Orders O1 must call POST /api/fulfillment-orders after existing reservation fulfillment with fulfilled reservation ids and dispatch payload; Warehouse deployment requires explicit owner approval.",
+  "last_milestone": "Allegro checkout-form fulfillment mapping contract documented",
+  "next_focus": "Collect sanitized Allegro checkout-form fulfillment enum fixtures and Orders source-reference preservation evidence before any Warehouse runtime adapter.",
   "blockers": [],
   "budget_units_used": 0,
   "metrics": {
@@ -91,7 +91,7 @@
       "wh_g13_supplier_conflict_operations": "source_integrated_no_deploy",
       "wh_g14_authenticated_actor_enforcement": "source_integrated_no_deploy",
       "wh_g10_plus_integration_validation": "git_diff_check_passed_full_jest_50_passed_build_passed",
-      "next_orchestrator_command": "Orders O1 wire paid payment transition to Warehouse fulfillment handoff",
+      "next_orchestrator_command": "Collect Allegro checkout-form enum fixtures and Orders source-reference preservation evidence",
       "wh_g10_plus_deployed": "true",
       "wh_g10_plus_deployment_validation": "health_ready_admin_cronjob_smoke_passed",
       "reservation_expiry_cronjob": "enabled_manual_and_scheduled_smoke_passed",
@@ -99,11 +99,13 @@
       "supplier_conflict_review_migration": "applied",
       "reservation_expiry_cronjob_scheduled_jobs": "warehouse-reservation-expiry-29691965,warehouse-reservation-expiry-29691970,warehouse-reservation-expiry-29691975",
       "reservation_expiry_cronjob_scheduled_validation": "success_true_examined_0_expired_0_failed_0",
-      "final_validation_2026_06_15": "git_diff_check_passed_full_jest_50_passed_build_passed"
+      "final_validation_2026_06_15": "git_diff_check_passed_full_jest_50_passed_build_passed",
+      "allegro_checkout_fulfillment_mapping_contract": "docs/contracts/allegro-checkout-fulfillment-status-mapping.md",
+      "allegro_checkout_fulfillment_mapping_validation": "git_diff_check_passed_hosted_auth_check_passed"
     }
   },
-  "project_status": "source_validated_no_deploy",
+  "project_status": "contract_gated_no_deploy",
   "completed_at": "2026-06-21",
   "frozen_at": "2026-06-21",
-  "updated_at": "2026-07-02"
+  "updated_at": "2026-07-03"
 }
