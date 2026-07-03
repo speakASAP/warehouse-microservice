@@ -136,3 +136,8 @@ This source implementation does not wire a provider adapter, mutate `fulfillment
 ## Sanitized Snapshot Adapter Checkpoint
 
 `FulfillmentProviderStatusSnapshotAdapterService` now maps sanitized Allegro shipment snapshots into ledger observation commands when a separate approved correlation supplies the central Orders id and Warehouse fulfillment order id. The adapter is source-only and does not mutate fulfillment status, call Orders, run a provider read, deploy, or run the ledger migration in production.
+
+
+## Shipment Correlation Checkpoint
+
+`FulfillmentProviderShipmentCorrelationService` now provides a source-only exact-match resolver from sanitized Allegro shipment snapshot hashes to central Orders id and Warehouse fulfillment order id. The resolver is not deployed and has no runtime producer/population path yet.

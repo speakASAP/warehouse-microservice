@@ -4,6 +4,7 @@ import {
   FulfillmentProviderStatusLedgerService,
   ProviderStatusObservationCommand,
 } from './fulfillment-provider-status-ledger.service';
+import { FulfillmentProviderShipmentCorrelationService } from './fulfillment-provider-shipment-correlation.service';
 import { FulfillmentProviderStatusObservation } from './fulfillment-provider-status-observation.entity';
 import { FulfillmentOrderStatus } from './fulfillment-order.entity';
 
@@ -82,6 +83,7 @@ const FORBIDDEN_SNAPSHOT_KEYS = [
 export class FulfillmentProviderStatusSnapshotAdapterService {
   constructor(
     private readonly ledgerService: FulfillmentProviderStatusLedgerService,
+    private readonly correlationService: FulfillmentProviderShipmentCorrelationService,
   ) {}
 
   async recordAllegroShipmentSnapshot(
@@ -90,6 +92,13 @@ export class FulfillmentProviderStatusSnapshotAdapterService {
   ): Promise<FulfillmentProviderStatusObservation> {
     const command = this.toAllegroObservationCommand(snapshot, correlation);
     return this.ledgerService.recordObservation(command);
+  }
+
+  async recordResolvedAllegroShipmentSnapshot(
+    snapshot: AllegroShipmentStatusSnapshot,
+  ): Promise<FulfillmentProviderStatusObservation> {
+    const correlation = await this.correlationService.resolveAllegroShipmentSnapshot(snapshot);
+    return this.recordAllegroShipmentSnapshot(snapshot, correlation);
   }
 
   toAllegroObservationCommand(

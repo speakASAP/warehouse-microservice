@@ -43,9 +43,16 @@ describe('FulfillmentProviderStatusSnapshotAdapterService', () => {
         ...command,
       })),
     };
+    const correlationService = {
+      resolveAllegroShipmentSnapshot: jest.fn(async () => ({
+        centralOrderId: 'order-1',
+        fulfillmentOrderId: '11111111-1111-4111-8111-111111111111',
+      })),
+    };
     return {
-      service: new FulfillmentProviderStatusSnapshotAdapterService(ledgerService as any),
+      service: new FulfillmentProviderStatusSnapshotAdapterService(ledgerService as any, correlationService as any),
       ledgerService,
+      correlationService,
     };
   }
 
@@ -130,6 +137,18 @@ describe('FulfillmentProviderStatusSnapshotAdapterService', () => {
       normalizedWarehouseStatus: 'noop',
       decision: 'noop',
       rejectionReason: 'SOURCE_READ_UNAVAILABLE',
+    }));
+  });
+
+  it('resolves snapshot correlation before recording to the ledger', async () => {
+    const { service, ledgerService, correlationService } = createService();
+
+    await service.recordResolvedAllegroShipmentSnapshot(snapshot);
+
+    expect(correlationService.resolveAllegroShipmentSnapshot).toHaveBeenCalledWith(snapshot);
+    expect(ledgerService.recordObservation).toHaveBeenCalledWith(expect.objectContaining({
+      centralOrderId: 'order-1',
+      fulfillmentOrderId: '11111111-1111-4111-8111-111111111111',
     }));
   });
 

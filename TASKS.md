@@ -18,6 +18,7 @@
 
 ## Completed
 <!-- AI appends here. Never modifies previous entries. -->
+- [x] 2026-07-03 WH-SHIPMENT-CORRELATION-SOURCE-T1 Added source-only provider shipment correlation registry/resolver and adapter resolver wiring; no deploy, migration run, status mutation, live call, or raw provider payload persistence performed.
 - [x] 2026-07-03 WH-ALLEGRO-SNAPSHOT-ADAPTER-SOURCE-T1 Added source-only sanitized Allegro shipment snapshot adapter mapper and focused tests; no correlation resolver, status mutation, deploy, live call, or provider payload persistence performed.
 - [x] 2026-07-03 WH-PROVIDER-LEDGER-SOURCE-T1 Added source-only provider-status observation ledger entity, service, migration, and focused tests; no provider adapter, deploy, live call, or fulfillment mutation performed.
 - [x] 2026-07-03 WH-PROVIDER-LEDGER-POLICY-T1 Defined Warehouse-owned provider-status ledger and timestamp/replay policy; validation passed with `git diff --check` and `npm run check:hosted-auth`. No runtime adapter, migration, deploy, live provider call, or fulfillment mutation performed.

@@ -3,13 +3,13 @@
   "project": "warehouse-microservice",
   "stage": "production",
   "health": "ok",
-  "cycle": 23,
+  "cycle": 24,
   "last_cycle_at": "2026-07-03T00:00:00Z",
   "tasks_active": 0,
   "tasks_failed_last_cycle": 0,
   "open_task_ids": [],
-  "last_milestone": "Warehouse sanitized Allegro shipment snapshot adapter mapper implemented",
-  "next_focus": "Approve correlation source and runtime mutation policy before wiring any status-mutating provider consumer.",
+  "last_milestone": "Warehouse provider shipment correlation source foundation implemented",
+  "next_focus": "Approve runtime producer/population path for shipment correlations before any status-mutating provider consumer.",
   "blockers": [],
   "budget_units_used": 0,
   "metrics": {
@@ -91,7 +91,7 @@
       "wh_g13_supplier_conflict_operations": "source_integrated_no_deploy",
       "wh_g14_authenticated_actor_enforcement": "source_integrated_no_deploy",
       "wh_g10_plus_integration_validation": "git_diff_check_passed_full_jest_50_passed_build_passed",
-      "next_orchestrator_command": "Approve correlation source before runtime provider consumer",
+      "next_orchestrator_command": "Approve runtime correlation producer before status-mutating provider consumer",
       "wh_g10_plus_deployed": "true",
       "wh_g10_plus_deployment_validation": "health_ready_admin_cronjob_smoke_passed",
       "reservation_expiry_cronjob": "enabled_manual_and_scheduled_smoke_passed",
@@ -109,10 +109,12 @@
       "fulfillment_provider_status_ledger_source": "entity_service_migration_tests_validated_no_deploy",
       "fulfillment_provider_status_ledger_source_validation": "focused_jest_14_passed_build_passed_diff_check_passed",
       "fulfillment_provider_status_snapshot_adapter": "source_mapper_validated_no_runtime_consumer",
-      "fulfillment_provider_status_snapshot_adapter_validation": "focused_jest_27_passed_build_passed_diff_check_passed"
+      "fulfillment_provider_status_snapshot_adapter_validation": "focused_jest_27_passed_build_passed_diff_check_passed",
+      "fulfillment_provider_shipment_correlation": "source_registry_resolver_validated_no_deploy",
+      "fulfillment_provider_shipment_correlation_validation": "focused_jest_35_passed_build_passed_diff_check_passed"
     }
   },
-  "project_status": "snapshot_adapter_source_validated_no_deploy",
+  "project_status": "shipment_correlation_source_validated_no_deploy",
   "completed_at": "2026-06-21",
   "frozen_at": "2026-06-21",
   "updated_at": "2026-07-03"
