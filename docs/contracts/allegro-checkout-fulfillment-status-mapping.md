@@ -16,6 +16,7 @@ source_contract:
 upstream:
   - docs/contracts/fulfillment-handoff-contract.md
   - docs/contracts/fulfillment-provider-status-intake-contract.md
+  - docs/contracts/fulfillment-provider-status-ledger-policy.md
   - docs/orchestrator/2026-07-02-orders-fulfillment-handoff-plan.md
   - src/fulfillment/fulfillment-order.entity.ts
   - src/fulfillment/fulfillment-orders.service.ts
@@ -95,10 +96,16 @@ Warehouse-owned runtime updates, if later approved, must use Warehouse and Order
 Unproven or missing join/idempotency facts:
 
 - [PROVEN: Orders source-reference preservation for synthetic Allegro Warehouse fulfillment handoff payloads in orders-microservice commit 3c9526b; live Allegro-origin fulfilled-reservation smoke remains missing.]
-- [MISSING: approved durable Warehouse adapter ledger for checkout-form status observations if this mapping becomes runtime behavior.]
+- [DECIDED: Warehouse owns the durable provider-status observation ledger; see `docs/contracts/fulfillment-provider-status-ledger-policy.md`.]
 - [MISSING: approved conflict behavior when the same Allegro checkout-form evidence maps to a different central Orders id or a different Warehouse fulfillment order.]
-- [MISSING: approved timestamp ordering semantics for Allegro updatedAt, checkout-form status update time, raw payload observation time, and Warehouse transition occurredAt.]
+- [DECIDED: provisional timestamp/replay semantics are documented in `docs/contracts/fulfillment-provider-status-ledger-policy.md`; runtime constants for clock skew, stale-event age, and retention remain missing.]
 - [MISSING: approved retry and dead-letter behavior for any future checkout-form status adapter.]
+
+## Ledger And Timestamp Policy
+
+The Warehouse-owned durable observation ledger and provisional timestamp/replay rules are defined in `docs/contracts/fulfillment-provider-status-ledger-policy.md`.
+
+Runtime use of this checkout-form mapping remains blocked until the ledger is implemented with an approved migration and tests. The policy closes the ownership decision but does not approve a runtime adapter, DB schema, migration, deploy, live provider read, or production fulfillment-row mutation.
 
 ## Required Rejection Rules Before Runtime Use
 
@@ -135,8 +142,8 @@ For the Orders worker:
 - [LANDED: sanitized checkout-form fulfillment.status fixture set in allegro commit fc94b5d; approved runtime enum/class list remains adapter-gated]
 - [MISSING: sanitized shipment payloads, package ids, waybill ids, carrier tracking statuses, and redaction proof for package/parcels/tracking domains]
 - [MISSING: reliable tracking id source; current AllegroOrder.trackingNumber is nullable and importer writes null]
-- [MISSING: timestamp semantics for Allegro checkout-form updatedAt, provider status occurrence time, local observation time, Warehouse transition occurredAt, stale-event rejection, and replay ordering]
-- [MISSING: retry, dead-letter, replay, and poison-message policy for any future Warehouse checkout-form status adapter]
+- [DECIDED: Warehouse-owned provisional timestamp/replay policy for Allegro checkout-form updatedAt, status occurrence time, local observation time, stale-event rejection, and replay ordering; runtime constants remain missing]
+- [PARTIAL: replay/conflict policy is documented in the Warehouse ledger policy; retry, dead-letter, poison-message handling, and runtime retention constants remain missing]
 - [MISSING: owner approval for runtime implementation, Warehouse adapter ledger, source-to-status fixture set, and any mutation of src/**, migrations, deploy files, or production fulfillment rows]
 - [MISSING: approved distinction between Allegro seller-managed fulfillment status SENT and carrier movement status in_delivery]
 - [MISSING: approved behavior for checkout-form DELIVERED or return-like values without sanitized shipment snapshot evidence]

@@ -1,3 +1,5 @@
+2026-07-03: Defined the Warehouse-owned provider-status observation ledger and timestamp/replay policy in `docs/contracts/fulfillment-provider-status-ledger-policy.md`. The docs-only contract decides ledger ownership, minimal sanitized persistence shape, idempotency/replay/conflict behavior, and provisional timestamp ordering for checkout-form and shipment snapshot sources. No runtime adapter, `src/**`, DB migration, deploy, live provider call, secret read, raw provider payload, tracking value, customer field, or production fulfillment-row mutation was performed. Remaining gates: `[MISSING: approved ledger migration/schema implementation]`, `[MISSING: approved future clock-skew window]`, `[MISSING: approved stale-event age]`, `[MISSING: approved retention/retry/dead-letter policy]`, and `[MISSING: owner approval for runtime adapter/deploy]`.
+
 # 2026-07-03 - Orders Allegro Source-Reference Preservation Integrated
 
 Intent chain:
