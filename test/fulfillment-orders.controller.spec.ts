@@ -8,6 +8,11 @@ describe('FulfillmentOrdersController', () => {
         id: '11111111-1111-4111-8111-111111111111',
         orderId: 'order-1',
       })),
+      updateStatus: jest.fn(async () => ({
+        id: '11111111-1111-4111-8111-111111111111',
+        orderId: 'order-1',
+        status: 'in_delivery',
+      })),
     };
     const providerShipmentCorrelationService = {
       registerCorrelation: jest.fn(async (command) => ({
@@ -15,10 +20,20 @@ describe('FulfillmentOrdersController', () => {
         ...command,
       })),
     };
+    const providerStatusSnapshotAdapterService = {
+      recordResolvedAllegroShipmentSnapshot: jest.fn(async () => ({
+        id: 'observation-1',
+        decision: 'accepted',
+        normalizedWarehouseStatus: 'in_delivery',
+        centralOrderId: 'order-1',
+        idempotencyKey: 'wh-provider-status-ledger:v1:key',
+      })),
+    };
     const logger = { log: jest.fn() };
     const controller = new FulfillmentOrdersController(
       fulfillmentOrdersService as any,
       providerShipmentCorrelationService as any,
+      providerStatusSnapshotAdapterService as any,
       logger as any,
     );
     const request = {
@@ -30,6 +45,7 @@ describe('FulfillmentOrdersController', () => {
       controller,
       fulfillmentOrdersService,
       providerShipmentCorrelationService,
+      providerStatusSnapshotAdapterService,
       logger,
       request,
     };
@@ -68,5 +84,43 @@ describe('FulfillmentOrdersController', () => {
         centralOrderId: 'order-1',
       }),
     }));
+  });
+
+  it('records an Allegro shipment snapshot and applies mapped fulfillment status', async () => {
+    const { controller, fulfillmentOrdersService, providerStatusSnapshotAdapterService, request } = createController();
+    const snapshot = {
+      contract: 'allegro.shipment_status_snapshot.v1',
+      source: 'allegro-service',
+      channel: 'allegro',
+    };
+
+    const response = await controller.recordAllegroShipmentStatusSnapshot(snapshot, request as any);
+
+    expect(providerStatusSnapshotAdapterService.recordResolvedAllegroShipmentSnapshot).toHaveBeenCalledWith(snapshot);
+    expect(fulfillmentOrdersService.updateStatus).toHaveBeenCalledWith('order-1', expect.objectContaining({
+      status: 'in_delivery',
+      reasonCode: 'ALLEGRO_SHIPMENT_STATUS_OBSERVED',
+      actor: 'service:allegro-service',
+    }));
+    expect(response).toEqual(expect.objectContaining({
+      success: true,
+      data: expect.objectContaining({ statusMutationApplied: true }),
+    }));
+  });
+
+  it('records duplicate or noop Allegro shipment observations without status mutation', async () => {
+    const { controller, fulfillmentOrdersService, providerStatusSnapshotAdapterService, request } = createController();
+    providerStatusSnapshotAdapterService.recordResolvedAllegroShipmentSnapshot.mockResolvedValueOnce({
+      id: 'observation-duplicate',
+      decision: 'duplicate',
+      normalizedWarehouseStatus: 'in_delivery',
+      centralOrderId: 'order-1',
+      idempotencyKey: 'wh-provider-status-ledger:v1:key',
+    });
+
+    const response = await controller.recordAllegroShipmentStatusSnapshot({ contract: 'allegro.shipment_status_snapshot.v1' }, request as any);
+
+    expect(fulfillmentOrdersService.updateStatus).not.toHaveBeenCalled();
+    expect(response.data.statusMutationApplied).toBe(false);
   });
 });
