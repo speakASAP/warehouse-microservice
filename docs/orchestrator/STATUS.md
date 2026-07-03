@@ -1,3 +1,17 @@
+## 2026-07-03 - Warehouse Internal Delivery Status Deployed And Smoked
+
+Result: Warehouse image localhost:5000/warehouse-microservice:3868df3 deployed successfully after the internal delivery status intake source commit. The deploy built and pushed the image, applied manifests, ran the migration job with no pending migrations, rolled out successfully, and in-pod health returned healthy with database and RabbitMQ up. Route smoke with the Warehouse admin service token reached the new endpoint and returned the expected business 404 for a synthetic nonexistent order, proving auth and routing without mutating data. Bounded runtime smoke used the previously documented synthetic fulfillment order fixture, advanced it through forming -> formed -> handed_to_delivery, then posted warehouse.internal_delivery_status.v1 IN_DELIVERY. Warehouse returned HTTP 201, provider observation decision accepted, statusMutationApplied=true, and fulfillment status in_delivery. Orders projection readback showed the central order status shipped, payment paid, fulfillment Warehouse status in_delivery, and a fulfillmentOrderId present. No token values, customer PII, raw provider payloads, tracking values, or random live customer orders were used.
+
+IPS chain: Vision -> Alfares-owned delivery status must update customer/admin order lifecycle without waiting for external carriers; Goal Impact -> internal Warehouse delivery path is now deployed and callback-proven into Orders; System -> Warehouse owns fulfillment/delivery validation and ledger, Orders owns lifecycle projection, frontends read Orders state; Feature -> Warehouse internal delivery status intake; Task -> deploy and smoke the bounded internal delivery path; Execution Plan -> deploy, route smoke, bounded synthetic fixture mutation, Orders projection readback; Coding Prompt -> no raw provider/customer/tracking/credential output; Code -> Warehouse 3868df3; Validation -> deploy phases, health, route smoke, runtime status mutation, Orders projection readback.
+
+Resolved gates:
+
+- [PROVEN: deploy new Warehouse image.]
+- [PROVEN: bounded runtime smoke with one safe fulfillment order proving Warehouse status mutation and Orders callback/projection.]
+
+Remaining gate:
+
+- [MISSING: customer/admin frontend read-path verification across selling surfaces after Orders projection.]
 ## 2026-07-03 - Warehouse Internal Delivery Status Source Implemented
 
 Result: Warehouse now has a source-implemented internal delivery status intake for Alfares-owned delivery operations, so the Orders reliability goal is no longer blocked on an external courier/provider owner for our own orders. The new endpoint is POST /api/fulfillment-orders/order/:orderId/internal-delivery-status, guarded by internal:warehouse-microservice:admin. It records a sanitized provider-status ledger observation under warehouse.internal_delivery_status.v1 and applies the existing Warehouse transition graph for IN_DELIVERY, DELIVERED, NOT_DELIVERED, and RETURNED; UNKNOWN records a no-op observation and does not call Orders.
