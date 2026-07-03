@@ -1,3 +1,12 @@
+## 2026-07-03 - Allegro Shipment Snapshot Intake Runtime Deployed And Proven
+
+Result: Warehouse `2553452` deployed `POST /api/fulfillment-orders/provider-status/allegro-shipment-snapshots`. The endpoint accepts sanitized `allegro.shipment_status_snapshot.v1` snapshots from `internal:allegro-service:service`, resolves the existing provider shipment correlation, records a provider-status observation, and applies the mapped Warehouse status through the existing transition/callback service only when the observation is accepted and non-noop. Focused tests passed before deploy. Live proof advanced the existing Allegro fulfillment row through the normal transition graph to `handed_to_delivery`, then an Allegro pod posted a sanitized `IN_TRANSIT` snapshot. Warehouse returned HTTP 201 with `statusMutationApplied=true`, `observationDecision=accepted`, and fulfillment status `in_delivery`. Warehouse readback: `correlations=1`, `observations=1`, latest observation `accepted/in_delivery`, fulfillment status `in_delivery`.
+
+Remaining gates:
+
+- [MISSING: optional real Allegro provider live-read selection if provider API evidence is required.]
+- [MISSING: product-approved tracking visibility policy.]
+
 ## 2026-07-03 - Allegro c00013b Disabled-Gate Replay Readback
 
 Result: Allegro `c00013b` is deployed with the shipment dead-letter PVC/env path present and `ALLEGRO_WAREHOUSE_SHIPMENT_CORRELATION_ENABLED` still absent. A synthetic redacted Allegro apply replay returned `posted=0`, `disabled=1`, reason `ALLEGRO_WAREHOUSE_SHIPMENT_CORRELATION_ENABLED_NOT_TRUE`, so no Warehouse post or fulfillment status mutation was attempted. Warehouse readback remained unchanged before/after at `fulfillment_provider_shipment_correlations=1` and `fulfillment_provider_status_observations=0`.
