@@ -72,6 +72,47 @@ Current branch validation:
 - `npm run build` - passed, TypeScript build completed.
 - `git diff --check` - passed, no whitespace errors.
 
+## 2026-07-03 Paid Bundle Cleanup Semantics Refresh
+
+Scope: Warehouse-owned docs/static verifier/source-policy only. No live checkout, stock reservation, stock decrement, fulfillment, release, cancel, return, provider call, Orders mutation, Payments mutation, migration, deploy, secret read, or production DB mutation was performed.
+
+Intent Preservation Chain: Vision -> Goal Impact -> System -> Feature -> Task -> Execution Plan -> Coding Prompt -> Code -> Validation -> State Update.
+
+- Vision: paid/provider `catalog.bundle.v1` cleanup must restore Warehouse stock only through approved component-line lifecycle operations.
+- Goal Impact: resolves/narrows the Warehouse-owned operation-selection blockers for future Orders cleanup while preserving the live paid/provider smoke gate.
+- System: Warehouse owns reservation state and stock effects; Orders owns canonical lifecycle/cancellation gates; Payments owns provider success/cancel/refund evidence; Catalog owns bundle identity.
+- Feature: Warehouse cleanup operation matrix for paid/provider bundle component lines.
+- Task: define whether Orders should call Warehouse `release`, `cancel`, `return`, or no operation for reserved-only, fulfilled/stock-decremented, partial, and unknown component-line states.
+- Execution Plan: update Warehouse contract, validation report, state/status, and static verifier only.
+- Coding Prompt: do not invent provider events, live approvals, stock windows, max quantities, runtime packet contents, or aggregate bundle cleanup.
+- Code: `docs/contracts/catalog-bundle-component-reservation-contract.md`, `scripts/verify-bundle-component-reservation-contract.js`, Warehouse state/status docs.
+- Validation: focused reservation/stock tests, static verifier, build, and `git diff --check`.
+- State Update: operation-selection blockers are resolved/narrowed at source-policy level; runtime paid/provider smoke remains blocked until the cross-service packet is owner-approved.
+
+Warehouse cleanup operation decision:
+
+| Component-line cleanup state | Warehouse operation | Decision |
+| --- | --- | --- |
+| Reserved-only active hold before fulfillment | `release` | Approved for payment failure, provider cancel, checkout abort, or smoke abort before stock decrement. |
+| TTL-owned expiry | `expire` | Approved only for Warehouse TTL/expiry ownership; explicit smoke cleanup should use `release` unless the packet names expiry ownership. |
+| Fulfilled/stock-decremented cancellation rollback | `cancel` | Approved only after Orders cancellation gate and provider/Payments rollback evidence exist. |
+| Fulfilled/stock-decremented return workflow | `return` | Approved only when the event is an inventory return, not merely a refund. |
+| Partial failure before fulfillment | `release` successful active holds; no operation for never-reserved components | Approved line-by-line; no aggregate bundle cleanup. |
+| Mixed active and fulfilled partial failure | `release` active lines plus `cancel` or `return` fulfilled lines by approved business event | Approved line-by-line only; stop if any component state is unknown or cleanup fails. |
+| Unknown or ambiguous component state | none | Fail closed with `[MISSING: deterministic Warehouse component reservation state for cleanup]`. |
+
+Result:
+
+- `[RESOLVED/NARROWED: owner-approved Warehouse stock decrement/fulfillment rollback criteria for paid bundle smoke at source-policy level; live stock window and max quantity remain missing]`
+- `[RESOLVED/NARROWED: Warehouse owner-approved cleanup operation for reserved-only, fulfilled/stock-decremented, and partially failed bundle component-line states]`
+
+Remaining blockers:
+
+- `[MISSING: owner-approved paid/provider checkout smoke with stock and refund/cancel rollback plan]`
+- `[MISSING: approved Warehouse stock hold/release window and max quantity]`
+- `[MISSING: Orders/Payments provider-success, provider-cancel, refund, and post-fulfillment cancellation event contract that maps to Warehouse fulfill/cancel/return calls]`
+- `[MISSING: final integration owner approval before any live Warehouse reservation, fulfillment, decrement, cancel, return, or release smoke]`
+
 Parallel execution:
 
 | Workstream | Status | Owner role | Scope | Dependencies | Validation evidence | Handoff notes |

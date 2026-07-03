@@ -63,6 +63,15 @@ const contractMarkers = [
   'transition each active component reservation to `fulfilled`',
   'refund/cancel after fulfillment',
   'Orders/Payments provider-success, provider-cancel, refund, and post-fulfillment cancellation event contract',
+  'Paid Bundle Cleanup Operation Matrix',
+  'Reserved-only `active` hold, no stock decrement',
+  'Approved Warehouse operation',
+  'use Warehouse `release` for reserved-only component lines before fulfillment',
+  'use Warehouse `cancel` for fulfilled/stock-decremented component lines only when the approved rollback event is order/provider cancellation',
+  'use Warehouse `return` for fulfilled/stock-decremented component lines only when the approved rollback event is a return workflow',
+  'use line-by-line mixed cleanup for partial failures',
+  '[RESOLVED/NARROWED: Warehouse owner-approved cleanup operation for reserved-only, fulfilled/stock-decremented, and partially failed bundle component-line states]',
+  '[MISSING: deterministic Warehouse component reservation state for cleanup]',
 ];
 for (const marker of contractMarkers) {
   assertIncludes(contract, marker, `contract marker is missing: ${marker}`);
@@ -76,6 +85,13 @@ const validationMarkers = [
   'Cancel after fulfillment: `StockService.cancelReservation`',
   'Return after fulfillment: `StockService.returnReservation`',
   '[MISSING: approved Warehouse stock hold/release window and max quantity]',
+  'Paid Bundle Cleanup Semantics Refresh',
+  'Reserved-only active hold before fulfillment',
+  'Fulfilled/stock-decremented cancellation rollback',
+  'Fulfilled/stock-decremented return workflow',
+  'Mixed active and fulfilled partial failure',
+  '[RESOLVED/NARROWED: owner-approved Warehouse stock decrement/fulfillment rollback criteria for paid bundle smoke at source-policy level; live stock window and max quantity remain missing]',
+  '[RESOLVED/NARROWED: Warehouse owner-approved cleanup operation for reserved-only, fulfilled/stock-decremented, and partially failed bundle component-line states]',
 ];
 for (const marker of validationMarkers) {
   assertIncludes(validation, marker, `validation marker is missing: ${marker}`);

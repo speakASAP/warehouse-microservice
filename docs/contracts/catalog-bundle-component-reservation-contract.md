@@ -16,15 +16,15 @@ upstream:
 Vision -> Goal Impact -> System -> Feature -> Task -> Execution Plan -> Coding Prompt -> Code -> Validation -> State Update
 
 - Vision: Warehouse remains the stock and reservation authority for existing sellable Catalog product lines without taking bundle merchandising, checkout, order, or payment ownership.
-- Goal Impact: resolves `[MISSING: Warehouse approval that first ecosystem bundle selling reserves component lines only]` for Catalog `catalog.bundle.v1` while keeping bundle identity in Catalog and order/payment effects in their owning services; narrows `[MISSING: owner-approved paid/provider checkout smoke with stock and refund/cancel rollback plan]` to cross-service owner approval because Warehouse can only approve the component-line stock lifecycle boundary.
+- Goal Impact: resolves `[MISSING: Warehouse approval that first ecosystem bundle selling reserves component lines only]` and resolves/narrows the Warehouse-owned cleanup-operation portion of paid/provider rollback planning for Catalog `catalog.bundle.v1`; live paid/provider smoke still requires cross-service owner approval because Warehouse can only approve component-line stock lifecycle semantics.
 - System: Catalog owns `bundleId` and component metadata; Orders/checkout submit normal product lines; Warehouse reserves stock rows by existing `productId`, `warehouseId`, quantity, order id, channel, actor, and reason; Payments remains amount/currency owner only through its accepted caller contract.
-- Feature: source-verified Warehouse sign-off for first bundle-selling reservation semantics.
-- Task: document and verify that bundle selling uses existing component-line reservation lifecycle and that bundle aggregate reservation attempts fail closed.
+- Feature: source-verified Warehouse sign-off for first bundle-selling reservation and cleanup semantics.
+- Task: document and verify that bundle selling uses existing component-line reservation lifecycle, that bundle aggregate reservation attempts fail closed, and that future Orders cleanup selects a Warehouse operation by each component line's current reservation state.
 - Execution Plan: additive Warehouse docs, DTO guard, focused unit tests, and static verifier only; no migration, deploy, live stock mutation, Orders/Payments/FlipFlop call, Catalog edit, or Kubernetes change.
-- Coding Prompt: reject `bundleId`, synthetic bundle SKU/stock, and bundle contract evidence as Warehouse reservation identity; prove existing component product reservation remains compatible.
+- Coding Prompt: reject `bundleId`, synthetic bundle SKU/stock, and bundle contract evidence as Warehouse reservation identity; prove existing component product reservation and state-specific cleanup remain compatible.
 - Code: `ReserveStockDto` and reservation lifecycle DTOs inherit explicit forbidden bundle aggregate fields; tests cover rejection and component-line forwarding; verifier checks source/docs boundaries.
 - Validation: non-mutating local source validation only: focused Jest, static verifier, build, and `git diff --check`.
-- State Update: `[RESOLVED: Warehouse approval that first ecosystem bundle selling reserves component lines only]`; `[MISSING: owner-approved paid/provider checkout smoke with stock and refund/cancel rollback plan]` remains blocked beyond existing pending-order reservation/release evidence.
+- State Update: `[RESOLVED: Warehouse approval that first ecosystem bundle selling reserves component lines only]`; `[RESOLVED/NARROWED: Warehouse owner-approved cleanup operation for reserved-only, fulfilled/stock-decremented, and partially failed bundle component-line states]`; `[MISSING: owner-approved paid/provider checkout smoke with stock and refund/cancel rollback plan]` remains blocked beyond existing pending-order reservation/release evidence.
 
 ## Accepted Reservation Behavior
 
@@ -64,15 +64,43 @@ Result: `[RESOLVED: Warehouse source evidence for component-line stock hold/rele
 
 ## Paid/Provider Checkout Smoke Boundary
 
-Warehouse cannot approve a paid/provider bundle checkout smoke beyond the already recorded pending-order reservation and release evidence unless the integration owner provides an owner-approved cross-service plan. The Warehouse-owned part of that plan is limited to component-line stock effects:
+Warehouse cannot approve a paid/provider bundle checkout smoke beyond the already recorded pending-order reservation and release evidence unless the integration owner provides an owner-approved cross-service plan. The Warehouse-owned part of that plan is limited to component-line stock effects and state-specific cleanup operations:
 
 - pending checkout: create or update `active` component reservations only after Orders/checkout submits normal product lines with `productId`, `warehouseId`, `quantity`, `orderId`, `channel`, actor, and reason evidence;
 - payment/provider success: transition each active component reservation to `fulfilled`, which decrements `reserved` and `quantity` transactionally for that component line;
-- payment failure, provider cancel, or checkout timeout before fulfillment: transition each active component reservation through `release`, `cancel`, or `expire`, which removes the hold without decrementing stock;
-- refund/cancel after fulfillment: use the existing fulfilled-reservation reversal path (`cancel` or `return`) only after Orders/Payments define the refund/cancel source event, idempotency key, and business approval state;
-- partial component failure: fail closed at the caller-owned workflow layer and compensate any prior component-line holds through Warehouse release/cancel calls.
+- payment failure, provider cancel, or checkout timeout before fulfillment: transition each active component reservation through `release`, which removes the hold without decrementing stock;
+- refund/cancel after fulfillment: use the existing fulfilled-reservation reversal path selected by the approved business event: `cancel` for order/provider cancellation rollback before a return workflow, or `return` for customer/provider return evidence;
+- partial component failure: fail closed at the caller-owned workflow layer and compensate each component line by its own current Warehouse reservation state; there is no aggregate bundle cleanup operation.
 
 Warehouse does not own provider payment status, refund authorization, order cancellation policy, bundle pricing, external marketplace publication, customer communication, or the end-to-end paid smoke decision. Until those owner-approved inputs exist, runtime paid/provider progression for `catalog.bundle.v1` remains blocked and must not be inferred from this source sign-off.
+
+## Paid Bundle Cleanup Operation Matrix
+
+This matrix is the Warehouse-owned answer for future Orders cleanup planning. It approves only the operation choice for existing component-line reservation states; it does not approve a live checkout, provider payment, refund, fulfillment, stock mutation, or smoke window.
+
+| Component-line state at cleanup time | Approved Warehouse operation | Required caller-owned precondition | Stock effect | Orders cleanup guidance |
+| --- | --- | --- | --- | --- |
+| Reserved-only `active` hold, no stock decrement | `release` | Payment failure, provider cancel, checkout abort, or owner-approved smoke abort before fulfillment | decreases `reserved`, restores `available`, leaves `quantity` unchanged | Orders should call Warehouse `release` for every active component line and keep payment/provider evidence in Payments-owned records. |
+| Reserved-only hold expired by time, no stock decrement | `expire` only through Warehouse TTL/expiry workflow; explicit smoke cleanup should still prefer `release` | Reservation TTL elapsed and expiry worker or approved explicit expiry action owns the event | decreases `reserved`, restores `available`, leaves `quantity` unchanged | Orders should not choose `expire` as normal paid/provider rollback cleanup unless the runtime packet explicitly names TTL expiry as the cleanup owner. |
+| Fulfilled or stock-decremented component line, approved order/provider cancellation before return workflow | `cancel` | Orders cancellation gate is approved, Payments/provider rollback evidence exists, side-effect acknowledgements include Warehouse cleanup, and no physical return workflow is being represented | restocks `quantity`, keeps `reserved=0`, marks reservation `cancelled` | Orders may call Warehouse `cancel` only after its owner-approved cancellation workflow passes; Orders must not edit stock or infer quantities. |
+| Fulfilled or stock-decremented component line, approved customer/provider return evidence | `return` | Return/refund event is approved by Orders/Payments/provider owner and maps to an inventory return rather than pure cancellation | restocks `quantity`, keeps `reserved=0`, marks reservation `returned`, writes return movement | Orders should call Warehouse `return` only for an approved return workflow; refund alone is not enough to infer a return. |
+| Active reservation for one component after another component failed reservation/validation before any fulfillment | `release` for each already active component; no operation for never-reserved components | Caller-owned checkout/order workflow fails closed and identifies successful active component holds | releases only the successful active holds | Orders should compensate successful holds line-by-line and reject the order/checkout path. |
+| Mixed active and fulfilled component lines after partial paid/provider/fulfillment failure | `release` for active lines; `cancel` or `return` for fulfilled lines based on the approved business event | Owner-approved runtime packet identifies each component reservation state and whether the fulfilled rollback is cancellation or return | line-by-line restoration according to each state | Orders must stop if any component state is unknown or any cleanup step fails; no aggregate bundle shortcut is approved. |
+| Unknown, ambiguous, duplicate, or missing component reservation state | none; fail closed | A deterministic component reservation lookup is missing | no mutation | Orders/integration must stop before the next side effect and record `[MISSING: deterministic Warehouse component reservation state for cleanup]`. |
+
+No other Warehouse operation is approved for `catalog.bundle.v1` cleanup. Direct stock adjustments, direct database updates, aggregate bundle reservation cleanup, synthetic bundle SKU cleanup, and local Orders stock corrections remain forbidden.
+
+### Orders Handoff Decision
+
+Future Orders cleanup should map paid/provider bundle component lines as follows:
+
+- use Warehouse `release` for reserved-only component lines before fulfillment;
+- use Warehouse `cancel` for fulfilled/stock-decremented component lines only when the approved rollback event is order/provider cancellation and the Orders cancellation gate has side-effect acknowledgements;
+- use Warehouse `return` for fulfilled/stock-decremented component lines only when the approved rollback event is a return workflow;
+- use line-by-line mixed cleanup for partial failures: `release` active holds, `cancel` fulfilled cancellation lines, `return` fulfilled return lines, and do nothing for never-reserved lines;
+- use no Warehouse operation when the state is unknown; fail closed and require a new owner-approved runtime packet.
+
+This resolves the operation-selection portion of `[MISSING: owner-approved Warehouse stock decrement/fulfillment rollback criteria for paid bundle smoke]` and `[MISSING: Warehouse owner-approved cleanup operation for reserved-only, fulfilled/stock-decremented, and partially failed bundle component-line states]`. The broader live paid/provider smoke blocker remains because Orders/Payments/provider source events, target IDs, stock window, max quantity, and final integration owner approval are still missing.
 
 ## Fail-Closed Source Boundary
 
@@ -96,6 +124,8 @@ Normal component reservation compatibility is preserved: existing `productId`, `
 - `[RESOLVED: owner-approved Rung 1 non-mutating real checkout smoke credentials and target products]`
 - `[RESOLVED: owner-approved Rung 2 live pending-order smoke proved pending Orders create, Warehouse reservation, and payment-status cleanup release]`
 - `[MISSING: owner-approved paid/provider checkout smoke with stock and refund/cancel rollback plan]`
+- `[RESOLVED/NARROWED: owner-approved Warehouse stock decrement/fulfillment rollback criteria for paid bundle smoke at source-policy level; live stock window and max quantity remain missing]`
+- `[RESOLVED/NARROWED: Warehouse owner-approved cleanup operation for reserved-only, fulfilled/stock-decremented, and partially failed bundle component-line states]`
 - `[MISSING: Orders/Payments provider-success, provider-cancel, refund, and post-fulfillment cancellation event contract that maps to Warehouse fulfill/cancel/return calls]`
 - `[MISSING: final integration owner approval before any live Warehouse reservation, fulfillment, decrement, cancel, return, or release smoke]`
 
@@ -104,7 +134,7 @@ Normal component reservation compatibility is preserved: existing `productId`, `
 | Workstream | Status | Owner role | Scope | Dependencies | Validation evidence | Handoff notes |
 | --- | --- | --- | --- | --- | --- | --- |
 | Warehouse component reservation sign-off | complete | Warehouse reservation owner | this contract, DTO guard, focused tests, static verifier | Catalog `catalog.bundle.v1` contracts | focused Jest, stock-service lifecycle tests, verifier, build, diff check | Safe to hand to Catalog/Orders integration as Warehouse component-line source evidence. |
-| Warehouse paid/provider rollback verifier | dependency-gated | Warehouse reservation owner | prove source mapping for hold/release/fulfill/cancel/return without live mutation | Orders/Payments status mapping and approved stock window | stock-service lifecycle tests, verifier, build, diff check | Runtime smoke remains blocked until owner-approved canary facts and rollback packet exist. |
+| Warehouse paid/provider cleanup operation matrix | complete-source-policy | Warehouse reservation owner | define `release`/`cancel`/`return` mapping for reserved-only, fulfilled, and mixed component-line cleanup without live mutation | Orders/Payments status mapping and approved stock window | stock-service lifecycle tests, verifier, build, diff check | Operation selection is ready for Orders handoff; runtime smoke remains blocked until owner-approved canary facts and rollback packet exist. |
 | Orders bundle evidence contract | dependency-gated outside this repo | Orders contract owner | additive order metadata only | Warehouse sign-off plus Catalog aggregate | `[MISSING: Orders validation evidence]` | Must preserve normal item lines. |
 | Payments metadata allowlist | dependency-gated outside this repo | Payments boundary owner | audit metadata only | Orders metadata contract | `[MISSING: Payments validation evidence]` | Must preserve caller-owned amount/currency. |
 | Final checkout smoke | final integration | Commerce integration validator | paid/provider smoke with rollback plan | Catalog/Orders/Warehouse/Payments/FlipFlop contracts, provider/refund/cancel mapping, owner credentials | `[MISSING: owner-approved paid/provider checkout smoke with stock and refund/cancel rollback plan]` | Warehouse must not run or approve live stock effects outside the owner-approved integration plan. |
