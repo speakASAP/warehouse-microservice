@@ -94,7 +94,7 @@ Warehouse-owned runtime updates, if later approved, must use Warehouse and Order
 
 Unproven or missing join/idempotency facts:
 
-- [MISSING: approved Orders-to-Warehouse handoff contract proving every Allegro-origin central order preserves the source AllegroOrder.allegroOrderId or equivalent source evidence reference.]
+- [PROVEN: Orders source-reference preservation for synthetic Allegro Warehouse fulfillment handoff payloads in orders-microservice commit 3c9526b; live Allegro-origin fulfilled-reservation smoke remains missing.]
 - [MISSING: approved durable Warehouse adapter ledger for checkout-form status observations if this mapping becomes runtime behavior.]
 - [MISSING: approved conflict behavior when the same Allegro checkout-form evidence maps to a different central Orders id or a different Warehouse fulfillment order.]
 - [MISSING: approved timestamp ordering semantics for Allegro updatedAt, checkout-form status update time, raw payload observation time, and Warehouse transition occurredAt.]
@@ -126,7 +126,7 @@ For the Allegro source-contract worker:
 For the Orders worker:
 
 - Preserve central order id as the only Warehouse write join.
-- Preserve Allegro source evidence reference on Allegro-origin central orders before asking Warehouse to consume checkout-form status observations.
+- Orders source verifier in commit `3c9526b` proves synthetic Allegro Warehouse handoff payloads preserve `channel=allegro`, central order id, external checkout reference as `orderNumber/reference`, and fulfilled reservation line ids; live fulfilled-reservation smoke remains missing.
 - Do not route Allegro checkout-form or shipment payloads directly into Warehouse status metadata.
 - Continue using Warehouse fulfillment status callback as the Orders lifecycle projection bridge.
 
@@ -146,7 +146,7 @@ For the Orders worker:
 | Workstream | Status | Owner role | Allowed files | Forbidden files/actions | Dependencies | Expected output | Validation evidence | Handoff notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | Allegro checkout-form fixtures | landed in Allegro `fc94b5d` | Allegro source-contract worker | Allegro docs/fixtures only | Warehouse runtime edits, raw PII/tracking payload publication | Current checkout-form importer/source evidence | sanitized enum/value fixtures and timestamp evidence | docs/source inspection, fixture review | Needed before Warehouse mapping can be approved. |
-| Orders source-reference preservation | ready now | Orders worker | Orders docs/source contract only | direct Warehouse stock mutations, raw Allegro shipment metadata | central Orders forwarding/read model | proof central order preserves Allegro source evidence and reservation ids | Orders contract tests/docs evidence | Provides Warehouse join path. |
+| Orders source-reference preservation | proven in Orders `3c9526b` | Orders worker | Orders docs/source contract only | direct Warehouse stock mutations, raw Allegro shipment metadata | central Orders forwarding/read model | proof central order preserves Allegro source evidence and reservation ids | Orders contract tests/docs evidence | Provides Warehouse join path. |
 | Warehouse mapping contract | complete in this slice | Warehouse status mapping owner | `docs/contracts/allegro-checkout-fulfillment-status-mapping.md` | `src/**`, migrations, deploys, secrets, live provider calls | Warehouse fulfillment docs/source and Allegro source facts | provisional mapping, non-mapping, missing gates | `git diff --check` | Runtime remains blocked. |
 | Warehouse runtime adapter | blocked | Warehouse fulfillment owner | future approved adapter/tests/ledger files | fake providers, raw tracking persistence, deploy without owner approval | all missing facts above | idempotent adapter with durable ledger and fixtures | focused tests, build, diff check | Must preserve Warehouse transition graph. |
 | Final integration | dependency-gated | Orders/Warehouse integration owner | integration docs/tests after adapter exists | direct Allegro-to-Orders shipment consumption | Allegro fixtures, Orders join, Warehouse adapter | end-to-end lifecycle proof | contract tests and callback verification | Orders sees bounded Warehouse callback only. |
