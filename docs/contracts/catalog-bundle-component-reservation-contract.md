@@ -100,7 +100,7 @@ Future Orders cleanup should map paid/provider bundle component lines as follows
 - use line-by-line mixed cleanup for partial failures: `release` active holds, `cancel` fulfilled cancellation lines, `return` fulfilled return lines, and do nothing for never-reserved lines;
 - use no Warehouse operation when the state is unknown; fail closed and require a new owner-approved runtime packet.
 
-This resolves the operation-selection portion of `[MISSING: owner-approved Warehouse stock decrement/fulfillment rollback criteria for paid bundle smoke]` and `[MISSING: Warehouse owner-approved cleanup operation for reserved-only, fulfilled/stock-decremented, and partially failed bundle component-line states]`. The broader live paid/provider smoke blocker remains because Orders/Payments/provider source events, target IDs, stock window, max quantity, and final integration owner approval are still missing.
+This resolves/narrows the operation-selection portion of `[MISSING: owner-approved operation for reserved-only, fulfilled/stock-decremented, return, partial component failure, and timeout states, including max quantity and hold/release window]`: Warehouse source-policy defines `release`, `cancel`, `return`, line-by-line partial cleanup, and timeout/expiry behavior, but max quantity and the live hold/release window remain missing owner approvals. The broader live paid/provider smoke blocker remains because Orders/Payments/provider source events, target IDs, stock window, max quantity, and final integration owner approval are still missing.
 
 ## Fail-Closed Source Boundary
 
@@ -119,7 +119,8 @@ Normal component reservation compatibility is preserved: existing `productId`, `
 
 The Warehouse-owned approval packet for the remaining stock-window and post-fulfillment cleanup blockers lives at `docs/contracts/goal24-warehouse-cleanup-approval-packet.md`. Its decision is fail-closed:
 
-- `[MISSING: owner-approved Warehouse stock hold/release window and max quantity]` remains unresolved because source evidence does not approve target stock rows, a live hold duration, maximum quantity, or canary cleanup ownership.
+- `[MISSING: owner-approved operation for reserved-only, fulfilled/stock-decremented, return, partial component failure, and timeout states, including max quantity and hold/release window]` is narrowed at source-policy level: operation choices are defined for reserved-only, fulfilled cancellation, fulfilled return, partial component failure, and timeout/expiry states; live max quantity and hold/release window remain unresolved.
+- `[MISSING: owner-approved Warehouse stock hold/release window and max quantity]` remains unresolved because source evidence does not approve target stock rows, a live hold duration, maximum quantity, timeout/TTL override, or canary cleanup ownership.
 - `[MISSING: owner-approved post-fulfillment cancellation/return workflow that maps a Payments refund or correction to Orders and Warehouse without inferring stock effects]` remains unresolved because a refund/correction alone is not Warehouse inventory evidence; an approved Orders/Payments business event must choose `cancel` or `return`.
 
 ## Remaining Blockers
@@ -132,7 +133,7 @@ The Warehouse-owned approval packet for the remaining stock-window and post-fulf
 - `[RESOLVED: owner-approved Rung 2 live pending-order smoke proved pending Orders create, Warehouse reservation, and payment-status cleanup release]`
 - `[MISSING: owner-approved paid/provider checkout smoke with stock and refund/cancel rollback plan]`
 - `[RESOLVED/NARROWED: owner-approved Warehouse stock decrement/fulfillment rollback criteria for paid bundle smoke at source-policy level; live stock window and max quantity remain missing]`
-- `[RESOLVED/NARROWED: Warehouse owner-approved cleanup operation for reserved-only, fulfilled/stock-decremented, and partially failed bundle component-line states]`
+- `[RESOLVED/NARROWED: Warehouse owner-approved cleanup operation for reserved-only, fulfilled/stock-decremented, return, partial component failure, and timeout component-line states; max quantity and live hold/release window remain missing]`
 - `[MISSING: Orders/Payments provider-success, provider-cancel, refund, and post-fulfillment cancellation event contract that maps to Warehouse fulfill/cancel/return calls]`
 - `[MISSING: final integration owner approval before any live Warehouse reservation, fulfillment, decrement, cancel, return, or release smoke]`
 

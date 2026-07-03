@@ -71,7 +71,8 @@ const contractMarkers = [
   'use Warehouse `cancel` for fulfilled/stock-decremented component lines only when the approved rollback event is order/provider cancellation',
   'use Warehouse `return` for fulfilled/stock-decremented component lines only when the approved rollback event is a return workflow',
   'use line-by-line mixed cleanup for partial failures',
-  '[RESOLVED/NARROWED: Warehouse owner-approved cleanup operation for reserved-only, fulfilled/stock-decremented, and partially failed bundle component-line states]',
+  'timeout/expiry behavior',
+  '[RESOLVED/NARROWED: Warehouse owner-approved cleanup operation for reserved-only, fulfilled/stock-decremented, return, partial component failure, and timeout component-line states; max quantity and live hold/release window remain missing]',
   '[MISSING: deterministic Warehouse component reservation state for cleanup]',
 ];
 for (const marker of contractMarkers) {
@@ -91,6 +92,8 @@ const validationMarkers = [
   'Fulfilled/stock-decremented cancellation rollback',
   'Fulfilled/stock-decremented return workflow',
   'Mixed active and fulfilled partial failure',
+  'Reserved/Timeout Cleanup Narrowing',
+  'Timeout state',
   '[RESOLVED/NARROWED: owner-approved Warehouse stock decrement/fulfillment rollback criteria for paid bundle smoke at source-policy level; live stock window and max quantity remain missing]',
   '[RESOLVED/NARROWED: Warehouse owner-approved cleanup operation for reserved-only, fulfilled/stock-decremented, and partially failed bundle component-line states]',
 ];
@@ -102,10 +105,12 @@ for (const marker of validationMarkers) {
 const approvalPacketMarkers = [
   'WH-G24-WAREHOUSE-CLEANUP-APPROVAL-PACKET',
   '[MISSING: owner-approved Warehouse stock hold/release window and max quantity]',
+  '[MISSING: owner-approved operation for reserved-only, fulfilled/stock-decremented, return, partial component failure, and timeout states, including max quantity and hold/release window]',
   '[MISSING: owner-approved post-fulfillment cancellation/return workflow that maps a Payments refund or correction to Orders and Warehouse without inferring stock effects]',
   'A refund alone is not inventory-return evidence',
   'Do not fulfill Warehouse reservations unless Orders receives a Payments-owned completed status through the approved `orders.payment-status.v1` path.',
   'Do not release fulfilled reservations. Use `release` only for active holds before stock decrement.',
+  'Treat the 15-minute default reservation TTL as a source implementation fact only',
   'Do not call Warehouse `cancel` after fulfillment unless the approved event is order/provider cancellation or reversal',
   'Do not call Warehouse `return` after fulfillment unless the approved event is an inventory-return workflow.',
   '[MISSING: deterministic Warehouse component reservation state for cleanup]',
@@ -121,6 +126,8 @@ const cleanupRefreshMarkers = [
   '[MISSING: owner-approved Warehouse stock hold/release window and max quantity]` remains unresolved',
   '[MISSING: owner-approved post-fulfillment cancellation/return workflow that maps a Payments refund or correction to Orders and Warehouse without inferring stock effects]` remains unresolved',
   'It grants no runtime permission.',
+  'Reserved/Timeout Cleanup Narrowing',
+  '[RESOLVED/NARROWED: Warehouse owner-approved cleanup operation for reserved-only, fulfilled/stock-decremented, return, partial component failure, and timeout component-line states; max quantity and live hold/release window remain missing]',
 ];
 for (const marker of cleanupRefreshMarkers) {
   assertIncludes(validation, marker, `cleanup refresh marker is missing: ${marker}`);

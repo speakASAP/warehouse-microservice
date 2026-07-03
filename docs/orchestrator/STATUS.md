@@ -1,3 +1,21 @@
+## 2026-07-04 - Goal 24 Reserved/Timeout Cleanup Approval Narrowed
+
+IPS: Vision -> paid/provider bundle smoke must preserve deterministic component-line cleanup; Goal Impact -> requested Warehouse operation-state blocker is source-policy narrowed while max quantity and live hold/release window remain missing; System -> Warehouse owns stock effects, Orders owns lifecycle gates, Payments owns provider evidence, Catalog owns bundle identity; Feature -> reserved/fulfilled/return/partial/timeout cleanup boundary; Task -> docs/verifier narrowing; Execution Plan -> Warehouse docs/status/verifier only; Coding Prompt -> no live mutation or invented approvals; Code -> approval packet, bundle contract, validation report, state/status, verifier; Validation -> focused tests, verifier, build, diff check.
+
+Decision: reserved-only active holds use `release`; fulfilled cancellation/reversal uses `cancel`; fulfilled inventory return uses `return`; partial component failures are cleaned line-by-line by current reservation state; timeout uses `expire` only when Warehouse TTL/expiry owns the event, otherwise explicit smoke abort cleanup should use `release`.
+
+Resolved/narrowed blocker:
+
+- `[RESOLVED/NARROWED: Warehouse owner-approved cleanup operation for reserved-only, fulfilled/stock-decremented, return, partial component failure, and timeout component-line states; max quantity and live hold/release window remain missing]`
+
+Remaining gates:
+
+- `[MISSING: owner-approved Warehouse stock hold/release window and max quantity]`
+- `[MISSING: Orders/Payments provider-success, provider-cancel, refund, and post-fulfillment cancellation event contract that maps to Warehouse fulfill/cancel/return calls]`
+- `[MISSING: final integration owner approval before any live Warehouse reservation, fulfillment, decrement, cancel, return, expire, or release smoke]`
+
+Boundary decision: no Warehouse source reservation behavior, live stock, live reservation, fulfillment, decrement, release, cancel, return, expire, provider call, Orders mutation, Payments mutation, migration, deploy, Kubernetes manifest, or secret value was changed or executed.
+
 ## 2026-07-03 - Warehouse Internal Delivery Status Deployed And Smoked
 
 Result: Warehouse image localhost:5000/warehouse-microservice:3868df3 deployed successfully after the internal delivery status intake source commit. The deploy built and pushed the image, applied manifests, ran the migration job with no pending migrations, rolled out successfully, and in-pod health returned healthy with database and RabbitMQ up. Route smoke with the Warehouse admin service token reached the new endpoint and returned the expected business 404 for a synthetic nonexistent order, proving auth and routing without mutating data. Bounded runtime smoke used the previously documented synthetic fulfillment order fixture, advanced it through forming -> formed -> handed_to_delivery, then posted warehouse.internal_delivery_status.v1 IN_DELIVERY. Warehouse returned HTTP 201, provider observation decision accepted, statusMutationApplied=true, and fulfillment status in_delivery. Orders projection readback showed the central order status shipped, payment paid, fulfillment Warehouse status in_delivery, and a fulfillmentOrderId present. No token values, customer PII, raw provider payloads, tracking values, or random live customer orders were used.

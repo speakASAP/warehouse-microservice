@@ -150,3 +150,37 @@ Decision:
 - `[RESOLVED/NARROWED: Warehouse source-policy operation selection for release/cancel/return by component reservation state]` remains valid source evidence only.
 
 The new approval packet lists the exact required owner facts, fail-closed runtime rules, agent-ready approval request, parallel execution ownership, shared contracts, validation owner, and merge order. It grants no runtime permission.
+
+## 2026-07-04 Reserved/Timeout Cleanup Narrowing
+
+Scope: Warehouse-owned docs/static verifier only. No live checkout, payment creation, provider callback, refund, correction, Orders mutation, Warehouse reservation, stock mutation, fulfillment, release, cancel, return, deployment, migration, secret read, or production DB mutation was performed. RAG shortcut was skipped because this task forbids secret use.
+
+Intent Preservation Chain: Vision -> Goal Impact -> System -> Feature -> Task -> Execution Plan -> Coding Prompt -> Code -> Validation -> State Update.
+
+- Vision: future paid/provider smoke must not leave component reservations or decremented stock without an owner-approved cleanup path.
+- Goal Impact: narrows `[MISSING: owner-approved operation for reserved-only, fulfilled/stock-decremented, return, partial component failure, and timeout states, including max quantity and hold/release window]` by separating source-approved operation choices from still-missing live canary facts.
+- System: Warehouse owns component reservation state and stock effects; Orders owns lifecycle/correction gates; Payments owns provider success/cancel/refund evidence; Catalog owns bundle identity.
+- Feature: reserved-only, fulfilled, return, partial failure, and timeout cleanup approval boundary.
+- Task: make timeout-state ownership explicit and preserve max quantity/hold-window blockers.
+- Execution Plan: update Warehouse approval packet, contract, verifier, state/status only.
+- Coding Prompt: do not invent live stock windows, max quantities, provider rollback contracts, or owner approvals.
+- Code: docs/verifier/status only.
+- Validation: static verifier, focused stock/reservation tests, build, and diff check.
+- State Update: operation choices are source-defined for requested states; max quantity and live hold/release window remain `[MISSING]`.
+
+Decision matrix update:
+
+| Requested state | Warehouse source-policy answer | Runtime approval status |
+| --- | --- | --- |
+| Reserved-only active hold | `release` before stock decrement | source-defined; live target/window/quantity missing |
+| Fulfilled/stock-decremented cancellation | `cancel` only after approved Orders/provider cancellation or reversal | source-defined; external event approval missing |
+| Fulfilled inventory return | `return` only after approved inventory-return workflow | source-defined; external return approval missing |
+| Partial component failure | line-by-line cleanup by each component reservation state; no aggregate bundle cleanup | source-defined; deterministic reservation lookup missing for runtime |
+| Timeout state | `expire` only when Warehouse TTL/expiry workflow owns the event; explicit smoke abort cleanup should use `release` unless the packet names expiry ownership | source-defined; live timeout owner/window missing |
+| Max quantity and hold/release window | no source-only approval available | `[MISSING: owner-approved Warehouse stock hold/release window and max quantity]` |
+
+Result:
+
+- `[RESOLVED/NARROWED: Warehouse owner-approved cleanup operation for reserved-only, fulfilled/stock-decremented, return, partial component failure, and timeout component-line states; max quantity and live hold/release window remain missing]`
+- `[MISSING: owner-approved Warehouse stock hold/release window and max quantity]` remains unresolved.
+- `[MISSING: final integration owner approval before any live Warehouse reservation, fulfillment, decrement, cancel, return, expire, or release smoke]` remains unresolved.
