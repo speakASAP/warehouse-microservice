@@ -203,6 +203,13 @@ Intent Preservation Chain: Vision -> Goal Impact -> System -> Feature -> Task ->
 - Validation: static verifier, focused stock/reservation tests, build, and diff check.
 - State Update: deterministic cleanup packet shape is source-defined; live max quantity and hold/release window remain `[MISSING]`.
 
+Current cleanup-worker validation:
+
+- `npm test -- --runInBand test/reservations.service.spec.ts test/stock.service.spec.ts` - passed, 2 suites / 22 tests.
+- `npm run verify:bundle-component-reservation` - passed, static source/docs boundary verified.
+- `npm run build` - passed, TypeScript build completed.
+- `git diff --check` - passed with no whitespace errors.
+
 Deterministic packet result:
 
 - `[RESOLVED/NARROWED: deterministic Warehouse component-line cleanup packet for reserved-only, fulfilled, cancel, return, partial failure, and timeout states]`
