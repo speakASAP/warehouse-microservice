@@ -8,8 +8,8 @@
   "tasks_active": 0,
   "tasks_failed_last_cycle": 0,
   "open_task_ids": [],
-  "last_milestone": "Warehouse Goal 24 reserved/fulfilled/return/partial/timeout cleanup source-policy narrowed",
-  "next_focus": "Owner-approved paid/provider checkout smoke packet with target products, stock window, Orders/Payments provider-success/cancel/refund mapping, and final rollback validation owner.",
+  "last_milestone": "Warehouse Goal 24 deterministic component-line cleanup packet source-defined; stock window/max quantity still missing",
+  "next_focus": "Owner-approved paid/provider checkout smoke packet with target component stock rows, stock hold/release window, max quantity, Orders/Payments provider-success/cancel/refund mapping, and final rollback validation owner.",
   "blockers": [],
   "budget_units_used": 0,
   "metrics": {
@@ -122,11 +122,13 @@
       "catalog_bundle_component_rollback_evidence": "source_verified_hold_release_fulfill_cancel_return_no_live_mutation",
       "catalog_bundle_component_rollback_validation": "focused_jest_22_passed_verifier_passed_build_passed_diff_check_passed",
       "catalog_bundle_reserved_timeout_cleanup_narrowing": "source_policy_defined_reserved_fulfilled_return_partial_timeout_max_quantity_window_missing",
-      "catalog_bundle_reserved_timeout_cleanup_validation": "verifier_passed_focused_jest_22_passed_build_passed_diff_check_passed"
+      "catalog_bundle_reserved_timeout_cleanup_validation": "verifier_passed_focused_jest_22_passed_build_passed_diff_check_passed",
+      "catalog_bundle_deterministic_cleanup_packet": "source_defined_component_line_lookup_packet_no_live_mutation",
+      "catalog_bundle_deterministic_cleanup_packet_validation": "verifier_passed_focused_jest_22_passed_build_passed_diff_check_pending"
     }
   },
-  "project_status": "goal24_reserved_timeout_cleanup_source_narrowed_no_deploy",
+  "project_status": "goal24_deterministic_cleanup_packet_source_defined_no_deploy",
   "completed_at": "2026-06-21",
   "frozen_at": "2026-06-21",
-  "updated_at": "2026-07-03"
+  "updated_at": "2026-07-04"
 }

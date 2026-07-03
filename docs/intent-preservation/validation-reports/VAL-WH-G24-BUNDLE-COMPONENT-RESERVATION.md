@@ -63,7 +63,7 @@ Evidence matrix:
 - Return after fulfillment: `StockService.returnReservation` and focused stock tests prove return restocks `quantity`, marks `returned`, and records a `return` movement.
 - Aggregate bundle identity: DTO guards and reservation tests prove `bundleId`, `bundleSku`, `bundleStockId`, and `bundleContractVersion` cannot become Warehouse reservation identity.
 
-Result: `[RESOLVED: Warehouse source evidence for component-line stock hold/release/fulfill/cancel/return mapping]`. Runtime remains blocked on `[MISSING: owner-approved paid/provider checkout smoke with stock and refund/cancel rollback plan]`, `[MISSING: approved Warehouse stock hold/release window and max quantity]`, and `[MISSING: Orders/Payments provider-success, provider-cancel, refund, and post-fulfillment cancellation event contract that maps to Warehouse fulfill/cancel/return calls]`.
+Result: `[RESOLVED: Warehouse source evidence for component-line stock hold/release/fulfill/cancel/return mapping]`. Runtime remains blocked on `[MISSING: owner-approved paid/provider checkout smoke with stock and refund/cancel rollback plan]`, `[MISSING: owner-approved Warehouse stock hold/release window and max quantity]`, and `[MISSING: Orders/Payments provider-success, provider-cancel, refund, and post-fulfillment cancellation event contract that maps to Warehouse fulfill/cancel/return calls]`.
 
 Current branch validation:
 
@@ -109,7 +109,7 @@ Result:
 Remaining blockers:
 
 - `[MISSING: owner-approved paid/provider checkout smoke with stock and refund/cancel rollback plan]`
-- `[MISSING: approved Warehouse stock hold/release window and max quantity]`
+- `[MISSING: owner-approved Warehouse stock hold/release window and max quantity]`
 - `[MISSING: Orders/Payments provider-success, provider-cancel, refund, and post-fulfillment cancellation event contract that maps to Warehouse fulfill/cancel/return calls]`
 - `[MISSING: final integration owner approval before any live Warehouse reservation, fulfillment, decrement, cancel, return, or release smoke]`
 
@@ -184,3 +184,65 @@ Result:
 - `[RESOLVED/NARROWED: Warehouse owner-approved cleanup operation for reserved-only, fulfilled/stock-decremented, return, partial component failure, and timeout component-line states; max quantity and live hold/release window remain missing]`
 - `[MISSING: owner-approved Warehouse stock hold/release window and max quantity]` remains unresolved.
 - `[MISSING: final integration owner approval before any live Warehouse reservation, fulfillment, decrement, cancel, return, expire, or release smoke]` remains unresolved.
+
+
+## 2026-07-04 Deterministic Cleanup Packet Lane
+
+Scope: Warehouse-owned docs/static verifier/source-policy only. No live checkout, payment creation, provider callback, refund, correction, Orders mutation, Warehouse reservation, stock mutation, fulfillment, release, cancel, return, expire, deployment, migration, secret read, or production DB mutation was performed.
+
+Intent Preservation Chain: Vision -> Goal Impact -> System -> Feature -> Task -> Execution Plan -> Coding Prompt -> Code -> Validation -> State Update.
+
+- Vision: paid/provider `catalog.bundle.v1` cleanup must be deterministic before any stock-affecting runtime action is approved.
+- Goal Impact: narrows the deterministic component-line cleanup packet blocker for reserved-only, fulfilled, cancel, return, partial failure, and timeout states while preserving the owner-approval blocker for max quantity and hold/release window.
+- System: Warehouse owns reservation rows and state reads; Orders owns central order identity and lifecycle/correction gates; Payments owns provider status/refund evidence; Catalog owns bundle identity.
+- Feature: source-defined component-line cleanup packet.
+- Task: document the exact packet fields and fail-closed lookup rules required before future live cleanup validation.
+- Execution Plan: update Warehouse cleanup packet, component-reservation contract, static verifier, task/state evidence only.
+- Coding Prompt: do not invent target ids, stock windows, max quantities, owner approvals, provider rollback contracts, or runtime cleanup permission.
+- Code: `docs/contracts/goal24-warehouse-cleanup-approval-packet.md`, `docs/contracts/catalog-bundle-component-reservation-contract.md`, `scripts/verify-bundle-component-reservation-contract.js`, state/task docs.
+- Validation: static verifier, focused stock/reservation tests, build, and diff check.
+- State Update: deterministic cleanup packet shape is source-defined; live max quantity and hold/release window remain `[MISSING]`.
+
+Deterministic packet result:
+
+- `[RESOLVED/NARROWED: deterministic Warehouse component-line cleanup packet for reserved-only, fulfilled, cancel, return, partial failure, and timeout states]`
+- Required packet keys: `orderId`, `channel`, `productId`, `warehouseId`, `quantity`, optional `reservationId`, `currentReservationStatus`, `approvedCleanupOperation`, `cleanupReasonCode`, and `actor`; `bundleContractVersion` is audit evidence only and cannot become stock identity.
+- Read-only source path: `GET /api/reservations/order/:orderId` must resolve each component line exactly once by `orderId + channel + productId + warehouseId + quantity` and, when supplied, `reservationId`.
+- Cleanup operations remain state-specific: active rows use `release` or TTL-owned `expire`, fulfilled rows use `cancel` or `return` only after the approved business event, terminal rows use `none` unless idempotency proof is explicitly requested, and unknown/duplicate/mismatched rows fail closed.
+
+Remaining blockers:
+
+- `[MISSING: owner-approved Warehouse stock hold/release window and max quantity]` remains unresolved.
+- `[MISSING: target component stock rows]` remains unresolved.
+- `[MISSING: final integration owner approval before any live Warehouse reservation, fulfillment, decrement, cancel, return, expire, or release smoke]` remains unresolved.
+
+## 2026-07-04 Warehouse Hold Window Blocker Preservation Refresh
+
+Scope: Warehouse-owned docs/static verifier only. No live checkout, payment creation, provider callback, refund, correction, Orders mutation, Warehouse reservation, stock mutation, fulfillment, release, cancel, return, expire, deployment, migration, secret read, or production DB mutation was performed.
+
+Intent Preservation Chain: Vision -> Goal Impact -> System -> Feature -> Task -> Execution Plan -> Coding Prompt -> Code -> Validation -> State Update.
+
+- Vision: future Fiobanka or other paid/provider smoke must not use Warehouse stock without an owner-approved live hold/release window and maximum quantity.
+- Goal Impact: precisely preserves `[MISSING: owner-approved Warehouse stock hold/release window and max quantity]` while keeping component-line cleanup operation selection source-defined.
+- System: Warehouse owns component-line stock effects only; Orders owns lifecycle/correction gates; Payments/provider owner owns provider success/cancel/refund evidence; Catalog owns bundle identity.
+- Feature: fail-closed Warehouse cleanup packet wording for hold window, max quantity, timeout, and future Fiobanka paid/provider canary planning.
+- Task: normalize the blocker text to require owner approval and make the static verifier reject weaker wording.
+- Execution Plan: update Warehouse docs/report/verifier only; run non-mutating validation.
+- Coding Prompt: do not infer live stock window, maximum quantity, provider rollback, or aggregate bundle stock ownership from source policy.
+- Code: `docs/IMPLEMENTATION_STATE.md`, `docs/orchestrator/STATUS.md`, this report, and `scripts/verify-bundle-component-reservation-contract.js`.
+- Validation: static verifier, focused stock/reservation tests, build, and diff check.
+- State Update: `[MISSING: owner-approved Warehouse stock hold/release window and max quantity]` remains unresolved; operation selection remains resolved/narrowed for component-line states only.
+
+Decision:
+
+- `[MISSING: owner-approved Warehouse stock hold/release window and max quantity]` remains unresolved and must be answered by Commerce/Warehouse owner before any Fiobanka paid/provider stock effect.
+- Source-policy operation selection remains preserved: `release` for active reserved-only holds, `expire` only for TTL-owned expiry, `cancel` for approved fulfilled cancellation/reversal, `return` for approved inventory return, line-by-line cleanup for partial component failures, and no operation for unknown/ambiguous component state.
+- No aggregate bundle reservation, synthetic bundle SKU stock, or aggregate bundle cleanup operation is approved.
+
+
+Current branch validation:
+
+- `npm run verify:bundle-component-reservation` - passed, static source/docs boundary verified.
+- `npm test -- --runInBand test/reservations.service.spec.ts test/stock.service.spec.ts` - passed, 2 suites / 22 tests.
+- `npm run build` - passed, TypeScript build completed.
+- `git diff --check` - passed, no whitespace errors.

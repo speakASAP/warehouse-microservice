@@ -88,6 +88,14 @@ This matrix is the Warehouse-owned answer for future Orders cleanup planning. It
 | Mixed active and fulfilled component lines after partial paid/provider/fulfillment failure | `release` for active lines; `cancel` or `return` for fulfilled lines based on the approved business event | Owner-approved runtime packet identifies each component reservation state and whether the fulfilled rollback is cancellation or return | line-by-line restoration according to each state | Orders must stop if any component state is unknown or any cleanup step fails; no aggregate bundle shortcut is approved. |
 | Unknown, ambiguous, duplicate, or missing component reservation state | none; fail closed | A deterministic component reservation lookup is missing | no mutation | Orders/integration must stop before the next side effect and record `[MISSING: deterministic Warehouse component reservation state for cleanup]`. |
 
+## Deterministic Cleanup Packet
+
+Warehouse source-policy now defines the cleanup packet shape for future paid/provider validation. The packet must be line-based, not bundle-based, and must contain one row for each component reservation with `bundleContractVersion` as audit evidence only, plus `orderId`, `channel`, `productId`, `warehouseId`, `quantity`, optional `reservationId`, `currentReservationStatus`, `approvedCleanupOperation`, `cleanupReasonCode`, and `actor`. The read-only source of truth for runtime state is `GET /api/reservations/order/:orderId`, which returns Warehouse reservation rows carrying `id`, `productId`, `warehouseId`, `quantity`, `orderId`, `channel`, and `status`.
+
+A cleanup packet is deterministic only when each component line resolves exactly one Warehouse reservation by `orderId + channel + productId + warehouseId + quantity` and, when present, `reservationId`. `active` rows map to `release` or TTL-owned `expire`; `fulfilled` rows map to `cancel` or `return` only after the approved external business event; `released`, `cancelled`, `returned`, and `expired` rows map to `none` unless the owner-approved packet asks for idempotency proof. Zero, duplicate, mixed-key, quantity-mismatched, or aggregate bundle rows fail closed before any mutation.
+
+Result: `[RESOLVED/NARROWED: deterministic Warehouse component-line cleanup packet for reserved-only, fulfilled, cancel, return, partial failure, and timeout states]`. Live target rows, max quantity, stock hold/release window, and final mutation approval remain missing.
+
 No other Warehouse operation is approved for `catalog.bundle.v1` cleanup. Direct stock adjustments, direct database updates, aggregate bundle reservation cleanup, synthetic bundle SKU cleanup, and local Orders stock corrections remain forbidden.
 
 ### Orders Handoff Decision
@@ -98,7 +106,7 @@ Future Orders cleanup should map paid/provider bundle component lines as follows
 - use Warehouse `cancel` for fulfilled/stock-decremented component lines only when the approved rollback event is order/provider cancellation and the Orders cancellation gate has side-effect acknowledgements;
 - use Warehouse `return` for fulfilled/stock-decremented component lines only when the approved rollback event is a return workflow;
 - use line-by-line mixed cleanup for partial failures: `release` active holds, `cancel` fulfilled cancellation lines, `return` fulfilled return lines, and do nothing for never-reserved lines;
-- use no Warehouse operation when the state is unknown; fail closed and require a new owner-approved runtime packet.
+- use no Warehouse operation when the state is unknown; fail closed and require a deterministic component-line cleanup packet plus a new owner-approved runtime packet.
 
 This resolves/narrows the operation-selection portion of `[MISSING: owner-approved operation for reserved-only, fulfilled/stock-decremented, return, partial component failure, and timeout states, including max quantity and hold/release window]`: Warehouse source-policy defines `release`, `cancel`, `return`, line-by-line partial cleanup, and timeout/expiry behavior, but max quantity and the live hold/release window remain missing owner approvals. The broader live paid/provider smoke blocker remains because Orders/Payments/provider source events, target IDs, stock window, max quantity, and final integration owner approval are still missing.
 
@@ -134,6 +142,7 @@ The Warehouse-owned approval packet for the remaining stock-window and post-fulf
 - `[MISSING: owner-approved paid/provider checkout smoke with stock and refund/cancel rollback plan]`
 - `[RESOLVED/NARROWED: owner-approved Warehouse stock decrement/fulfillment rollback criteria for paid bundle smoke at source-policy level; live stock window and max quantity remain missing]`
 - `[RESOLVED/NARROWED: Warehouse owner-approved cleanup operation for reserved-only, fulfilled/stock-decremented, return, partial component failure, and timeout component-line states; max quantity and live hold/release window remain missing]`
+- `[RESOLVED/NARROWED: deterministic Warehouse component-line cleanup packet for reserved-only, fulfilled, cancel, return, partial failure, and timeout states]`
 - `[MISSING: Orders/Payments provider-success, provider-cancel, refund, and post-fulfillment cancellation event contract that maps to Warehouse fulfill/cancel/return calls]`
 - `[MISSING: final integration owner approval before any live Warehouse reservation, fulfillment, decrement, cancel, return, or release smoke]`
 

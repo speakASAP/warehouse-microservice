@@ -69,7 +69,7 @@ Resolved/narrowed blockers:
 Remaining gates:
 
 - `[MISSING: owner-approved paid/provider checkout smoke with stock and refund/cancel rollback plan]`
-- `[MISSING: approved Warehouse stock hold/release window and max quantity]`
+- `[MISSING: owner-approved Warehouse stock hold/release window and max quantity]`
 - `[MISSING: Orders/Payments provider-success, provider-cancel, refund, and post-fulfillment cancellation event contract that maps to Warehouse fulfill/cancel/return calls]`
 - `[MISSING: final integration owner approval before any live Warehouse reservation, fulfillment, decrement, cancel, return, or release smoke]`
 

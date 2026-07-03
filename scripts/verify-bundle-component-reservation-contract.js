@@ -86,7 +86,7 @@ const validationMarkers = [
   'Fulfill/decrement: `StockService.fulfillReservation`',
   'Cancel after fulfillment: `StockService.cancelReservation`',
   'Return after fulfillment: `StockService.returnReservation`',
-  '[MISSING: approved Warehouse stock hold/release window and max quantity]',
+  '[MISSING: owner-approved Warehouse stock hold/release window and max quantity]',
   'Paid Bundle Cleanup Semantics Refresh',
   'Reserved-only active hold before fulfillment',
   'Fulfilled/stock-decremented cancellation rollback',
@@ -131,6 +131,45 @@ const cleanupRefreshMarkers = [
 ];
 for (const marker of cleanupRefreshMarkers) {
   assertIncludes(validation, marker, `cleanup refresh marker is missing: ${marker}`);
+}
+
+
+const deterministicCleanupMarkers = [
+  ['contract deterministic cleanup packet', contract, 'Deterministic Cleanup Packet'],
+  ['contract deterministic lookup path', contract, 'GET /api/reservations/order/:orderId'],
+  ['contract deterministic lookup keys', contract, 'orderId + channel + productId + warehouseId + quantity'],
+  ['contract deterministic result', contract, '[RESOLVED/NARROWED: deterministic Warehouse component-line cleanup packet for reserved-only, fulfilled, cancel, return, partial failure, and timeout states]'],
+  ['approval deterministic cleanup packet', approvalPacket, 'Deterministic Component-Line Cleanup Packet'],
+  ['approval current status field', approvalPacket, 'currentReservationStatus'],
+  ['approval cleanup operation field', approvalPacket, 'approvedCleanupOperation'],
+  ['validation deterministic cleanup lane', validation, 'Deterministic Cleanup Packet Lane'],
+  ['validation required packet keys', validation, 'Required packet keys'],
+];
+for (const [label, source, marker] of deterministicCleanupMarkers) {
+  assertIncludes(source, marker, `${label} marker is missing`);
+}
+
+
+const staleBlockerMarkers = [
+  '[MISSING: approved Warehouse stock hold/release window and max quantity]',
+];
+for (const marker of staleBlockerMarkers) {
+  for (const [label, source] of [
+    ['contract', contract],
+    ['validation report', validation],
+    ['approval packet', approvalPacket],
+  ]) {
+    assert(!source.includes(marker), `${label} contains weaker non-owner-approved blocker marker: ${marker}`);
+  }
+}
+
+const holdWindowPreservationMarkers = [
+  'Warehouse Hold Window Blocker Preservation Refresh',
+  '[MISSING: owner-approved Warehouse stock hold/release window and max quantity]` remains unresolved',
+  'No aggregate bundle reservation, synthetic bundle SKU stock, or aggregate bundle cleanup operation is approved.',
+];
+for (const marker of holdWindowPreservationMarkers) {
+  assertIncludes(validation, marker, `hold-window preservation marker is missing: ${marker}`);
 }
 
 console.log('catalog.bundle.v1 Warehouse component-line rollback boundary verified');

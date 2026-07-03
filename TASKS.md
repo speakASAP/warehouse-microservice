@@ -18,6 +18,7 @@
 
 ## Completed
 <!-- AI appends here. Never modifies previous entries. -->
+- [x] 2026-07-04 WH-G24-DETERMINISTIC-CLEANUP-PACKET-T1 Defined deterministic Warehouse component-line cleanup packet for reserved-only, fulfilled, cancel, return, partial failure, and timeout states; max quantity, live hold/release window, target stock rows, and final runtime approval remain missing; no live stock, reservation, fulfillment, release, cancel, return, expire, provider, Orders, Payments, deploy, migration, or secret mutation performed.
 - [x] 2026-07-04 WH-G24-RESERVED-TIMEOUT-CLEANUP-NARROWING-T1 Narrowed Warehouse cleanup approval for reserved-only, fulfilled/stock-decremented, return, partial component failure, and timeout component-line states; max quantity and live hold/release window remain missing; no live stock, reservation, fulfillment, release, cancel, return, expire, provider, Orders, Payments, deploy, migration, or secret mutation performed.
 - [x] 2026-07-03 WH-G24-BUNDLE-COMPONENT-ROLLBACK-EVIDENCE-T1 Hardened Warehouse component-line stock rollback evidence docs/verifier for catalog.bundle.v1 hold/release/fulfill/cancel/return mapping; no live checkout, stock decrement, reservation/release mutation, deploy, migration, provider flow, secret read, or production DB mutation performed.
 - [x] 2026-07-03 WH-G24-PAID-PROVIDER-ROLLBACK-READINESS-T1 Hardened Warehouse paid/provider bundle rollback readiness docs/verifier; no live stock, reservation, fulfillment, release, provider, Orders, Payments, deploy, migration, or secret mutation performed.
