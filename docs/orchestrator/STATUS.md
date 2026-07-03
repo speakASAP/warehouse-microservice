@@ -1,3 +1,18 @@
+## 2026-07-03 - Real Allegro Shipment Snapshot Accepted As No-Op Observation
+
+Result: a bounded real Allegro provider live-read snapshot was accepted by the deployed Warehouse provider-status intake without exposing raw provider/customer/tracking data. Allegro selected one existing forwarded order from its local projection, decrypted the account OAuth token in memory, live-read the Allegro shipment endpoints, and posted one sanitized `allegro.shipment_status_snapshot.v1` snapshot to `POST /api/fulfillment-orders/provider-status/allegro-shipment-snapshots`. The provider returned `latestStatus=UNKNOWN` with `sourceRead.status=AVAILABLE` and reason `[UNKNOWN: carrier tracking details absent or older than provider retention]`. Warehouse intake returned HTTP 201. Warehouse DB readback showed `fulfillment_provider_status_observations=2`, `fulfillment_provider_shipment_correlations=1`, latest real-provider observation `decision=accepted`, `source_status_class=UNKNOWN`, `normalized_warehouse_status=noop`, `attempt_count=1`; the fulfillment order remained `in_delivery`. No Orders status change was expected or forced for this no-op provider status.
+
+Runtime caveat: this evidence was gathered against the currently deployed Warehouse runtime that predates source hardening commit `ab7ac6e`; the source hardening requires a dedicated `internal:allegro-service:service` token path before cutover.
+
+IPS chain: Vision -> real provider shipment evidence can enter Warehouse as sanitized lifecycle observations; Goal Impact -> optional real-provider read proof moved from missing to proven for no-op handling; System -> Allegro owns live provider read/projection, Warehouse owns correlation/ledger/transition, Orders owns lifecycle callbacks; Feature -> provider-status observation intake; Task -> accept one real sanitized Allegro shipment snapshot and verify ledger readback; Execution Plan -> use existing deployed endpoint, no raw output, no provider write, no forced status mutation; Coding Prompt -> no token/raw id/customer/tracking output; Code -> deployed Warehouse runtime plus existing endpoint; Validation -> HTTP 201 and DB readback `accepted/noop/UNKNOWN`.
+
+Remaining gates:
+
+- [PROVEN: real Allegro provider snapshot accepted into Warehouse ledger as no-op UNKNOWN.]
+- [MISSING: deploy/cutover of hardened least-privilege Allegro service token path from source commit `ab7ac6e`.]
+- [MISSING: live provider sample with non-UNKNOWN carrier status if product requires real provider status mutation evidence.]
+- [MISSING: product-approved tracking visibility policy for customer/admin surfaces.]
+
 ## 2026-07-03 - Allegro Shipment Service Role Hardened In Source
 
 Result: Warehouse provider-shipment correlation and Allegro shipment snapshot intake routes now require only `internal:allegro-service:service`; broad `internal:warehouse-microservice:admin` is no longer accepted for those provider-ingestion endpoints in source. Guard coverage proves an Auth-issued Allegro service principal with `serviceName=allegro-service` and role `internal:allegro-service:service` passes, while a broad Warehouse-admin service principal is forbidden on shipment-only routes. Actor derivation still records `service:allegro-service`.

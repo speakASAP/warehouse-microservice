@@ -59,3 +59,9 @@ Documentation-only Warehouse consumer contract for Allegro read-only shipment st
 ## Recommendation
 
 Do not implement runtime Warehouse consumer code until the missing gates above are assigned as an owner-approved implementation task.
+
+## Runtime Validation Addendum - 2026-07-03
+
+A real Allegro provider live-read snapshot was posted to the deployed Warehouse provider-status intake. The snapshot was sanitized before handoff; raw checkout-form id, account id, waybill, customer fields, addresses, token values, and provider payloads were not printed. Warehouse persisted the observation as `decision=accepted`, `source_status_class=UNKNOWN`, `normalized_warehouse_status=noop`, and `attempt_count=1`; total observations were `2` and correlations `1` after the proof. The fulfillment order stayed `in_delivery`, which is expected for no-op `UNKNOWN` provider status.
+
+This validates the consumer contract for real-provider no-op ingestion. It does not validate a real-provider transition to `delivered`, `not_delivered`, or `returned`; that remains gated on an approved provider sample with a non-UNKNOWN carrier status.
