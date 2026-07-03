@@ -1,3 +1,15 @@
+## 2026-07-03 - Allegro c00013b Disabled-Gate Replay Readback
+
+Result: Allegro `c00013b` is deployed with the shipment dead-letter PVC/env path present and `ALLEGRO_WAREHOUSE_SHIPMENT_CORRELATION_ENABLED` still absent. A synthetic redacted Allegro apply replay returned `posted=0`, `disabled=1`, reason `ALLEGRO_WAREHOUSE_SHIPMENT_CORRELATION_ENABLED_NOT_TRUE`, so no Warehouse post or fulfillment status mutation was attempted. Warehouse readback remained unchanged before/after at `fulfillment_provider_shipment_correlations=1` and `fulfillment_provider_status_observations=0`.
+
+IPS chain: Vision -> Warehouse accepts provider shipment status only after explicit safe correlation; Goal Impact -> deployed Allegro dead-letter readiness is proven without changing Warehouse ledger/status; System -> Allegro owns disabled producer gate, Warehouse owns correlation/ledger/status transitions, Orders owns lifecycle callbacks; Feature -> fail-closed shipment correlation readback; Task -> compare Warehouse counts around Allegro disabled replay; Execution Plan -> count-only DB readback, no status mutation; Coding Prompt -> no raw provider/customer/tracking data and no fulfillment status mutation; Code -> Warehouse unchanged, Allegro `c00013b`; Validation -> Warehouse count readback before/after replay.
+
+Remaining gates:
+
+- [MISSING: owner-approved Allegro live correlation producer enablement.]
+- [MISSING: safe real order selection and expected exactly-one fulfillment order correlation.]
+- [MISSING: Warehouse status mutation smoke after correlation registration, with Orders callback verification.]
+
 ## 2026-07-03 - Shipment Correlation Migration Deployed
 
 Result: owner-approved Warehouse deploy/migration completed for the provider-status observation ledger and provider-shipment correlation registry. Image `localhost:5000/warehouse-microservice:174f92e` rolled out healthy. The migration job executed `CreateFulfillmentProviderStatusObservations1781600000000` and `CreateFulfillmentProviderShipmentCorrelations1781700000000`; post-deploy `npm run migration:show:prod` shows all six migrations applied. No fulfillment status mutation was performed. Allegro disabled-gate smoke left correlation and observation row counts at zero.
