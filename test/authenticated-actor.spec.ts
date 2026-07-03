@@ -34,6 +34,17 @@ describe('authenticated mutation actor enforcement', () => {
     },
   } as any;
 
+  const allegroShipmentServiceRequest = {
+    user: {
+      sub: 'allegro-shipment-service',
+      serviceName: 'allegro-service',
+      service: 'allegro-service',
+      clientId: 'allegro-service',
+      authMethod: 'auth-service-jwt',
+      roles: ['internal:allegro-service:service'],
+    },
+  } as any;
+
   const logger = {
     log: jest.fn(),
   };
@@ -52,6 +63,10 @@ describe('authenticated mutation actor enforcement', () => {
 
   it('derives Catalog service actor from the approved Warehouse service-principal shape', () => {
     expect(getAuthenticatedMutationActor(catalogServiceRequest)).toBe('service:catalog-microservice');
+  });
+
+  it('derives Allegro service actor from the shipment provider service-principal shape', () => {
+    expect(getAuthenticatedMutationActor(allegroShipmentServiceRequest)).toBe('service:allegro-service');
   });
 
   it('fails closed when JWT verification did not attach an authenticated subject', () => {

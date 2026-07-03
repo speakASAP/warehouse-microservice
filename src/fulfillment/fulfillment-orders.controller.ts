@@ -35,7 +35,7 @@ export class FulfillmentOrdersController {
   }
 
   @Post('provider-status/allegro-shipment-snapshots')
-  @Roles('internal:warehouse-microservice:admin', 'internal:allegro-service:service')
+  @Roles('internal:allegro-service:service')
   async recordAllegroShipmentStatusSnapshot(
     @Body() body: any,
     @Req() request: Request,
@@ -66,7 +66,7 @@ export class FulfillmentOrdersController {
   }
 
   @Post('order/:orderId/provider-shipment-correlations')
-  @Roles('internal:warehouse-microservice:admin', 'internal:allegro-service:service')
+  @Roles('internal:allegro-service:service')
   async registerProviderShipmentCorrelation(
     @Param('orderId') orderId: string,
     @Body() body: ProviderShipmentCorrelationDto,

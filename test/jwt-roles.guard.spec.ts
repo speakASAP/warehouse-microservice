@@ -120,6 +120,63 @@ describe('JwtRolesGuard central Auth validation', () => {
     expect(request.user.sub).toBe('auth-user-id');
   });
 
+  it('accepts an Auth-issued Allegro service principal with only the shipment provider role', async () => {
+    const request = { headers: { authorization: 'Bearer allegro-shipment-token' } };
+    mockedAxios.post.mockResolvedValueOnce({
+      data: {
+        valid: true,
+        user: {
+          sub: 'allegro-shipment-service',
+          type: 'service',
+          authMethod: 'auth-service-jwt',
+          roles: ['internal:allegro-service:service'],
+          serviceName: 'allegro-service',
+          service: 'allegro-service',
+          clientId: 'allegro-service',
+        },
+      },
+    } as any);
+
+    const guard = createGuard({ roles: ['internal:allegro-service:service'] });
+
+    await expect(guard.canActivate(createContext(request))).resolves.toBe(true);
+    expect(request).toMatchObject({
+      user: {
+        sub: 'allegro-shipment-service',
+        type: 'service',
+        authMethod: 'auth-service-jwt',
+        roles: ['internal:allegro-service:service'],
+        service: 'allegro-service',
+        serviceName: 'allegro-service',
+        clientId: 'allegro-service',
+      },
+      serviceActor: {
+        type: 'service',
+        serviceName: 'allegro-service',
+      },
+    });
+  });
+
+  it('rejects a Warehouse-admin service principal on Allegro shipment-only routes', async () => {
+    const request = { headers: { authorization: 'Bearer broad-warehouse-token' } };
+    mockedAxios.post.mockResolvedValueOnce({
+      data: {
+        valid: true,
+        user: {
+          sub: 'broad-service',
+          type: 'service',
+          authMethod: 'auth-service-jwt',
+          roles: ['internal:warehouse-microservice:admin'],
+          serviceName: 'orders-microservice',
+        },
+      },
+    } as any);
+
+    const guard = createGuard({ roles: ['internal:allegro-service:service'] });
+
+    await expect(guard.canActivate(createContext(request))).rejects.toThrow(ForbiddenException);
+  });
+
   it('accepts an Auth-issued Catalog service principal with the Warehouse admin role', async () => {
     const request = { headers: { authorization: 'Bearer catalog-warehouse-token' } };
     mockedAxios.post.mockResolvedValueOnce({
