@@ -53,7 +53,7 @@ Allegro now has a source-only verifier contract in commit `e626e5c`:
 - Snapshot includes `sourceRead.status`, `sourceRead.reason`, `packageCount`, `latestStatus`, `latestStatusAt`, and `trackingUpdatedAt`.
 - Snapshot excludes raw provider payloads, tracking numbers, tracking URLs, and provider document URLs.
 
-Warehouse has not implemented a runtime consumer, provider-status ledger, correlation layer, or snapshot adapter. Orders still lists `[MISSING: Warehouse consumer/runtime adapter for read-only shipment snapshots]`.
+Warehouse now has a source-only provider-status ledger and sanitized snapshot adapter mapper. It still has no runtime consumer loop, correlation resolver, status mutation path, deployed migration, or live provider intake. Orders must continue to treat runtime shipment-status consumption as gated.
 
 ## Accepted Snapshot Envelope
 
@@ -159,7 +159,7 @@ Required semantics:
 - `sourceRead.status != ok` must be deduped separately from successful status snapshots and must not advance Warehouse fulfillment status.
 - Snapshot dedupe must survive process restarts before runtime implementation is accepted.
 
-Current implementation gap: Warehouse stores only the latest `statusReference` on `fulfillment_orders`; it does not have a provider-status event ledger. Strong replay conflict detection across older references is `[MISSING: approved Warehouse shipment snapshot ledger or adapter-owned durable idempotency store]`. Until that is resolved, any runtime adapter must own durable dedupe before retrying Warehouse updates.
+Current implementation state: Warehouse has a source-only provider-status observation ledger and snapshot adapter mapper, but no deployed migration, no correlation resolver, and no status-mutating runtime consumer. Runtime updates remain blocked until correlation and deploy gates close.
 
 ## Redaction Policy
 
@@ -222,7 +222,7 @@ This keeps Orders lifecycle callback as the projection bridge and avoids moving 
 
 ## Exact Missing Gates
 
-- `[MISSING: Warehouse consumer/runtime adapter for read-only shipment snapshots]`
+- `[PARTIAL: source-only sanitized snapshot adapter mapper exists; runtime consumer loop remains missing]`
 - `[MISSING: approved Warehouse shipment snapshot ledger or adapter-owned durable idempotency store]`
 - `[MISSING: approved correlation source between Allegro hashed order/shipment/waybill identity and exactly one Warehouse fulfillment order]`
 - `[MISSING: approved Allegro latestStatus to Warehouse status mapping fixture set for in-delivery, delivered, not-delivered, returned, and no-op classes]`
@@ -268,3 +268,17 @@ Merge order: Allegro verifier contract, Warehouse docs contract, Warehouse runti
 
 - 2026-07-03: Worker F created the documentation-only bounded Warehouse intake contract for generic Allegro-origin provider status updates.
 - 2026-07-03: Worker H updated the contract for Allegro's `allegro.shipment_status_snapshot.v1` source-only verifier, documenting hashed identity fields, source-read status, package/status timestamps, redaction, rejection rules, idempotency/ledger expectations, Orders callback role, and runtime gates.
+
+
+## Source Adapter Checkpoint
+
+Warehouse source now contains `FulfillmentProviderStatusSnapshotAdapterService` for sanitized Allegro shipment snapshot mapping. The adapter:
+
+- accepts only `allegro.shipment_status_snapshot.v1`;
+- requires an already-resolved `centralOrderId` and `fulfillmentOrderId`;
+- rejects raw-looking identifiers and raw tracking/provider/customer fields before ledger writes;
+- maps bounded Allegro snapshot classes to Warehouse candidate statuses or no-op diagnostics;
+- records only a provider-status ledger observation through `FulfillmentProviderStatusLedgerService`;
+- does not resolve correlation, update `fulfillment_orders.status`, call Orders, read Allegro/provider APIs, deploy, or run migrations.
+
+Runtime consumer work remains gated by correlation, retry/dead-letter, tracking visibility, deployment, and smoke approval.

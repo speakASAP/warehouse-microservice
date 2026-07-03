@@ -6,6 +6,7 @@ import { FulfillmentOrderLine } from './fulfillment-order-line.entity';
 import { FulfillmentOrder } from './fulfillment-order.entity';
 import { FulfillmentProviderStatusObservation } from './fulfillment-provider-status-observation.entity';
 import { FulfillmentProviderStatusLedgerService } from './fulfillment-provider-status-ledger.service';
+import { FulfillmentProviderStatusSnapshotAdapterService } from './fulfillment-provider-status-snapshot-adapter.service';
 import { FulfillmentOrdersController } from './fulfillment-orders.controller';
 import { FulfillmentOrdersService } from './fulfillment-orders.service';
 
@@ -15,7 +16,7 @@ import { FulfillmentOrdersService } from './fulfillment-orders.service';
     LoggerModule,
   ],
   controllers: [FulfillmentOrdersController],
-  providers: [FulfillmentOrdersService, FulfillmentProviderStatusLedgerService],
-  exports: [FulfillmentOrdersService, FulfillmentProviderStatusLedgerService],
+  providers: [FulfillmentOrdersService, FulfillmentProviderStatusLedgerService, FulfillmentProviderStatusSnapshotAdapterService],
+  exports: [FulfillmentOrdersService, FulfillmentProviderStatusLedgerService, FulfillmentProviderStatusSnapshotAdapterService],
 })
 export class FulfillmentModule {}

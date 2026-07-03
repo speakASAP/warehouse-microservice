@@ -131,3 +131,8 @@ Warehouse commit for this slice implements the durable observation ledger founda
 - Focused tests cover accepted, duplicate, conflict, raw metadata rejection, future timestamp rejection, and stale update rejection.
 
 This source implementation does not wire a provider adapter, mutate `fulfillment_orders.status`, call Orders, run a production migration, deploy, read a live provider, read secrets, or persist raw provider/tracking/customer fields.
+
+
+## Sanitized Snapshot Adapter Checkpoint
+
+`FulfillmentProviderStatusSnapshotAdapterService` now maps sanitized Allegro shipment snapshots into ledger observation commands when a separate approved correlation supplies the central Orders id and Warehouse fulfillment order id. The adapter is source-only and does not mutate fulfillment status, call Orders, run a provider read, deploy, or run the ledger migration in production.
