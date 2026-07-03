@@ -10,7 +10,7 @@ completeness_level: partial
 applies_to:
   - docs/contracts/allegro-checkout-fulfillment-status-mapping.md
   - docs/contracts/fulfillment-provider-status-intake-contract.md
-runtime_state: not_implemented
+runtime_state: source_implemented_not_deployed
 ```
 
 ## Intent Chain
@@ -22,7 +22,7 @@ runtime_state: not_implemented
 - Task: define the write ownership, minimal persistence shape, timestamp ordering rules, rejection behavior, and next implementation gate before any runtime adapter or migration.
 - Execution Plan: documentation-only contract. Do not create a DB table, service, migration, adapter, deploy, live provider read, secret read, or production fulfillment mutation in this slice.
 - Coding Prompt: remote-only on Alfares in warehouse-microservice; docs/status updates only; preserve raw-provider exclusion and Warehouse transition graph.
-- Code: contract documentation only.
+- Code: contract documentation plus source-only ledger foundation in `src/fulfillment/fulfillment-provider-status-observation.entity.ts`, `src/fulfillment/fulfillment-provider-status-ledger.service.ts`, `src/migrations/1781600000000-CreateFulfillmentProviderStatusObservations.ts`, and `test/fulfillment-provider-status-ledger.service.spec.ts`.
 - Validation: `git diff --check`, hosted auth static checker.
 
 ## Ownership Decision
@@ -119,3 +119,15 @@ Runtime implementation remains blocked until all of these are true:
 | Warehouse ledger migration/tests | dependency-gated | Warehouse runtime owner | future approved entity/migration/tests | production mutation without approval, raw payload persistence | owner approval and final schema naming | durable ledger and tests | focused Jest/build/diff check | Must happen before adapter consumption. |
 | Allegro checkout-form adapter | blocked | Warehouse/Allegro integration owner | future approved adapter/tests | direct raw Allegro payload reads from Warehouse | ledger migration/tests and sanitized source contract | disabled-by-default adapter | contract tests | Reads sanitized source only. |
 | Orders projection verification | dependency-gated | Orders integration owner | Orders callback/read-model tests | direct provider metadata in Orders events | Warehouse adapter callback payload | customer/admin projection proof | Orders tests/smoke | Orders remains bounded lifecycle owner. |
+
+
+## Source Implementation Checkpoint
+
+Warehouse commit for this slice implements the durable observation ledger foundation in source only:
+
+- `FulfillmentProviderStatusObservation` stores sanitized observation fields, idempotency key/content hash, bounded decision/rejection reason, timestamp classes, replay diagnostics, and optional sanitized metadata.
+- `FulfillmentProviderStatusLedgerService` records accepted observations, exact replay duplicates, same-key content conflicts, stale source updates, future source timestamps, and raw provider/tracking/customer metadata rejection.
+- TypeORM migration `1781600000000-CreateFulfillmentProviderStatusObservations` creates the ledger table and indexes without running it in production.
+- Focused tests cover accepted, duplicate, conflict, raw metadata rejection, future timestamp rejection, and stale update rejection.
+
+This source implementation does not wire a provider adapter, mutate `fulfillment_orders.status`, call Orders, run a production migration, deploy, read a live provider, read secrets, or persist raw provider/tracking/customer fields.

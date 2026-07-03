@@ -9,6 +9,7 @@ import { SupplierStockReconciliation } from '../suppliers/supplier-stock-reconci
 import { Warehouse } from '../warehouses/warehouse.entity';
 import { FulfillmentOrderLine } from '../fulfillment/fulfillment-order-line.entity';
 import { FulfillmentOrder } from '../fulfillment/fulfillment-order.entity';
+import { FulfillmentProviderStatusObservation } from '../fulfillment/fulfillment-provider-status-observation.entity';
 
 config({ path: '.env' });
 
@@ -26,6 +27,7 @@ export function createWarehouseTypeOrmOptions(): DataSourceOptions {
       SupplierStockReconciliation,
       FulfillmentOrder,
       FulfillmentOrderLine,
+      FulfillmentProviderStatusObservation,
     ],
     migrations: [__dirname + '/../migrations/*{.ts,.js}'],
     migrationsTableName: 'warehouse_migrations',

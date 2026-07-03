@@ -18,6 +18,7 @@
 
 ## Completed
 <!-- AI appends here. Never modifies previous entries. -->
+- [x] 2026-07-03 WH-PROVIDER-LEDGER-SOURCE-T1 Added source-only provider-status observation ledger entity, service, migration, and focused tests; no provider adapter, deploy, live call, or fulfillment mutation performed.
 - [x] 2026-07-03 WH-PROVIDER-LEDGER-POLICY-T1 Defined Warehouse-owned provider-status ledger and timestamp/replay policy; validation passed with `git diff --check` and `npm run check:hosted-auth`. No runtime adapter, migration, deploy, live provider call, or fulfillment mutation performed.
 - [x] 2026-07-03 WH-ALLEGRO-CHECKOUT-MAPPING-T1 Added provisional Allegro checkout-form fulfillment status mapping contract; validation passed with `git diff --check` and `npm run check:hosted-auth`. No runtime adapter, migration, deploy, or stock/order mutation performed.
 - [x] 2026-07-02 WH-G16-T1 Added paid fulfillment handoff/pick-ticket contract; validation passed with `npm test -- --runInBand` (10 suites / 69 tests), `npm run build`, and `git diff --check`. No deployment or push performed.
