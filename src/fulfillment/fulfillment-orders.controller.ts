@@ -1,6 +1,7 @@
 import { Body, Controller, Get, Param, Post, Req } from '@nestjs/common';
 import { Request } from 'express';
 import { getAuthenticatedMutationActor } from '../auth/authenticated-actor';
+import { Roles } from '../auth/roles.decorator';
 import { LoggerService } from '../logger/logger.service';
 import { FulfillmentProviderShipmentCorrelationService } from './fulfillment-provider-shipment-correlation.service';
 import { CreateFulfillmentOrderDto, FulfillmentOrderStatusTransitionDto, FulfillmentOrderTransitionDto, ProviderShipmentCorrelationDto } from './dto/fulfillment-order.dto';
@@ -33,6 +34,7 @@ export class FulfillmentOrdersController {
 
 
   @Post('order/:orderId/provider-shipment-correlations')
+  @Roles('internal:warehouse-microservice:admin', 'internal:allegro-service:service')
   async registerProviderShipmentCorrelation(
     @Param('orderId') orderId: string,
     @Body() body: ProviderShipmentCorrelationDto,
