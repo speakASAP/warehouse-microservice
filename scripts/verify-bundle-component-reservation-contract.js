@@ -19,6 +19,18 @@ const warehouseLiveTargetReadbackWordingSync = read('reports/validation/VAL-GOAL
 const approvalPacket = read('docs/contracts/goal24-warehouse-cleanup-approval-packet.md');
 const catalogApprovalPacket = read('/home/ssf/Documents/Github/catalog-microservice/docs/orchestrator/2026-07-03-goal24-paid-provider-smoke-approval-packet.md');
 
+const goal24CurrentHeadVerifierSync = read('reports/validation/VAL-GOAL-24-current-head-verifier-sync-2026-07-04.md');
+const orchestratorStatus = read('docs/orchestrator/STATUS.md');
+const goal24CurrentHeadMarker = '[RESOLVED/NARROWED: Goal 24 current-head verifier sync GOAL24-CURRENT-HEADS-2026-07-04F requires Auth 2faf719 docs: complete goal10 customer data wallet rollout, Payments 6bd7b04 docs: sync goal24 payments source wave e, Catalog 12f3386 docs: sync goal24 catalog source wave e, FlipFlop e4ec887 docs: sync goal24 flipflop source wave e, Orders df17b25 docs: sync goal24 orders source wave e, and Warehouse ea7b9e9 merge goal24 warehouse cleanup packet readback sync as the current post-merge validation heads; historical Wave A-E markers are evidence only; runtime side effects remain blocked]';
+for (const [label, source] of [
+  ['current-head verifier sync report', goal24CurrentHeadVerifierSync],
+  ['orchestrator status', orchestratorStatus],
+]) {
+  if (!source.includes(goal24CurrentHeadMarker)) {
+    throw new Error(label + ' missing Goal 24 current-head verifier sync marker');
+  }
+}
+
 assertIncludes(dto, 'BundleAggregateReservationBoundaryDto', 'DTO boundary class is missing');
 assertIncludes(dto, 'bundleId is forbidden; reserve existing component productId lines only', 'bundleId fail-closed validation is missing');
 assertIncludes(dto, 'bundleSku is forbidden; Warehouse does not own synthetic bundle stock', 'bundleSku fail-closed validation is missing');
