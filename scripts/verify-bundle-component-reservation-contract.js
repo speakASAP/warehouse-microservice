@@ -169,7 +169,9 @@ for (const marker of staleBlockerMarkers) {
 
 
 const catalogTargetFactMarkers = [
+  '[RESOLVED/NARROWED: candidate target component stock rows and max component quantity are source-documented from Catalog packet]; [MISSING: live current target row readback at execution time]; [MISSING: renewed owner-approved execution window and Warehouse hold/release duration]; [MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]',
   '[RESOLVED/NARROWED: candidate target component stock rows and max component quantity are source-documented from Catalog packet]',
+  '[MISSING: live current target row readback at execution time]',
   '[MISSING: renewed owner-approved execution window and Warehouse hold/release duration]',
   '[MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]',
   '919be990-1c76-4f9c-b100-829281c6a709',
