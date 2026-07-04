@@ -17,7 +17,7 @@ Vision -> Goal Impact -> System -> Feature -> Task -> Execution Plan -> Coding P
 
 ## Current Markers
 
-[RESOLVED/NARROWED: candidate target component stock rows and max component quantity are source-documented from Catalog packet]; [MISSING: live current target row readback at execution time]; [MISSING: renewed owner-approved execution window and Warehouse hold/release duration]; [MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]
+[RESOLVED/NARROWED: candidate target component stock rows and max component quantity are source-documented from Catalog packet]; [MISSING: live current target row readback at execution time]; [RESOLVED/NARROWED: approval intake 003 supplies the bounded smoke execution window]; [MISSING: Warehouse hold/release duration]; [MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]
 
 [RESOLVED/NARROWED: Warehouse owner-approved cleanup operation for reserved-only, fulfilled/stock-decremented, return, partial component failure, and timeout component-line states; candidate max quantity is source-documented from Catalog packet, while live current row readback, renewed hold/release duration, and final mutation approval remain missing]
 

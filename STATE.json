@@ -132,6 +132,6 @@
   "frozen_at": "2026-06-21",
   "updated_at": "2026-07-04",
   "notes": [
-    "Goal 24 target facts reconciled source-only: [RESOLVED/NARROWED: candidate target component stock rows and max component quantity are source-documented from Catalog packet]; [MISSING: renewed owner-approved execution window and Warehouse hold/release duration]; [MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]. No live stock mutation approved."
+    "Goal 24 target facts reconciled source-only: [RESOLVED/NARROWED: candidate target component stock rows and max component quantity are source-documented from Catalog packet]; [RESOLVED/NARROWED: approval intake 003 supplies the bounded smoke execution window]; [MISSING: Warehouse hold/release duration]; [MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]. No live stock mutation approved."
   ]
 }
