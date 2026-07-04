@@ -13,7 +13,7 @@ Resolved/narrowed blocker:
 
 Remaining gates:
 
-- `[MISSING: owner-approved Warehouse stock hold/release window and max quantity]`
+- `[RESOLVED/NARROWED: candidate target component stock rows and max component quantity are source-documented from Catalog packet]; [MISSING: live current target row readback at execution time]; [MISSING: renewed owner-approved execution window and Warehouse hold/release duration]; [MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]`
 - `[MISSING: Orders/Payments provider-success, provider-cancel, refund, and post-fulfillment cancellation event contract that maps to Warehouse fulfill/cancel/return calls]`
 - `[MISSING: final integration owner approval before any live Warehouse reservation, fulfillment, decrement, cancel, return, expire, or release smoke]`
 
@@ -72,7 +72,7 @@ Resolved/narrowed blockers:
 Remaining gates:
 
 - `[MISSING: owner-approved paid/provider checkout smoke with stock and refund/cancel rollback plan]`
-- `[MISSING: owner-approved Warehouse stock hold/release window and max quantity]`
+- `[RESOLVED/NARROWED: candidate target component stock rows and max component quantity are source-documented from Catalog packet]; [MISSING: live current target row readback at execution time]; [MISSING: renewed owner-approved execution window and Warehouse hold/release duration]; [MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]`
 - `[MISSING: Orders/Payments provider-success, provider-cancel, refund, and post-fulfillment cancellation event contract that maps to Warehouse fulfill/cancel/return calls]`
 - `[MISSING: final integration owner approval before any live Warehouse reservation, fulfillment, decrement, cancel, return, or release smoke]`
 
