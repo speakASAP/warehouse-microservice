@@ -74,7 +74,7 @@ const contractMarkers = [
   'use Warehouse `return` for fulfilled/stock-decremented component lines only when the approved rollback event is a return workflow',
   'use line-by-line mixed cleanup for partial failures',
   'timeout/expiry behavior',
-  '[RESOLVED/NARROWED: Warehouse owner-approved cleanup operation for reserved-only, fulfilled/stock-decremented, return, partial component failure, and timeout component-line states; max quantity and live hold/release window remain missing]',
+  '[RESOLVED/NARROWED: Warehouse owner-approved cleanup operation for reserved-only, fulfilled/stock-decremented, return, partial component failure, and timeout component-line states; candidate max quantity is source-documented from Catalog packet, while live current row readback, renewed hold/release duration, and final mutation approval remain missing]',
   '[MISSING: deterministic Warehouse component reservation state for cleanup]',
 ];
 for (const marker of contractMarkers) {
@@ -96,8 +96,8 @@ const validationMarkers = [
   'Mixed active and fulfilled partial failure',
   'Reserved/Timeout Cleanup Narrowing',
   'Timeout state',
-  '[RESOLVED/NARROWED: owner-approved Warehouse stock decrement/fulfillment rollback criteria for paid bundle smoke at source-policy level; live stock window and max quantity remain missing]',
-  '[RESOLVED/NARROWED: Warehouse owner-approved cleanup operation for reserved-only, fulfilled/stock-decremented, and partially failed bundle component-line states]',
+  '[RESOLVED/NARROWED: candidate target component stock rows and max component quantity are source-documented from Catalog packet]; [MISSING: live current target row readback at execution time]; [MISSING: renewed owner-approved execution window and Warehouse hold/release duration]; [MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]',
+  '[RESOLVED/NARROWED: Warehouse owner-approved cleanup operation for reserved-only, fulfilled/stock-decremented, return, partial component failure, and timeout component-line states; candidate max quantity is source-documented from Catalog packet, while live current row readback, renewed hold/release duration, and final mutation approval remain missing]',
 ];
 for (const marker of validationMarkers) {
   assertIncludes(validation, marker, `validation marker is missing: ${marker}`);
@@ -129,7 +129,7 @@ const cleanupRefreshMarkers = [
   '[MISSING: owner-approved post-fulfillment cancellation/return workflow that maps a Payments refund or correction to Orders and Warehouse without inferring stock effects]` remains unresolved',
   'It grants no runtime permission.',
   'Reserved/Timeout Cleanup Narrowing',
-  '[RESOLVED/NARROWED: Warehouse owner-approved cleanup operation for reserved-only, fulfilled/stock-decremented, return, partial component failure, and timeout component-line states; max quantity and live hold/release window remain missing]',
+  '[RESOLVED/NARROWED: Warehouse owner-approved cleanup operation for reserved-only, fulfilled/stock-decremented, return, partial component failure, and timeout component-line states; candidate max quantity is source-documented from Catalog packet, while live current row readback, renewed hold/release duration, and final mutation approval remain missing]',
 ];
 for (const marker of cleanupRefreshMarkers) {
   assertIncludes(validation, marker, `cleanup refresh marker is missing: ${marker}`);
@@ -154,6 +154,8 @@ for (const [label, source, marker] of deterministicCleanupMarkers) {
 
 const staleBlockerMarkers = [
   '[MISSING: approved Warehouse stock hold/release window and max quantity]',
+  '[MISSING: owner-approved Warehouse stock hold/release window and max quantity]',
+  '[RESOLVED/NARROWED: owner-approved Warehouse stock decrement/fulfillment rollback criteria for paid bundle smoke at source-policy level; live stock window and max quantity remain missing]',
 ];
 for (const marker of staleBlockerMarkers) {
   for (const [label, source] of [
@@ -206,7 +208,6 @@ console.log('catalog.bundle.v1 Warehouse component-line rollback boundary verifi
 
 const staleGoal24WarehouseMarkers = [
   '[MISSING: target component stock rows]',
-  '[MISSING: owner-approved Warehouse stock hold/release window and max quantity]',
   '[MISSING: Orders/Payments provider-success, provider-cancel, refund, and post-fulfillment cancellation event contract that maps to Warehouse fulfill/cancel/return calls]',
 ];
 const sourceDefinedCrossServiceMappingMarker = '[RESOLVED/NARROWED: Orders/Payments completed|failed|cancelled source mapping plus Orders cancellation cleanup gate are source-defined; runtime remains blocked on exact provider proof, target order hash/state, named actor, side-effect acknowledgements, live Warehouse readback, and final mutation approval]';
