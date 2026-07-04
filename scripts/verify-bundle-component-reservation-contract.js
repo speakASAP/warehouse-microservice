@@ -215,6 +215,8 @@ for (const [label, source] of [
   ['implementation state', read('docs/IMPLEMENTATION_STATE.md')],
   ['orchestrator status', read('docs/orchestrator/STATUS.md')],
   ['live target readback wording sync report', warehouseLiveTargetReadbackWordingSync],
+  ['implementation state', read('docs/IMPLEMENTATION_STATE.md')],
+  ['orchestrator status', read('docs/orchestrator/STATUS.md')],
 ]) {
   assertIncludes(source, '[RESOLVED/NARROWED: candidate target component stock rows and max component quantity are source-documented from Catalog packet]', `${label} missing candidate target facts marker`);
   assertIncludes(source, '[MISSING: live current target row readback at execution time]', `${label} missing live target row readback blocker`);
