@@ -28,10 +28,29 @@ const paymentsLiveNoGoPreflight = read('/home/ssf/Documents/Github/payments-micr
 const catalogLiveNoGoPreflightConsumption = read('/home/ssf/Documents/Github/catalog-microservice/reports/validation/VAL-GOAL-24-catalog-consume-live-no-go-preflight-cc49c08-686d49c-2026-07-04.md');
 const flipflopDurableMigrationReadiness = read('/home/ssf/Documents/Github/flipflop/implementation-goals/GOAL-24-durable-bundleid-checkout-migration-readiness.md');
 const warehouseCurrentPaymentsOrdersCatalogHeads = read('reports/validation/VAL-GOAL-24-warehouse-consume-current-payments-orders-catalog-heads-2026-07-04.md');
+const warehouseReservationLookupBlocker = read('reports/validation/VAL-GOAL-24-warehouse-reservation-lookup-blocker-2026-07-04.md');
 const paymentsPreSideEffectPacket = read('/home/ssf/Documents/Github/payments-microservice/docs/orchestrator/2026-07-04-goal24-pre-side-effect-runtime-execution-packet.md');
 const ordersPaymentsPreSideEffectConsumption = read('/home/ssf/Documents/Github/orders-microservice/reports/validation/VAL-GOAL-24-orders-consume-payments-pre-side-effect-packet-445c4e7-2026-07-04.md');
 const catalogCurrentPaymentsOrdersHeads = read('/home/ssf/Documents/Github/catalog-microservice/reports/validation/VAL-GOAL-24-catalog-consume-current-payments-orders-heads-2026-07-04.md');
 
+
+
+for (const [label, source] of [
+  ['Warehouse reservation lookup blocker report', warehouseReservationLookupBlocker],
+  ['orchestrator status', read('docs/orchestrator/STATUS.md')],
+  ['implementation state', read('docs/IMPLEMENTATION_STATE.md')],
+]) {
+  assertIncludes(source, '[MISSING: exact selected Warehouse reservation lookup state for cleanup]', `${label} missing selected reservation lookup blocker`);
+  assertIncludes(source, 'GET /api/reservations/order/:orderId', `${label} missing non-mutating lookup route`);
+  assertIncludes(source, 'orderId + channel + productId + warehouseId + quantity', `${label} missing deterministic lookup key`);
+  assertIncludes(source, 'mutation: false', `${label} missing no-mutation boundary`);
+  assertIncludes(source, 'warehouse_reservation: false', `${label} missing no-reservation boundary`);
+  assertIncludes(source, 'warehouse_mutation: false', `${label} missing no-Warehouse-mutation boundary`);
+  assertIncludes(source, 'secret_output: false', `${label} missing secret boundary`);
+  assertIncludes(source, 'token_output: false', `${label} missing token boundary`);
+}
+assertIncludes(warehouseReservationLookupBlocker, '"complete": false', 'lookup blocker report must keep evidence incomplete');
+assertIncludes(warehouseReservationLookupBlocker, 'Payments final evidence path is source-reserved', 'lookup blocker report missing final evidence path reservation context');
 
 const warehouseNoGoOrchestratorStatus = read('docs/orchestrator/STATUS.md');
 const warehouseOrdersNoGoCurrentHeadsMarker = '[RESOLVED/NARROWED: Warehouse consumed Orders 9287e3f live no-go consumer sync, Payments cc49c08 live no-go preflight, Catalog d1eef3d no-go consumer sync, and FlipFlop 9a7c664 durable migration provider marker as source-governance inputs only; Warehouse stock/reservation effects remain hard-stopped until exact selected reservation lookup state, selected order/payment/provider hashes, Orders sideEffectsHandled acknowledgements, provider proof or unpaid acknowledgement, channel acknowledgement, and final redacted evidence exist]';
