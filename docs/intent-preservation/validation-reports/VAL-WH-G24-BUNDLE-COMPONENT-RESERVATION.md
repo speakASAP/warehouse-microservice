@@ -27,8 +27,8 @@ Catalog source packet facts consumed:
 Decision:
 
 - [RESOLVED/NARROWED: candidate target component stock rows and max component quantity are source-documented from Catalog packet].
-- [RESOLVED/NARROWED: Warehouse hold/release duration is owner-approved for the bounded Goal 24 smoke as 15 minutes source-default TTL or shorter caller-supplied expiresAt]; [MISSING: exact selected Warehouse reservation lookup state for cleanup] remains unresolved because the 2026-07-03 window is historical/expired and Warehouse has no renewed hold/release duration approval.
-- [RESOLVED/NARROWED: final owner approval before live Warehouse reservation mutation is bounded to one Goal 24 component-line smoke attempt with max quantity 1 per component after live readback] remains unresolved; no live Warehouse reservation, release, fulfill, cancel, return, expire, or stock mutation is approved.
+- [RESOLVED/NARROWED: Warehouse hold/release duration is owner-approved for the bounded Goal 24 smoke as 15 minutes source-default TTL or shorter caller-supplied expiresAt]; [MISSING: exact selected Warehouse reservation lookup state for cleanup] keeps runtime cleanup blocked until the exact selected reservation lookup state is recorded.
+- [RESOLVED/NARROWED: final owner approval before live Warehouse reservation mutation is bounded to one Goal 24 component-line smoke attempt with max quantity 1 per component after live readback] is source-defined for packet planning only; no live Warehouse reservation, release, fulfill, cancel, return, expire, or stock mutation is approved without the remaining exact packet facts.
 
 # VAL-WH-G24-BUNDLE-COMPONENT-RESERVATION
 
@@ -209,7 +209,7 @@ Decision matrix update:
 | Fulfilled inventory return | `return` only after approved inventory-return workflow | source-defined; external return approval missing |
 | Partial component failure | line-by-line cleanup by each component reservation state; no aggregate bundle cleanup | source-defined; deterministic reservation lookup missing for runtime |
 | Timeout state | `expire` only when Warehouse TTL/expiry workflow owns the event; explicit smoke abort cleanup should use `release` unless the packet names expiry ownership | source-defined; live timeout owner/window missing |
-| Max quantity and hold/release window | no source-only approval available | `[RESOLVED/NARROWED: Warehouse hold/release duration is owner-approved for the bounded Goal 24 smoke as 15 minutes source-default TTL or shorter caller-supplied expiresAt]; [RESOLVED/NARROWED: final owner approval before live Warehouse reservation mutation is bounded to one Goal 24 component-line smoke attempt with max quantity 1 per component after live readback]; [MISSING: exact selected Warehouse reservation lookup state for cleanup]` |
+| Max quantity and hold/release window | source-defined for bounded planning only; exact runtime lookup still missing | `[RESOLVED/NARROWED: Warehouse hold/release duration is owner-approved for the bounded Goal 24 smoke as 15 minutes source-default TTL or shorter caller-supplied expiresAt]; [RESOLVED/NARROWED: final owner approval before live Warehouse reservation mutation is bounded to one Goal 24 component-line smoke attempt with max quantity 1 per component after live readback]; [MISSING: exact selected Warehouse reservation lookup state for cleanup]` |
 
 Result:
 
@@ -274,7 +274,7 @@ Intent Preservation Chain: Vision -> Goal Impact -> System -> Feature -> Task ->
 
 Decision:
 
-- `[RESOLVED/NARROWED: Warehouse hold/release duration is owner-approved for the bounded Goal 24 smoke as 15 minutes source-default TTL or shorter caller-supplied expiresAt]; [RESOLVED/NARROWED: final owner approval before live Warehouse reservation mutation is bounded to one Goal 24 component-line smoke attempt with max quantity 1 per component after live readback]; [MISSING: exact selected Warehouse reservation lookup state for cleanup]` remains unresolved and must be answered by Commerce/Warehouse owner before any Fiobanka paid/provider stock effect.
+- `[RESOLVED/NARROWED: Warehouse hold/release duration is owner-approved for the bounded Goal 24 smoke as 15 minutes source-default TTL or shorter caller-supplied expiresAt]; [RESOLVED/NARROWED: final owner approval before live Warehouse reservation mutation is bounded to one Goal 24 component-line smoke attempt with max quantity 1 per component after live readback]; [MISSING: exact selected Warehouse reservation lookup state for cleanup]` keeps runtime blocked until the exact selected reservation lookup and final runtime packet are present before any Fiobanka paid/provider stock effect.
 - Source-policy operation selection remains preserved: `release` for active reserved-only holds, `expire` only for TTL-owned expiry, `cancel` for approved fulfilled cancellation/reversal, `return` for approved inventory return, line-by-line cleanup for partial component failures, and no operation for unknown/ambiguous component state.
 - No aggregate bundle reservation, synthetic bundle SKU stock, or aggregate bundle cleanup operation is approved.
 
@@ -287,7 +287,7 @@ Scope: Warehouse-owned docs/static verifier only. No live checkout, payment crea
 Intent Preservation Chain: Vision -> Goal Impact -> System -> Feature -> Task -> Execution Plan -> Coding Prompt -> Code -> Validation -> State Update.
 
 - Vision: future Fiobanka paid/provider smoke must use Warehouse component stock only inside a bounded owner-approved hold window.
-- Goal Impact: narrows `[MISSING: exact selected Warehouse reservation lookup state for cleanup]` and `[RESOLVED/NARROWED: final owner approval before live Warehouse reservation mutation is bounded to one Goal 24 component-line smoke attempt with max quantity 1 per component after live readback]` for exactly one Goal 24 component-line smoke attempt while preserving downstream provider, Orders, cleanup, live-readback, and evidence blockers.
+- Goal Impact: narrows the former hold-duration and final-approval blockers for exactly one Goal 24 component-line smoke attempt while preserving downstream provider, Orders, cleanup, live-readback, and evidence blockers.
 - System: Warehouse owns component-line stock holds and cleanup operation choice; Orders owns lifecycle state; Payments owns provider/bank evidence; FlipFlop/channel owns checkout and customer-visible cleanup.
 - Feature: bounded Warehouse hold-window approval for Goal 24.
 - Task: record owner approval intake 004 as Warehouse-scoped source evidence with explicit limits and abort conditions.
