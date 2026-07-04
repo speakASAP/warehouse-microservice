@@ -130,5 +130,8 @@
   "project_status": "goal24_deterministic_cleanup_packet_source_defined_no_deploy",
   "completed_at": "2026-06-21",
   "frozen_at": "2026-06-21",
-  "updated_at": "2026-07-04"
+  "updated_at": "2026-07-04",
+  "notes": [
+    "Goal 24 target facts reconciled source-only: [RESOLVED/NARROWED: candidate target component stock rows and max component quantity are source-documented from Catalog packet]; [MISSING: renewed owner-approved execution window and Warehouse hold/release duration]; [MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]. No live stock mutation approved."
+  ]
 }

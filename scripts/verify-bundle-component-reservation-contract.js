@@ -16,6 +16,7 @@ const stockService = read('src/stock/stock.service.ts');
 const contract = read('docs/contracts/catalog-bundle-component-reservation-contract.md');
 const validation = read('docs/intent-preservation/validation-reports/VAL-WH-G24-BUNDLE-COMPONENT-RESERVATION.md');
 const approvalPacket = read('docs/contracts/goal24-warehouse-cleanup-approval-packet.md');
+const catalogApprovalPacket = read('/home/ssf/Documents/Github/catalog-microservice/docs/orchestrator/2026-07-03-goal24-paid-provider-smoke-approval-packet.md');
 
 assertIncludes(dto, 'BundleAggregateReservationBoundaryDto', 'DTO boundary class is missing');
 assertIncludes(dto, 'bundleId is forbidden; reserve existing component productId lines only', 'bundleId fail-closed validation is missing');
@@ -161,6 +162,33 @@ for (const marker of staleBlockerMarkers) {
   ]) {
     assert(!source.includes(marker), `${label} contains weaker non-owner-approved blocker marker: ${marker}`);
   }
+}
+
+
+const catalogTargetFactMarkers = [
+  '[RESOLVED/NARROWED: candidate target component stock rows and max component quantity are source-documented from Catalog packet]',
+  '[MISSING: renewed owner-approved execution window and Warehouse hold/release duration]',
+  '[MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]',
+  '919be990-1c76-4f9c-b100-829281c6a709',
+  'ce4a51aa-2d12-4ab7-a965-7a36609d01fc',
+  'dbc51dde-fc66-4511-b178-f929183f4647',
+  'c0de0000-0000-4000-8000-000000000013',
+  'max hold quantity `1` per component',
+  'Catalog Candidate Target Facts Reconcile',
+];
+for (const marker of catalogTargetFactMarkers) {
+  assertIncludes(approvalPacket, marker, `approval packet missing Catalog target fact marker: ${marker}`);
+  assertIncludes(validation, marker, `validation missing Catalog target fact marker: ${marker}`);
+}
+for (const marker of [
+  'targetBundleId',
+  '`919be990-1c76-4f9c-b100-829281c6a709`',
+  '`ce4a51aa-2d12-4ab7-a965-7a36609d01fc` qty `1`',
+  '`dbc51dde-fc66-4511-b178-f929183f4647` qty `1`',
+  'Warehouse `c0de0000-0000-4000-8000-000000000013`',
+  'max hold qty `1` per component',
+]) {
+  assertIncludes(catalogApprovalPacket, marker, `Catalog approval packet missing source target fact: ${marker}`);
 }
 
 const holdWindowPreservationMarkers = [
