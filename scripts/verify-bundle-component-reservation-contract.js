@@ -21,13 +21,39 @@ const catalogApprovalPacket = read('/home/ssf/Documents/Github/catalog-microserv
 
 const goal24CurrentHeadVerifierSync = read('reports/validation/VAL-GOAL-24-current-head-verifier-sync-2026-07-04.md');
 const orchestratorStatus = read('docs/orchestrator/STATUS.md');
-const goal24CurrentHeadMarker = '[RESOLVED/NARROWED: Goal 24 current-head verifier sync GOAL24-CURRENT-HEADS-2026-07-04H requires Auth 2faf719 docs: complete goal10 customer data wallet rollout, Payments 0207876 docs: sync goal24 fiobanka runtime image evidence, Catalog 0e37b4c docs: sync goal24 catalog payments runtime image evidence, FlipFlop 490913a docs: clean goal24 owner wording, Orders 154c5cd docs: sync goal24 orders payments runtime image evidence, and Warehouse 0289dc2 docs: require goal24 current heads in verifier as the pre-H validation input heads; the H sync commits and later source-only status commits are validation evidence only; historical Wave A-G markers are evidence only; runtime side effects remain blocked]';
+const goal24CurrentHeadMarker = '[RESOLVED/NARROWED: Goal 24 current-head verifier sync GOAL24-CURRENT-HEADS-2026-07-04H requires Auth c389c1e, Payments 0207876 docs: sync goal24 fiobanka runtime image evidence, Catalog 0e37b4c docs: sync goal24 catalog payments runtime image evidence, FlipFlop 1113b9e docs: consume goal24 auth token proof in verifier, Orders 154c5cd docs: sync goal24 orders payments runtime image evidence, and Warehouse 0289dc2 docs: require goal24 current heads in verifier as the pre-H validation input heads; the H sync commits and later source-only status commits are validation evidence only; historical Wave A-G markers are evidence only; runtime side effects remain blocked]';
 for (const [label, source] of [
   ['current-head verifier sync report', goal24CurrentHeadVerifierSync],
   ['orchestrator status', orchestratorStatus],
 ]) {
   if (!source.includes(goal24CurrentHeadMarker)) {
     throw new Error(label + ' missing Goal 24 current-head verifier sync marker');
+  }
+}
+
+const narrowedAuthBlockers = [
+  '[MISSING: fresh Auth actor-bound token generated through the Auth c389c1e no-print/no-decode/no-persist pattern for the exact guarded discount-fixture step]',
+  '[MISSING: sanitized auth/admin evidence path for guarded discount-code generation using the fresh selected actor-bound token]',
+];
+for (const marker of narrowedAuthBlockers) {
+  for (const [label, source] of [
+    ['current-head verifier sync report', goal24CurrentHeadVerifierSync],
+    ['orchestrator status', orchestratorStatus],
+  ]) {
+    assertIncludes(source, marker, label + ' missing narrowed Auth blocker: ' + marker);
+  }
+}
+
+const staleAuthBlockers = [
+  '[MISSING: approved token source path, such as an on-host token file path or in-memory handoff, with explicit no-print/no-decode/no-persist handling]',
+  '[MISSING: confirmation that the token belongs to actor hash 4215870ba488de17 and carries app:flipflop-service:admin or global:superadmin]',
+];
+for (const marker of staleAuthBlockers) {
+  for (const [label, source] of [
+    ['current-head verifier sync report', goal24CurrentHeadVerifierSync],
+    ['orchestrator status', orchestratorStatus],
+  ]) {
+    assert(!source.includes(marker), label + ' contains stale broad Auth blocker: ' + marker);
   }
 }
 

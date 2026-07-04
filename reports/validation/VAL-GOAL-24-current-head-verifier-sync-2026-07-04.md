@@ -2,14 +2,14 @@
 
 IPS: Vision -> Goal 24 paid/provider smoke cleanup must validate against the latest merged source truth before any side-effectful runtime attempt; Goal Impact -> focused verifiers now fail closed if they only see historical Wave A-G source-governance markers; System -> Payments, Catalog, FlipFlop, Orders, and Warehouse keep separate ownership while sharing current-head validation evidence; Feature -> current-head verifier sync; Task -> add source-only marker coverage; Execution Plan -> docs/status/report/verifier only, no live side effects; Coding Prompt -> preserve blockers and do not infer stock effects from Payments refund state; Code -> focused verifier current-head assertion; Validation -> focused Goal 24 verifier plus git diff check; State Update -> source-integrated-runtime-hard-stopped.
 
-Decision: [RESOLVED/NARROWED: Goal 24 current-head verifier sync GOAL24-CURRENT-HEADS-2026-07-04H requires Auth 2faf719 docs: complete goal10 customer data wallet rollout, Payments 0207876 docs: sync goal24 fiobanka runtime image evidence, Catalog 0e37b4c docs: sync goal24 catalog payments runtime image evidence, FlipFlop 490913a docs: clean goal24 owner wording, Orders 154c5cd docs: sync goal24 orders payments runtime image evidence, and Warehouse 0289dc2 docs: require goal24 current heads in verifier as the pre-H validation input heads; the H sync commits and later source-only status commits are validation evidence only; historical Wave A-G markers are evidence only; runtime side effects remain blocked]
+Decision: [RESOLVED/NARROWED: Goal 24 current-head verifier sync GOAL24-CURRENT-HEADS-2026-07-04H requires Auth c389c1e, Payments 0207876 docs: sync goal24 fiobanka runtime image evidence, Catalog 0e37b4c docs: sync goal24 catalog payments runtime image evidence, FlipFlop 1113b9e docs: consume goal24 auth token proof in verifier, Orders 154c5cd docs: sync goal24 orders payments runtime image evidence, and Warehouse 0289dc2 docs: require goal24 current heads in verifier as the pre-H validation input heads; the H sync commits and later source-only status commits are validation evidence only; historical Wave A-G markers are evidence only; runtime side effects remain blocked]
 
 Historical Wave A-G markers remain evidence for planning lineage only. They are not renewed runtime authority and do not replace the pre-H validation input heads above; H sync commits and later source-only status commits are validation evidence only.
 
 Remaining blockers:
 
-- [MISSING: approved token source path, such as an on-host token file path or in-memory handoff, with explicit no-print/no-decode/no-persist handling].
-- [MISSING: confirmation that the token belongs to actor hash 4215870ba488de17 and carries app:flipflop-service:admin or global:superadmin].
+- [MISSING: fresh Auth actor-bound token generated through the Auth c389c1e no-print/no-decode/no-persist pattern for the exact guarded discount-fixture step].
+- [MISSING: sanitized auth/admin evidence path for guarded discount-code generation using the fresh selected actor-bound token].
 - [MISSING: named human Payments/provider rollback execution owner with bank/refund authority for runtime].
 - [MISSING: future paymentId/orderId/variableSymbolHash/providerTransactionHash for exact smoke].
 - [MISSING: concrete side-effectful rollback run id and cleanup idempotency keys].
