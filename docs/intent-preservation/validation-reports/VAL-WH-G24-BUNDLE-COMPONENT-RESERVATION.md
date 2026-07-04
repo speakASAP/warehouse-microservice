@@ -135,8 +135,8 @@ Warehouse cleanup operation decision:
 
 Result:
 
-- `[RESOLVED/NARROWED: owner-approved Warehouse stock decrement/fulfillment rollback criteria for paid bundle smoke at source-policy level; live stock window and max quantity remain missing]`
-- `[RESOLVED/NARROWED: Warehouse owner-approved cleanup operation for reserved-only, fulfilled/stock-decremented, and partially failed bundle component-line states]`
+- `[RESOLVED/NARROWED: candidate target component stock rows and max component quantity are source-documented from Catalog packet]; [MISSING: live current target row readback at execution time]; [MISSING: renewed owner-approved execution window and Warehouse hold/release duration]; [MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]`
+- `[RESOLVED/NARROWED: Warehouse owner-approved cleanup operation for reserved-only, fulfilled/stock-decremented, return, partial component failure, and timeout component-line states; candidate max quantity is source-documented from Catalog packet, while live current row readback, renewed hold/release duration, and final mutation approval remain missing]`
 
 Remaining blockers:
 
@@ -193,12 +193,12 @@ Intent Preservation Chain: Vision -> Goal Impact -> System -> Feature -> Task ->
 - Goal Impact: narrows `[MISSING: owner-approved operation for reserved-only, fulfilled/stock-decremented, return, partial component failure, and timeout states, including max quantity and hold/release window]` by separating source-approved operation choices from still-missing live canary facts.
 - System: Warehouse owns component reservation state and stock effects; Orders owns lifecycle/correction gates; Payments owns provider success/cancel/refund evidence; Catalog owns bundle identity.
 - Feature: reserved-only, fulfilled, return, partial failure, and timeout cleanup approval boundary.
-- Task: make timeout-state ownership explicit and preserve max quantity/hold-window blockers.
+- Task: make timeout-state ownership explicit and preserve live row readback, renewed hold-duration, deterministic cleanup lookup, and final mutation approval blockers.
 - Execution Plan: update Warehouse approval packet, contract, verifier, state/status only.
 - Coding Prompt: do not invent live stock windows, max quantities, provider rollback contracts, or owner approvals.
 - Code: docs/verifier/status only.
 - Validation: static verifier, focused stock/reservation tests, build, and diff check.
-- State Update: operation choices are source-defined for requested states; max quantity and live hold/release window remain `[MISSING]`.
+- State Update: operation choices are source-defined for requested states; candidate max quantity is source-documented, while live row readback, renewed hold/release duration, deterministic cleanup lookup, and final mutation approval remain `[MISSING]`.
 
 Decision matrix update:
 
@@ -213,7 +213,7 @@ Decision matrix update:
 
 Result:
 
-- `[RESOLVED/NARROWED: Warehouse owner-approved cleanup operation for reserved-only, fulfilled/stock-decremented, return, partial component failure, and timeout component-line states; max quantity and live hold/release window remain missing]`
+- `[RESOLVED/NARROWED: Warehouse owner-approved cleanup operation for reserved-only, fulfilled/stock-decremented, return, partial component failure, and timeout component-line states; candidate max quantity is source-documented from Catalog packet, while live current row readback, renewed hold/release duration, and final mutation approval remain missing]`
 - `[MISSING: renewed owner-approved execution window and Warehouse hold/release duration]; [MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]` remains unresolved.
 - `[MISSING: final integration owner approval before any live Warehouse reservation, fulfillment, decrement, cancel, return, expire, or release smoke]` remains unresolved.
 
@@ -233,7 +233,7 @@ Intent Preservation Chain: Vision -> Goal Impact -> System -> Feature -> Task ->
 - Coding Prompt: do not invent target ids, stock windows, max quantities, owner approvals, provider rollback contracts, or runtime cleanup permission.
 - Code: `docs/contracts/goal24-warehouse-cleanup-approval-packet.md`, `docs/contracts/catalog-bundle-component-reservation-contract.md`, `scripts/verify-bundle-component-reservation-contract.js`, state/task docs.
 - Validation: static verifier, focused stock/reservation tests, build, and diff check.
-- State Update: deterministic cleanup packet shape is source-defined; live max quantity and hold/release window remain `[MISSING]`.
+- State Update: deterministic cleanup packet shape and candidate max quantity are source-documented; live row readback, renewed hold/release duration, and final mutation approval remain `[MISSING]`.
 
 Current cleanup-worker validation:
 
@@ -264,10 +264,10 @@ Intent Preservation Chain: Vision -> Goal Impact -> System -> Feature -> Task ->
 - Vision: future Fiobanka or other paid/provider smoke must not use Warehouse stock without an owner-approved live hold/release window and maximum quantity.
 - Goal Impact: precisely preserves `[MISSING: renewed owner-approved execution window and Warehouse hold/release duration]; [MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]` while keeping component-line cleanup operation selection source-defined.
 - System: Warehouse owns component-line stock effects only; Orders owns lifecycle/correction gates; Payments/provider owner owns provider success/cancel/refund evidence; Catalog owns bundle identity.
-- Feature: fail-closed Warehouse cleanup packet wording for hold window, max quantity, timeout, and future Fiobanka paid/provider canary planning.
+- Feature: fail-closed Warehouse cleanup packet wording for live row readback, renewed hold duration, timeout, and future Fiobanka paid/provider canary planning.
 - Task: normalize the blocker text to require owner approval and make the static verifier reject weaker wording.
 - Execution Plan: update Warehouse docs/report/verifier only; run non-mutating validation.
-- Coding Prompt: do not infer live stock window, maximum quantity, provider rollback, or aggregate bundle stock ownership from source policy.
+- Coding Prompt: do not infer live row readback, hold duration, provider rollback, final mutation approval, or aggregate bundle stock ownership from source policy.
 - Code: `docs/IMPLEMENTATION_STATE.md`, `docs/orchestrator/STATUS.md`, this report, and `scripts/verify-bundle-component-reservation-contract.js`.
 - Validation: static verifier, focused stock/reservation tests, build, and diff check.
 - State Update: `[MISSING: renewed owner-approved execution window and Warehouse hold/release duration]; [MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]` remains unresolved; operation selection remains resolved/narrowed for component-line states only.

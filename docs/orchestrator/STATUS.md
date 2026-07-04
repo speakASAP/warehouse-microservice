@@ -3,13 +3,13 @@
 
 ## 2026-07-04 - Goal 24 Reserved/Timeout Cleanup Approval Narrowed
 
-IPS: Vision -> paid/provider bundle smoke must preserve deterministic component-line cleanup; Goal Impact -> requested Warehouse operation-state blocker is source-policy narrowed while max quantity and live hold/release window remain missing; System -> Warehouse owns stock effects, Orders owns lifecycle gates, Payments owns provider evidence, Catalog owns bundle identity; Feature -> reserved/fulfilled/return/partial/timeout cleanup boundary; Task -> docs/verifier narrowing; Execution Plan -> Warehouse docs/status/verifier only; Coding Prompt -> no live mutation or invented approvals; Code -> approval packet, bundle contract, validation report, state/status, verifier; Validation -> focused tests, verifier, build, diff check.
+IPS: Vision -> paid/provider bundle smoke must preserve deterministic component-line cleanup; Goal Impact -> requested Warehouse operation-state blocker is source-policy narrowed while candidate max quantity is source-documented and live row readback, renewed hold/release duration, deterministic cleanup lookup, and final mutation approval remain missing; System -> Warehouse owns stock effects, Orders owns lifecycle gates, Payments owns provider evidence, Catalog owns bundle identity; Feature -> reserved/fulfilled/return/partial/timeout cleanup boundary; Task -> docs/verifier narrowing; Execution Plan -> Warehouse docs/status/verifier only; Coding Prompt -> no live mutation or invented approvals; Code -> approval packet, bundle contract, validation report, state/status, verifier; Validation -> focused tests, verifier, build, diff check.
 
 Decision: reserved-only active holds use `release`; fulfilled cancellation/reversal uses `cancel`; fulfilled inventory return uses `return`; partial component failures are cleaned line-by-line by current reservation state; timeout uses `expire` only when Warehouse TTL/expiry owns the event, otherwise explicit smoke abort cleanup should use `release`.
 
 Resolved/narrowed blocker:
 
-- `[RESOLVED/NARROWED: Warehouse owner-approved cleanup operation for reserved-only, fulfilled/stock-decremented, return, partial component failure, and timeout component-line states; max quantity and live hold/release window remain missing]`
+- `[RESOLVED/NARROWED: Warehouse owner-approved cleanup operation for reserved-only, fulfilled/stock-decremented, return, partial component failure, and timeout component-line states; candidate max quantity is source-documented from Catalog packet, while live current row readback, renewed hold/release duration, and final mutation approval remain missing]`
 
 Remaining gates:
 
@@ -66,8 +66,8 @@ Decision:
 
 Resolved/narrowed blockers:
 
-- `[RESOLVED/NARROWED: owner-approved Warehouse stock decrement/fulfillment rollback criteria for paid bundle smoke at source-policy level; live stock window and max quantity remain missing]`
-- `[RESOLVED/NARROWED: Warehouse owner-approved cleanup operation for reserved-only, fulfilled/stock-decremented, and partially failed bundle component-line states]`
+- `[RESOLVED/NARROWED: candidate target component stock rows and max component quantity are source-documented from Catalog packet]; [MISSING: live current target row readback at execution time]; [MISSING: renewed owner-approved execution window and Warehouse hold/release duration]; [MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]`
+- `[RESOLVED/NARROWED: Warehouse owner-approved cleanup operation for reserved-only, fulfilled/stock-decremented, return, partial component failure, and timeout component-line states; candidate max quantity is source-documented from Catalog packet, while live current row readback, renewed hold/release duration, and final mutation approval remain missing]`
 
 Remaining gates:
 
