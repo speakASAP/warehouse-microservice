@@ -27,6 +27,10 @@ const ordersNoGoCurrentHeadsConsumption = read('/home/ssf/Documents/Github/order
 const paymentsLiveNoGoPreflight = read('/home/ssf/Documents/Github/payments-microservice/reports/validation/VAL-GOAL-24-live-paid-provider-no-go-preflight-2026-07-04.md');
 const catalogLiveNoGoPreflightConsumption = read('/home/ssf/Documents/Github/catalog-microservice/reports/validation/VAL-GOAL-24-catalog-consume-live-no-go-preflight-cc49c08-686d49c-2026-07-04.md');
 const flipflopDurableMigrationReadiness = read('/home/ssf/Documents/Github/flipflop/implementation-goals/GOAL-24-durable-bundleid-checkout-migration-readiness.md');
+const warehouseCurrentPaymentsOrdersCatalogHeads = read('reports/validation/VAL-GOAL-24-warehouse-consume-current-payments-orders-catalog-heads-2026-07-04.md');
+const paymentsPreSideEffectPacket = read('/home/ssf/Documents/Github/payments-microservice/docs/orchestrator/2026-07-04-goal24-pre-side-effect-runtime-execution-packet.md');
+const ordersPaymentsPreSideEffectConsumption = read('/home/ssf/Documents/Github/orders-microservice/reports/validation/VAL-GOAL-24-orders-consume-payments-pre-side-effect-packet-445c4e7-2026-07-04.md');
+const catalogCurrentPaymentsOrdersHeads = read('/home/ssf/Documents/Github/catalog-microservice/reports/validation/VAL-GOAL-24-catalog-consume-current-payments-orders-heads-2026-07-04.md');
 
 
 const warehouseNoGoOrchestratorStatus = read('docs/orchestrator/STATUS.md');
@@ -435,3 +439,29 @@ for (const boundary of [
 ]) {
   assertIncludes(warehouseLiveTargetReadbackWordingSync, boundary, `live target readback wording sync boundary ${boundary}`);
 }
+
+
+const warehouseCurrentPaymentsOrdersCatalogMarker = '[RESOLVED/NARROWED: Warehouse consumed Payments 445c4e7 pre-side-effect packet, Orders 6360baa Payments pre-side-effect consumption, Catalog 1a51b61 current Payments/Orders head sync, FlipFlop 793f8ef owner-authority sync, and Auth c389c1e actor token provisioning proof as source-governance inputs only; Warehouse stock/reservation effects remain hard-stopped until exact selected reservation lookup state, exact future payment/order/provider hashes, Orders sideEffectsHandled acknowledgements, provider proof or unpaid acknowledgement, channel acknowledgement, and final redacted evidence exist]';
+for (const [label, source] of [
+  ['Warehouse current Payments/Orders/Catalog heads report', warehouseCurrentPaymentsOrdersCatalogHeads],
+  ['orchestrator status', warehouseNoGoOrchestratorStatus],
+  ['implementation state', implementationState],
+  ['Warehouse validation report', warehouseValidationReport],
+  ['Warehouse cleanup approval packet', warehouseCleanupApprovalPacket],
+]) {
+  assertIncludes(source, warehouseCurrentPaymentsOrdersCatalogMarker, `${label} missing current Payments/Orders/Catalog heads marker`);
+  for (const blocker of [
+    '[MISSING: current side-effect execution window owned by a separate newer integration owner thread]',
+    '[MISSING: future paymentId/orderId/variableSymbolHash/providerTransactionHash for exact smoke]',
+    '[MISSING: exact Orders target order hash/state, cancellation actor, approval id, safe reason code, idempotency key, and sideEffectsHandled payment|warehouse|notification|crm|channel acknowledgements for the future smoke]',
+    '[MISSING: exact selected Warehouse reservation lookup state for cleanup]',
+    '[MISSING: final redacted evidence path for required provider, Orders, Warehouse, and channel cleanup proof]',
+  ]) {
+    assertIncludes(source, blocker, `${label} missing blocker ${blocker}`);
+  }
+  assertIncludes(source, 'warehouse_mutation: false', `${label} missing Warehouse mutation boundary`);
+  assertIncludes(source, 'provider_call: false', `${label} missing provider boundary`);
+}
+assertIncludes(paymentsPreSideEffectPacket, 'id: PAYMENTS-GOAL24-PRE-SIDE-EFFECT-RUNTIME-EXECUTION-PACKET', 'Payments pre-side-effect packet missing id');
+assertIncludes(ordersPaymentsPreSideEffectConsumption, '[RESOLVED/NARROWED: Orders consumed Payments 445c4e7 pre-side-effect runtime execution packet as source-only provider-authenticity handoff evidence; Orders route invocation remains blocked until a separate current side-effect execution window', 'Orders Payments 445c4e7 consumption marker missing');
+assertIncludes(catalogCurrentPaymentsOrdersHeads, '[RESOLVED/NARROWED: Catalog consumed Payments 445c4e7 pre-side-effect packet, Orders 6360baa Payments pre-side-effect consumption', 'Catalog current Payments/Orders heads marker missing');
