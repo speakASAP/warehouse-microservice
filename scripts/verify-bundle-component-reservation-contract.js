@@ -19,6 +19,7 @@ const warehouseLiveTargetReadbackWordingSync = read('reports/validation/VAL-GOAL
 const warehouseLiveTargetReadbackRuntime = read('reports/validation/VAL-GOAL-24-warehouse-live-target-readback-runtime-2026-07-04.md');
 const approvalPacket = read('docs/contracts/goal24-warehouse-cleanup-approval-packet.md');
 const catalogApprovalPacket = read('/home/ssf/Documents/Github/catalog-microservice/docs/orchestrator/2026-07-03-goal24-paid-provider-smoke-approval-packet.md');
+const warehouseCleanupRuntimeValuesConsumption = read('reports/validation/VAL-GOAL-24-warehouse-consume-cleanup-runtime-values-fa88917-59be11e-8bb22e2-9a7c664-2026-07-04.md');
 
 const goal24CurrentHeadVerifierSync = read('reports/validation/VAL-GOAL-24-current-head-verifier-sync-2026-07-04.md');
 const orchestratorStatus = read('docs/orchestrator/STATUS.md');
@@ -268,6 +269,33 @@ for (const [label, source] of [
   assertIncludes(source, '[RESOLVED/NARROWED: final owner approval before live Warehouse reservation mutation is bounded to one Goal 24 component-line smoke attempt with max quantity 1 per component after live readback]', `${label} missing hold-window approval 004 final mutation marker`);
   assertIncludes(source, '[MISSING: live current target row readback at execution time]', `${label} missing live readback hard stop after approval 004`);
   assertIncludes(source, '[MISSING: final redacted evidence path for required provider, Orders, Warehouse, and channel cleanup proof]', `${label} missing final evidence hard stop after approval 004`);
+}
+
+
+
+const cleanupRuntimeValuesMarker = '[RESOLVED/NARROWED: Warehouse consumed Catalog fa88917, Payments 59be11e, Orders 8bb22e2, and FlipFlop 9a7c664 cleanup runtime-values sync; hold duration and one-attempt final bounded reservation approval are source-defined for packet planning only, while exact selected reservation lookup state remains missing]';
+for (const [label, source] of [
+  ['cleanup runtime-values report', warehouseCleanupRuntimeValuesConsumption],
+  ['implementation state', read('docs/IMPLEMENTATION_STATE.md')],
+  ['orchestrator status', read('docs/orchestrator/STATUS.md')],
+  ['warehouse cleanup approval packet', approvalPacket],
+]) {
+  assertIncludes(source, cleanupRuntimeValuesMarker, `${label} missing Warehouse cleanup runtime-values marker`);
+  assertIncludes(source, '[MISSING: exact selected Warehouse reservation lookup state for cleanup]', `${label} missing selected Warehouse reservation lookup blocker`);
+  assertIncludes(source, '[MISSING: exact selected Orders cleanup packet runtime values and sideEffectsHandled acknowledgements]', `${label} missing selected Orders runtime-values blocker`);
+  assertIncludes(source, 'Warehouse must not infer stock effects from Payments refund state', `${label} missing no-refund-inference boundary`);
+}
+for (const boundary of [
+  'mutation: false',
+  'provider_call: false',
+  'orders_mutation: false',
+  'warehouse_mutation: false',
+  'warehouse_cleanup: false',
+  'db_write: false',
+  'secret_output: false',
+  'raw_customer_or_payment_evidence: false',
+]) {
+  assertIncludes(warehouseCleanupRuntimeValuesConsumption, boundary, `cleanup runtime-values report missing boundary ${boundary}`);
 }
 
 console.log('catalog.bundle.v1 Warehouse component-line rollback boundary verified');

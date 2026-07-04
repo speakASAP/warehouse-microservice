@@ -164,3 +164,9 @@ Integration owner: Catalog commerce integration owner until a dedicated paid/pro
 Validation owner: final integration validator.
 
 Merge order: Payments provider evidence, Orders correction approval, Warehouse cleanup packet, channel/canary dry-run, final integration smoke.
+
+## 2026-07-04 Cleanup Runtime-Values Consumption
+
+[RESOLVED/NARROWED: Warehouse consumed Catalog fa88917, Payments 59be11e, Orders 8bb22e2, and FlipFlop 9a7c664 cleanup runtime-values sync; hold duration and one-attempt final bounded reservation approval are source-defined for packet planning only, while exact selected reservation lookup state remains missing]
+
+Current Warehouse owner facts preserve the 15-minute source-default TTL/shorter expiresAt hold-duration approval and one-attempt final bounded reservation approval as source-defined packet-planning facts only. Runtime remains blocked by [MISSING: exact selected Warehouse reservation lookup state for cleanup], [MISSING: exact selected Orders cleanup packet runtime values and sideEffectsHandled acknowledgements], provider/bank proof, and final redacted evidence. Warehouse must not infer stock effects from Payments refund state, provider state, Auth token state, or channel cleanup state.
