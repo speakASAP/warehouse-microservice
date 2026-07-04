@@ -23,7 +23,7 @@ raw_ids_printed: false
 - Coding Prompt: redact product and warehouse identifiers by hash, print no bearer token, no raw DB rows, no customer/order/payment/provider data.
 - Code: `reports/validation/VAL-GOAL-24-warehouse-live-target-readback-runtime-2026-07-04.md`, `docs/IMPLEMENTATION_STATE.md`, `docs/orchestrator/STATUS.md`, `scripts/verify-bundle-component-reservation-contract.js`.
 - Validation: `npm run verify:bundle-component-reservation`, `node --check scripts/verify-bundle-component-reservation-contract.js`, `git diff --check`.
-- State Update: live current target row readback is resolved/narrowed for this runtime snapshot; Warehouse hold/release duration and final mutation approval remain missing.
+- State Update: live current target row readback is resolved/narrowed for this runtime snapshot; exact selected Warehouse reservation lookup state remains missing.
 
 ## Sanitized Runtime Evidence
 
@@ -35,12 +35,12 @@ raw_ids_printed: false
 
 [RESOLVED/NARROWED: live current target row readback at execution time captured through protected Warehouse API without mutation]
 [RESOLVED/NARROWED: candidate target component stock rows and max component quantity are source-documented from Catalog packet]
-[RESOLVED/NARROWED: approval intake 003 supplies the bounded smoke execution window]; [MISSING: Warehouse hold/release duration]; [MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]
+[RESOLVED/NARROWED: Warehouse hold/release duration is owner-approved for the bounded Goal 24 smoke as 15 minutes source-default TTL or shorter caller-supplied expiresAt]; [RESOLVED/NARROWED: final owner approval before live Warehouse reservation mutation is bounded to one Goal 24 component-line smoke attempt with max quantity 1 per component after live readback]; [MISSING: exact selected Warehouse reservation lookup state for cleanup]
 
 ## Remaining Hard Stops
 
-- `[MISSING: Warehouse hold/release duration]`
-- `[MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]`
+- `[MISSING: exact selected Warehouse reservation lookup state for cleanup]`
+- `[RESOLVED/NARROWED: final owner approval before live Warehouse reservation mutation is bounded to one Goal 24 component-line smoke attempt with max quantity 1 per component after live readback]`
 - `[MISSING: exact Orders target order hash/state, cancellation actor, approval id, safe reason code, idempotency key, and sideEffectsHandled acknowledgements]`
 - `[MISSING: provider proof and completed-transfer refund/reversal evidence for any completed-payment variant]`
 - `[MISSING: final redacted evidence path for required provider, Orders, Warehouse, and channel cleanup proof]`

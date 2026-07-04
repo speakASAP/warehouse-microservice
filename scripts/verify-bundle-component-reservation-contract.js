@@ -20,6 +20,7 @@ const warehouseLiveTargetReadbackRuntime = read('reports/validation/VAL-GOAL-24-
 const approvalPacket = read('docs/contracts/goal24-warehouse-cleanup-approval-packet.md');
 const catalogApprovalPacket = read('/home/ssf/Documents/Github/catalog-microservice/docs/orchestrator/2026-07-03-goal24-paid-provider-smoke-approval-packet.md');
 const warehouseCleanupRuntimeValuesConsumption = read('reports/validation/VAL-GOAL-24-warehouse-consume-cleanup-runtime-values-fa88917-59be11e-8bb22e2-9a7c664-2026-07-04.md');
+const warehouseHistoricalBlockerCleanup = read('reports/validation/VAL-GOAL-24-warehouse-historical-blocker-cleanup-2026-07-04.md');
 
 const goal24CurrentHeadVerifierSync = read('reports/validation/VAL-GOAL-24-current-head-verifier-sync-2026-07-04.md');
 const orchestratorStatus = read('docs/orchestrator/STATUS.md');
@@ -105,7 +106,7 @@ const contractMarkers = [
   'paid/provider bundle checkout smoke beyond the already recorded pending-order reservation and release evidence',
   'transition each active component reservation to `fulfilled`',
   'refund/cancel after fulfillment',
-  '[RESOLVED/NARROWED: Orders/Payments completed|failed|cancelled source mapping plus Orders cancellation cleanup gate are source-defined; runtime remains blocked on exact provider proof, target order hash/state, named actor, side-effect acknowledgements, live Warehouse readback, and final mutation approval]',
+  '[RESOLVED/NARROWED: Orders/Payments completed|failed|cancelled source mapping plus Orders cancellation cleanup gate are source-defined; runtime remains blocked on exact provider proof, target order hash/state, named actor, side-effect acknowledgements, Warehouse live readback, bounded final approval, and exact selected reservation lookup state]',
   'Paid Bundle Cleanup Operation Matrix',
   'Reserved-only `active` hold, no stock decrement',
   'Approved Warehouse operation',
@@ -114,8 +115,8 @@ const contractMarkers = [
   'use Warehouse `return` for fulfilled/stock-decremented component lines only when the approved rollback event is a return workflow',
   'use line-by-line mixed cleanup for partial failures',
   'timeout/expiry behavior',
-  '[RESOLVED/NARROWED: Warehouse owner-approved cleanup operation for reserved-only, fulfilled/stock-decremented, return, partial component failure, and timeout component-line states; candidate max quantity is source-documented from Catalog packet, while renewed hold/release duration and final mutation approval remain missing]',
-  '[MISSING: deterministic Warehouse component reservation state for cleanup]',
+  '[RESOLVED/NARROWED: Warehouse owner-approved cleanup operation for reserved-only, fulfilled/stock-decremented, return, partial component failure, and timeout component-line states; candidate max quantity is source-documented from Catalog packet, while exact selected reservation lookup state remains missing]',
+  '[MISSING: exact selected Warehouse reservation lookup state for cleanup]',
 ];
 for (const marker of contractMarkers) {
   assertIncludes(contract, marker, `contract marker is missing: ${marker}`);
@@ -128,7 +129,7 @@ const validationMarkers = [
   'Fulfill/decrement: `StockService.fulfillReservation`',
   'Cancel after fulfillment: `StockService.cancelReservation`',
   'Return after fulfillment: `StockService.returnReservation`',
-  '[RESOLVED/NARROWED: approval intake 003 supplies the bounded smoke execution window]; [MISSING: Warehouse hold/release duration]; [MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]',
+  '[RESOLVED/NARROWED: Warehouse hold/release duration is owner-approved for the bounded Goal 24 smoke as 15 minutes source-default TTL or shorter caller-supplied expiresAt]; [RESOLVED/NARROWED: final owner approval before live Warehouse reservation mutation is bounded to one Goal 24 component-line smoke attempt with max quantity 1 per component after live readback]; [MISSING: exact selected Warehouse reservation lookup state for cleanup]',
   'Paid Bundle Cleanup Semantics Refresh',
   'Reserved-only active hold before fulfillment',
   'Fulfilled/stock-decremented cancellation rollback',
@@ -136,8 +137,8 @@ const validationMarkers = [
   'Mixed active and fulfilled partial failure',
   'Reserved/Timeout Cleanup Narrowing',
   'Timeout state',
-  '[RESOLVED/NARROWED: candidate target component stock rows and max component quantity are source-documented from Catalog packet]; [RESOLVED/NARROWED: live current target row readback at execution time captured through protected Warehouse API without mutation]; [RESOLVED/NARROWED: approval intake 003 supplies the bounded smoke execution window]; [MISSING: Warehouse hold/release duration]; [MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]',
-  '[RESOLVED/NARROWED: Warehouse owner-approved cleanup operation for reserved-only, fulfilled/stock-decremented, return, partial component failure, and timeout component-line states; candidate max quantity is source-documented from Catalog packet, while renewed hold/release duration and final mutation approval remain missing]',
+  '[RESOLVED/NARROWED: candidate target component stock rows and max component quantity are source-documented from Catalog packet]; [RESOLVED/NARROWED: live current target row readback at execution time captured through protected Warehouse API without mutation]; [RESOLVED/NARROWED: Warehouse hold/release duration is owner-approved for the bounded Goal 24 smoke as 15 minutes source-default TTL or shorter caller-supplied expiresAt]; [RESOLVED/NARROWED: final owner approval before live Warehouse reservation mutation is bounded to one Goal 24 component-line smoke attempt with max quantity 1 per component after live readback]; [MISSING: exact selected Warehouse reservation lookup state for cleanup]',
+  '[RESOLVED/NARROWED: Warehouse owner-approved cleanup operation for reserved-only, fulfilled/stock-decremented, return, partial component failure, and timeout component-line states; candidate max quantity is source-documented from Catalog packet, while exact selected reservation lookup state remains missing]',
 ];
 for (const marker of validationMarkers) {
   assertIncludes(validation, marker, `validation marker is missing: ${marker}`);
@@ -146,7 +147,7 @@ for (const marker of validationMarkers) {
 
 const approvalPacketMarkers = [
   'WH-G24-WAREHOUSE-CLEANUP-APPROVAL-PACKET',
-  '[RESOLVED/NARROWED: approval intake 003 supplies the bounded smoke execution window]; [MISSING: Warehouse hold/release duration]; [MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]',
+  '[RESOLVED/NARROWED: Warehouse hold/release duration is owner-approved for the bounded Goal 24 smoke as 15 minutes source-default TTL or shorter caller-supplied expiresAt]; [RESOLVED/NARROWED: final owner approval before live Warehouse reservation mutation is bounded to one Goal 24 component-line smoke attempt with max quantity 1 per component after live readback]; [MISSING: exact selected Warehouse reservation lookup state for cleanup]',
   '[MISSING: owner-approved operation for reserved-only, fulfilled/stock-decremented, return, partial component failure, and timeout states, including max quantity and hold/release window]',
   '[MISSING: owner-approved post-fulfillment cancellation/return workflow that maps a Payments refund or correction to Orders and Warehouse without inferring stock effects]',
   'A refund alone is not inventory-return evidence',
@@ -155,7 +156,7 @@ const approvalPacketMarkers = [
   'Treat the 15-minute default reservation TTL as a source implementation fact only',
   'Do not call Warehouse `cancel` after fulfillment unless the approved event is order/provider cancellation or reversal',
   'Do not call Warehouse `return` after fulfillment unless the approved event is an inventory-return workflow.',
-  '[MISSING: deterministic Warehouse component reservation state for cleanup]',
+  '[MISSING: exact selected Warehouse reservation lookup state for cleanup]',
   'Agent-Ready Approval Request',
   'Merge order: Payments provider evidence, Orders correction approval, Warehouse cleanup packet, channel/canary dry-run, final integration smoke.',
 ];
@@ -165,11 +166,11 @@ for (const marker of approvalPacketMarkers) {
 
 const cleanupRefreshMarkers = [
   'Warehouse Cleanup Approval Packet Refresh',
-  '[RESOLVED/NARROWED: approval intake 003 supplies the bounded smoke execution window]; [MISSING: Warehouse hold/release duration]; [MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]` remains unresolved',
+  '[RESOLVED/NARROWED: Warehouse hold/release duration is owner-approved for the bounded Goal 24 smoke as 15 minutes source-default TTL or shorter caller-supplied expiresAt]; [RESOLVED/NARROWED: final owner approval before live Warehouse reservation mutation is bounded to one Goal 24 component-line smoke attempt with max quantity 1 per component after live readback]; [MISSING: exact selected Warehouse reservation lookup state for cleanup]` remains unresolved',
   '[MISSING: owner-approved post-fulfillment cancellation/return workflow that maps a Payments refund or correction to Orders and Warehouse without inferring stock effects]` remains unresolved',
   'It grants no runtime permission.',
   'Reserved/Timeout Cleanup Narrowing',
-  '[RESOLVED/NARROWED: Warehouse owner-approved cleanup operation for reserved-only, fulfilled/stock-decremented, return, partial component failure, and timeout component-line states; candidate max quantity is source-documented from Catalog packet, while renewed hold/release duration and final mutation approval remain missing]',
+  '[RESOLVED/NARROWED: Warehouse owner-approved cleanup operation for reserved-only, fulfilled/stock-decremented, return, partial component failure, and timeout component-line states; candidate max quantity is source-documented from Catalog packet, while exact selected reservation lookup state remains missing]',
 ];
 for (const marker of cleanupRefreshMarkers) {
   assertIncludes(validation, marker, `cleanup refresh marker is missing: ${marker}`);
@@ -195,7 +196,7 @@ for (const [label, source, marker] of deterministicCleanupMarkers) {
 const staleBlockerMarkers = [
   '[MISSING: approved Warehouse stock hold/release window and max quantity]',
   '[MISSING: owner-approved Warehouse stock hold/release window and max quantity]',
-  '[RESOLVED/NARROWED: owner-approved Warehouse stock decrement/fulfillment rollback criteria for paid bundle smoke at source-policy level; live stock window and max quantity remain missing]',
+  '[RESOLVED/NARROWED: owner-approved Warehouse stock decrement/fulfillment rollback criteria for paid bundle smoke at source-policy level; exact selected reservation lookup state remains missing]',
 ];
 for (const marker of staleBlockerMarkers) {
   for (const [label, source] of [
@@ -209,11 +210,11 @@ for (const marker of staleBlockerMarkers) {
 
 
 const catalogTargetFactMarkers = [
-  '[RESOLVED/NARROWED: candidate target component stock rows and max component quantity are source-documented from Catalog packet]; [RESOLVED/NARROWED: live current target row readback at execution time captured through protected Warehouse API without mutation]; [RESOLVED/NARROWED: approval intake 003 supplies the bounded smoke execution window]; [MISSING: Warehouse hold/release duration]; [MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]',
+  '[RESOLVED/NARROWED: candidate target component stock rows and max component quantity are source-documented from Catalog packet]; [RESOLVED/NARROWED: live current target row readback at execution time captured through protected Warehouse API without mutation]; [RESOLVED/NARROWED: Warehouse hold/release duration is owner-approved for the bounded Goal 24 smoke as 15 minutes source-default TTL or shorter caller-supplied expiresAt]; [RESOLVED/NARROWED: final owner approval before live Warehouse reservation mutation is bounded to one Goal 24 component-line smoke attempt with max quantity 1 per component after live readback]; [MISSING: exact selected Warehouse reservation lookup state for cleanup]',
   '[RESOLVED/NARROWED: candidate target component stock rows and max component quantity are source-documented from Catalog packet]',
   '[RESOLVED/NARROWED: live current target row readback at execution time captured through protected Warehouse API without mutation]',
-  '[RESOLVED/NARROWED: approval intake 003 supplies the bounded smoke execution window]; [MISSING: Warehouse hold/release duration]',
-  '[MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]',
+  '[RESOLVED/NARROWED: Warehouse hold/release duration is owner-approved for the bounded Goal 24 smoke as 15 minutes source-default TTL or shorter caller-supplied expiresAt]; [MISSING: exact selected Warehouse reservation lookup state for cleanup]',
+  '[RESOLVED/NARROWED: final owner approval before live Warehouse reservation mutation is bounded to one Goal 24 component-line smoke attempt with max quantity 1 per component after live readback]',
   '919be990-1c76-4f9c-b100-829281c6a709',
   'ce4a51aa-2d12-4ab7-a965-7a36609d01fc',
   'dbc51dde-fc66-4511-b178-f929183f4647',
@@ -238,7 +239,7 @@ for (const marker of [
 
 const holdWindowPreservationMarkers = [
   'Warehouse Hold Window Blocker Preservation Refresh',
-  '[RESOLVED/NARROWED: approval intake 003 supplies the bounded smoke execution window]; [MISSING: Warehouse hold/release duration]; [MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]` remains unresolved',
+  '[RESOLVED/NARROWED: Warehouse hold/release duration is owner-approved for the bounded Goal 24 smoke as 15 minutes source-default TTL or shorter caller-supplied expiresAt]; [RESOLVED/NARROWED: final owner approval before live Warehouse reservation mutation is bounded to one Goal 24 component-line smoke attempt with max quantity 1 per component after live readback]; [MISSING: exact selected Warehouse reservation lookup state for cleanup]` remains unresolved',
   'No aggregate bundle reservation, synthetic bundle SKU stock, or aggregate bundle cleanup operation is approved.',
 ];
 for (const marker of holdWindowPreservationMarkers) {
@@ -249,7 +250,7 @@ const holdWindowApproval004CommonMarkers = [
   '[RESOLVED/NARROWED: Warehouse hold/release duration is owner-approved for the bounded Goal 24 smoke as 15 minutes source-default TTL or shorter caller-supplied expiresAt]',
   '[RESOLVED/NARROWED: final owner approval before live Warehouse reservation mutation is bounded to one Goal 24 component-line smoke attempt with max quantity 1 per component after live readback]',
   '[RESOLVED/NARROWED: live current target row readback at execution time captured through protected Warehouse API without mutation]',
-  '[MISSING: deterministic Warehouse component reservation state for cleanup]',
+  '[MISSING: exact selected Warehouse reservation lookup state for cleanup]',
   '[MISSING: Payments provider proof and bank/refund authority before fulfilled cleanup]',
   '[MISSING: exact Orders target order hash/state and sideEffectsHandled acknowledgements]',
   '[MISSING: final redacted evidence path for required provider, Orders, Warehouse, and channel cleanup proof]',
@@ -267,7 +268,7 @@ for (const [label, source] of [
 ]) {
   assertIncludes(source, '[RESOLVED/NARROWED: Warehouse hold/release duration is owner-approved for the bounded Goal 24 smoke as 15 minutes source-default TTL or shorter caller-supplied expiresAt]', `${label} missing hold-window approval 004 duration marker`);
   assertIncludes(source, '[RESOLVED/NARROWED: final owner approval before live Warehouse reservation mutation is bounded to one Goal 24 component-line smoke attempt with max quantity 1 per component after live readback]', `${label} missing hold-window approval 004 final mutation marker`);
-  assertIncludes(source, '[MISSING: live current target row readback at execution time]', `${label} missing live readback hard stop after approval 004`);
+  assertIncludes(source, '[RESOLVED/NARROWED: live current target row readback at execution time captured through protected Warehouse API without mutation]', `${label} missing live readback hard stop after approval 004`);
   assertIncludes(source, '[MISSING: final redacted evidence path for required provider, Orders, Warehouse, and channel cleanup proof]', `${label} missing final evidence hard stop after approval 004`);
 }
 
@@ -298,6 +299,10 @@ for (const boundary of [
   assertIncludes(warehouseCleanupRuntimeValuesConsumption, boundary, `cleanup runtime-values report missing boundary ${boundary}`);
 }
 
+assertIncludes(warehouseHistoricalBlockerCleanup, '[RESOLVED/NARROWED: Warehouse historical verifier-read Goal 24 blocker surfaces now consume current cleanup runtime-values facts while preserving exact selected reservation lookup as missing]', 'historical blocker cleanup report missing state marker');
+assertIncludes(warehouseHistoricalBlockerCleanup, '[MISSING: exact selected Warehouse reservation lookup state for cleanup]', 'historical blocker cleanup report missing selected Warehouse blocker');
+assertIncludes(warehouseHistoricalBlockerCleanup, 'mutation: false', 'historical blocker cleanup report missing no-mutation boundary');
+
 console.log('catalog.bundle.v1 Warehouse component-line rollback boundary verified');
 
 
@@ -305,7 +310,7 @@ const staleGoal24WarehouseMarkers = [
   '[MISSING: target component stock rows]',
   '[MISSING: Orders/Payments provider-success, provider-cancel, refund, and post-fulfillment cancellation event contract that maps to Warehouse fulfill/cancel/return calls]',
 ];
-const sourceDefinedCrossServiceMappingMarker = '[RESOLVED/NARROWED: Orders/Payments completed|failed|cancelled source mapping plus Orders cancellation cleanup gate are source-defined; runtime remains blocked on exact provider proof, target order hash/state, named actor, side-effect acknowledgements, live Warehouse readback, and final mutation approval]';
+const sourceDefinedCrossServiceMappingMarker = '[RESOLVED/NARROWED: Orders/Payments completed|failed|cancelled source mapping plus Orders cancellation cleanup gate are source-defined; runtime remains blocked on exact provider proof, target order hash/state, named actor, side-effect acknowledgements, Warehouse live readback, bounded final approval, and exact selected reservation lookup state]';
 for (const [label, source] of [
   ['approval packet', approvalPacket],
   ['validation report', validation],
@@ -318,8 +323,8 @@ for (const [label, source] of [
 ]) {
   assertIncludes(source, '[RESOLVED/NARROWED: candidate target component stock rows and max component quantity are source-documented from Catalog packet]', `${label} missing candidate target facts marker`);
   assertIncludes(source, '[RESOLVED/NARROWED: live current target row readback at execution time captured through protected Warehouse API without mutation]', `${label} missing resolved live target row readback marker`);
-  assertIncludes(source, '[RESOLVED/NARROWED: approval intake 003 supplies the bounded smoke execution window]; [MISSING: Warehouse hold/release duration]', `${label} missing renewed Warehouse window blocker`);
-  assertIncludes(source, '[MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]', `${label} missing final Warehouse mutation approval blocker`);
+  assertIncludes(source, '[RESOLVED/NARROWED: Warehouse hold/release duration is owner-approved for the bounded Goal 24 smoke as 15 minutes source-default TTL or shorter caller-supplied expiresAt]; [MISSING: exact selected Warehouse reservation lookup state for cleanup]', `${label} missing renewed Warehouse window blocker`);
+  assertIncludes(source, '[RESOLVED/NARROWED: final owner approval before live Warehouse reservation mutation is bounded to one Goal 24 component-line smoke attempt with max quantity 1 per component after live readback]', `${label} missing final bounded Warehouse approval marker`);
 }
 
 for (const [label, source] of [
@@ -334,8 +339,8 @@ assertIncludes(warehouseLiveTargetReadbackRuntime, 'token_output: false', 'live 
 assertIncludes(warehouseLiveTargetReadbackRuntime, 'secret_output: false', 'live target readback runtime report missing secret output boundary');
 assertIncludes(warehouseLiveTargetReadbackRuntime, 'raw_ids_printed: false', 'live target readback runtime report missing raw id output boundary');
 assertIncludes(warehouseLiveTargetReadbackRuntime, 'reserved=0', 'live target readback runtime report missing reserved count evidence');
-assertIncludes(warehouseLiveTargetReadbackRuntime, '[MISSING: Warehouse hold/release duration]', 'live target readback runtime report must preserve hold/release blocker');
-assertIncludes(warehouseLiveTargetReadbackRuntime, '[MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]', 'live target readback runtime report must preserve final mutation approval blocker');
+assertIncludes(warehouseLiveTargetReadbackRuntime, '[MISSING: exact selected Warehouse reservation lookup state for cleanup]', 'live target readback runtime report must preserve selected Warehouse reservation lookup blocker');
+assertIncludes(warehouseLiveTargetReadbackRuntime, '[RESOLVED/NARROWED: final owner approval before live Warehouse reservation mutation is bounded to one Goal 24 component-line smoke attempt with max quantity 1 per component after live readback]', 'live target readback runtime report must preserve final bounded approval marker');
 
 for (const [label, source] of [
   ['validation report', validation],
