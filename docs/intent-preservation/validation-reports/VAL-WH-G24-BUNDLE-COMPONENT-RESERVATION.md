@@ -135,8 +135,8 @@ Warehouse cleanup operation decision:
 
 Result:
 
-- `[RESOLVED/NARROWED: candidate target component stock rows and max component quantity are source-documented from Catalog packet]; [MISSING: live current target row readback at execution time]; [RESOLVED/NARROWED: approval intake 003 supplies the bounded smoke execution window]; [MISSING: Warehouse hold/release duration]; [MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]`
-- `[RESOLVED/NARROWED: Warehouse owner-approved cleanup operation for reserved-only, fulfilled/stock-decremented, return, partial component failure, and timeout component-line states; candidate max quantity is source-documented from Catalog packet, while live current row readback, renewed hold/release duration, and final mutation approval remain missing]`
+- `[RESOLVED/NARROWED: candidate target component stock rows and max component quantity are source-documented from Catalog packet]; [RESOLVED/NARROWED: live current target row readback at execution time captured through protected Warehouse API without mutation]; [RESOLVED/NARROWED: approval intake 003 supplies the bounded smoke execution window]; [MISSING: Warehouse hold/release duration]; [MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]`
+- `[RESOLVED/NARROWED: Warehouse owner-approved cleanup operation for reserved-only, fulfilled/stock-decremented, return, partial component failure, and timeout component-line states; candidate max quantity is source-documented from Catalog packet, while renewed hold/release duration and final mutation approval remain missing]`
 
 Remaining blockers:
 
@@ -213,7 +213,7 @@ Decision matrix update:
 
 Result:
 
-- `[RESOLVED/NARROWED: Warehouse owner-approved cleanup operation for reserved-only, fulfilled/stock-decremented, return, partial component failure, and timeout component-line states; candidate max quantity is source-documented from Catalog packet, while live current row readback, renewed hold/release duration, and final mutation approval remain missing]`
+- `[RESOLVED/NARROWED: Warehouse owner-approved cleanup operation for reserved-only, fulfilled/stock-decremented, return, partial component failure, and timeout component-line states; candidate max quantity is source-documented from Catalog packet, while renewed hold/release duration and final mutation approval remain missing]`
 - `[RESOLVED/NARROWED: approval intake 003 supplies the bounded smoke execution window]; [MISSING: Warehouse hold/release duration]; [MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]` remains unresolved.
 - `[MISSING: final integration owner approval before any live Warehouse reservation, fulfillment, decrement, cancel, return, expire, or release smoke]` remains unresolved.
 
@@ -252,7 +252,7 @@ Deterministic packet result:
 Remaining blockers:
 
 - `[RESOLVED/NARROWED: approval intake 003 supplies the bounded smoke execution window]; [MISSING: Warehouse hold/release duration]; [MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]` remains unresolved.
-- `[RESOLVED/NARROWED: candidate target component stock rows and max component quantity are source-documented from Catalog packet]; [MISSING: live current target row readback at execution time]; [RESOLVED/NARROWED: approval intake 003 supplies the bounded smoke execution window]; [MISSING: Warehouse hold/release duration]; [MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]` remains unresolved.
+- `[RESOLVED/NARROWED: candidate target component stock rows and max component quantity are source-documented from Catalog packet]; [RESOLVED/NARROWED: live current target row readback at execution time captured through protected Warehouse API without mutation]; [RESOLVED/NARROWED: approval intake 003 supplies the bounded smoke execution window]; [MISSING: Warehouse hold/release duration]; [MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]` remains unresolved.
 - `[MISSING: final integration owner approval before any live Warehouse reservation, fulfillment, decrement, cancel, return, expire, or release smoke]` remains unresolved.
 
 ## 2026-07-04 Warehouse Hold Window Blocker Preservation Refresh
@@ -277,6 +277,35 @@ Decision:
 - `[RESOLVED/NARROWED: approval intake 003 supplies the bounded smoke execution window]; [MISSING: Warehouse hold/release duration]; [MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]` remains unresolved and must be answered by Commerce/Warehouse owner before any Fiobanka paid/provider stock effect.
 - Source-policy operation selection remains preserved: `release` for active reserved-only holds, `expire` only for TTL-owned expiry, `cancel` for approved fulfilled cancellation/reversal, `return` for approved inventory return, line-by-line cleanup for partial component failures, and no operation for unknown/ambiguous component state.
 - No aggregate bundle reservation, synthetic bundle SKU stock, or aggregate bundle cleanup operation is approved.
+
+## 2026-07-04 Owner Approval Intake 004 Warehouse Hold Window Narrowing
+
+Owner Approval Intake 004 - Bounded Warehouse Hold Window
+
+Scope: Warehouse-owned docs/static verifier only. No live checkout, payment creation, provider callback, refund, correction, Orders mutation, Warehouse reservation, stock mutation, fulfillment, release, cancel, return, expire, deployment, migration, secret read, production DB mutation, or raw evidence output was performed.
+
+Intent Preservation Chain: Vision -> Goal Impact -> System -> Feature -> Task -> Execution Plan -> Coding Prompt -> Code -> Validation -> State Update.
+
+- Vision: future Fiobanka paid/provider smoke must use Warehouse component stock only inside a bounded owner-approved hold window.
+- Goal Impact: narrows `[MISSING: Warehouse hold/release duration]` and `[MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]` for exactly one Goal 24 component-line smoke attempt while preserving downstream provider, Orders, cleanup, live-readback, and evidence blockers.
+- System: Warehouse owns component-line stock holds and cleanup operation choice; Orders owns lifecycle state; Payments owns provider/bank evidence; FlipFlop/channel owns checkout and customer-visible cleanup.
+- Feature: bounded Warehouse hold-window approval for Goal 24.
+- Task: record owner approval intake 004 as Warehouse-scoped source evidence with explicit limits and abort conditions.
+- Execution Plan: source docs/verifier only; do not run any live mutation or provider/order/warehouse/channel side effect.
+- Coding Prompt: do not infer provider proof, Orders cleanup approval, or final smoke completion from this Warehouse-only approval.
+- Code: `docs/contracts/goal24-warehouse-cleanup-approval-packet.md`, this report, `docs/IMPLEMENTATION_STATE.md`, `docs/orchestrator/STATUS.md`, and `scripts/verify-bundle-component-reservation-contract.js`.
+- Validation: `npm run verify:bundle-component-reservation` and `git diff --check`.
+- State Update: Warehouse hold duration and final Warehouse mutation approval are narrowed for one bounded attempt; runtime smoke remains blocked on non-Warehouse facts and live readback immediately before checkout.
+
+Decision:
+
+- `[RESOLVED/NARROWED: Warehouse hold/release duration is owner-approved for the bounded Goal 24 smoke as 15 minutes source-default TTL or shorter caller-supplied expiresAt]`.
+- `[RESOLVED/NARROWED: final owner approval before live Warehouse reservation mutation is bounded to one Goal 24 component-line smoke attempt with max quantity 1 per component after live readback]`.
+- `[MISSING: live current target row readback at execution time]` remains a hard stop immediately before checkout.
+- `[MISSING: deterministic Warehouse component reservation state for cleanup]` remains a hard stop after order creation and before any cleanup mutation.
+- `[MISSING: Payments provider proof and bank/refund authority before fulfilled cleanup]`, `[MISSING: exact Orders target order hash/state and sideEffectsHandled acknowledgements]`, and `[MISSING: final redacted evidence path for required provider, Orders, Warehouse, and channel cleanup proof]` remain outside Warehouse authority.
+
+No aggregate bundle reservation, synthetic bundle SKU stock, or aggregate bundle cleanup operation is approved.
 
 
 Current branch validation:

@@ -32,7 +32,7 @@ Vision -> Goal Impact -> System -> Feature -> Task -> Execution Plan -> Coding P
 - Feature: Warehouse live target readback wording sync.
 - Task: update Warehouse cleanup approval packet, validation report, status/state, and verifier so source-documented candidate rows/max quantity do not imply live row readback or cleanup authorization.
 - Execution Plan: docs/report/verifier only; no checkout, reservation, fulfillment, release, cancel, return, expire, Orders mutation, Payments/provider call, deploy, migration, DB read/write, secret/token output, or raw evidence capture.
-- Coding Prompt: do not infer stock effects from Payments refund state or Catalog candidate facts; preserve `[MISSING: live current target row readback at execution time]` and `[MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]`.
+- Coding Prompt: do not infer stock effects from Payments refund state or Catalog candidate facts; preserve `[RESOLVED/NARROWED: live current target row readback at execution time captured through protected Warehouse API without mutation]` and `[MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]`.
 - Code: `docs/contracts/goal24-warehouse-cleanup-approval-packet.md`, `docs/contracts/catalog-bundle-component-reservation-contract.md`, `docs/intent-preservation/validation-reports/VAL-WH-G24-BUNDLE-COMPONENT-RESERVATION.md`, `docs/orchestrator/STATUS.md`, `docs/IMPLEMENTATION_STATE.md`, and `scripts/verify-bundle-component-reservation-contract.js`.
 - Validation: `npm run verify:bundle-component-reservation`, `node --check scripts/verify-bundle-component-reservation-contract.js`, `npm run build`, and `git diff --check`.
 - State Update: source candidate facts remain resolved/narrowed; live Warehouse readback and mutation approval remain blocked.
@@ -43,7 +43,7 @@ Vision -> Goal Impact -> System -> Feature -> Task -> Execution Plan -> Coding P
 
 ## Still Blocked
 
-- `[MISSING: live current target row readback at execution time]`
+- `[RESOLVED/NARROWED: live current target row readback at execution time captured through protected Warehouse API without mutation]`
 - `[RESOLVED/NARROWED: approval intake 003 supplies the bounded smoke execution window]; [MISSING: Warehouse hold/release duration]`
 - `[MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]`
 - `[MISSING: deterministic Warehouse component reservation state for cleanup]`
