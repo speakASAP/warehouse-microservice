@@ -15,6 +15,7 @@ const stockTests = read('test/stock.service.spec.ts');
 const stockService = read('src/stock/stock.service.ts');
 const contract = read('docs/contracts/catalog-bundle-component-reservation-contract.md');
 const validation = read('docs/intent-preservation/validation-reports/VAL-WH-G24-BUNDLE-COMPONENT-RESERVATION.md');
+const warehouseLiveTargetReadbackWordingSync = read('reports/validation/VAL-GOAL-24-warehouse-live-target-readback-wording-sync-2026-07-04.md');
 const approvalPacket = read('docs/contracts/goal24-warehouse-cleanup-approval-packet.md');
 const catalogApprovalPacket = read('/home/ssf/Documents/Github/catalog-microservice/docs/orchestrator/2026-07-03-goal24-paid-provider-smoke-approval-packet.md');
 
@@ -87,7 +88,7 @@ const validationMarkers = [
   'Fulfill/decrement: `StockService.fulfillReservation`',
   'Cancel after fulfillment: `StockService.cancelReservation`',
   'Return after fulfillment: `StockService.returnReservation`',
-  '[MISSING: owner-approved Warehouse stock hold/release window and max quantity]',
+  '[MISSING: renewed owner-approved execution window and Warehouse hold/release duration]; [MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]',
   'Paid Bundle Cleanup Semantics Refresh',
   'Reserved-only active hold before fulfillment',
   'Fulfilled/stock-decremented cancellation rollback',
@@ -105,7 +106,7 @@ for (const marker of validationMarkers) {
 
 const approvalPacketMarkers = [
   'WH-G24-WAREHOUSE-CLEANUP-APPROVAL-PACKET',
-  '[MISSING: owner-approved Warehouse stock hold/release window and max quantity]',
+  '[MISSING: renewed owner-approved execution window and Warehouse hold/release duration]; [MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]',
   '[MISSING: owner-approved operation for reserved-only, fulfilled/stock-decremented, return, partial component failure, and timeout states, including max quantity and hold/release window]',
   '[MISSING: owner-approved post-fulfillment cancellation/return workflow that maps a Payments refund or correction to Orders and Warehouse without inferring stock effects]',
   'A refund alone is not inventory-return evidence',
@@ -124,7 +125,7 @@ for (const marker of approvalPacketMarkers) {
 
 const cleanupRefreshMarkers = [
   'Warehouse Cleanup Approval Packet Refresh',
-  '[MISSING: owner-approved Warehouse stock hold/release window and max quantity]` remains unresolved',
+  '[MISSING: renewed owner-approved execution window and Warehouse hold/release duration]; [MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]` remains unresolved',
   '[MISSING: owner-approved post-fulfillment cancellation/return workflow that maps a Payments refund or correction to Orders and Warehouse without inferring stock effects]` remains unresolved',
   'It grants no runtime permission.',
   'Reserved/Timeout Cleanup Narrowing',
@@ -193,7 +194,7 @@ for (const marker of [
 
 const holdWindowPreservationMarkers = [
   'Warehouse Hold Window Blocker Preservation Refresh',
-  '[MISSING: owner-approved Warehouse stock hold/release window and max quantity]` remains unresolved',
+  '[MISSING: renewed owner-approved execution window and Warehouse hold/release duration]; [MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]` remains unresolved',
   'No aggregate bundle reservation, synthetic bundle SKU stock, or aggregate bundle cleanup operation is approved.',
 ];
 for (const marker of holdWindowPreservationMarkers) {
@@ -201,3 +202,50 @@ for (const marker of holdWindowPreservationMarkers) {
 }
 
 console.log('catalog.bundle.v1 Warehouse component-line rollback boundary verified');
+
+
+const staleGoal24WarehouseMarkers = [
+  '[MISSING: target component stock rows]',
+  '[MISSING: owner-approved Warehouse stock hold/release window and max quantity]',
+];
+for (const [label, source] of [
+  ['approval packet', approvalPacket],
+  ['validation report', validation],
+  ['component reservation contract', contract],
+  ['implementation state', read('docs/IMPLEMENTATION_STATE.md')],
+  ['orchestrator status', read('docs/orchestrator/STATUS.md')],
+  ['live target readback wording sync report', warehouseLiveTargetReadbackWordingSync],
+]) {
+  assertIncludes(source, '[RESOLVED/NARROWED: candidate target component stock rows and max component quantity are source-documented from Catalog packet]', `${label} missing candidate target facts marker`);
+  assertIncludes(source, '[MISSING: live current target row readback at execution time]', `${label} missing live target row readback blocker`);
+  assertIncludes(source, '[MISSING: renewed owner-approved execution window and Warehouse hold/release duration]', `${label} missing renewed Warehouse window blocker`);
+  assertIncludes(source, '[MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]', `${label} missing final Warehouse mutation approval blocker`);
+}
+for (const [label, source] of [
+  ['approval packet', approvalPacket],
+  ['validation report', validation],
+  ['component reservation contract', contract],
+]) {
+  for (const marker of staleGoal24WarehouseMarkers) {
+    assert(!source.includes(marker), `${label} still contains stale Warehouse marker ${marker}`);
+  }
+}
+for (const boundary of [
+  'mutation: false',
+  'live_checkout_executed: false',
+  'payment_creation: false',
+  'provider_call: false',
+  'orders_mutation: false',
+  'warehouse_mutation: false',
+  'warehouse_reservation: false',
+  'warehouse_cleanup: false',
+  'deployment: false',
+  'migration: false',
+  'db_write: false',
+  'db_read: false',
+  'secret_output: false',
+  'token_output: false',
+  'raw_customer_or_payment_evidence: false',
+]) {
+  assertIncludes(warehouseLiveTargetReadbackWordingSync, boundary, `live target readback wording sync boundary ${boundary}`);
+}
