@@ -60,7 +60,7 @@ This source-only readiness pass proves the Warehouse-owned rollback mapping for 
 | Return after fulfillment | `StockService.returnReservation` | restocks `quantity`, keeps `reserved=0`, writes `returned` reservation and `return` movement | `test/stock.service.spec.ts` covers `restocks inventory for a fulfilled reservation return` | source-proven only; provider/refund/return authorization remains `[MISSING: ...]` |
 | Aggregate bundle identity attempt | `ReserveStockDto` / `ReservationLifecycleDto` | rejected before stock identity mutation | `test/reservations.service.spec.ts` covers bundle aggregate rejection; verifier checks DTO forbidden fields | fail-closed source boundary |
 
-Result: `[RESOLVED: Warehouse source evidence for component-line stock hold/release/fulfill/cancel/return mapping]` for existing component product reservations. The original runtime blocker is only narrowed, not globally cleared: `[MISSING: owner-approved paid/provider checkout smoke with stock and refund/cancel rollback plan]` and `[MISSING: Orders/Payments provider-success, provider-cancel, refund, and post-fulfillment cancellation event contract that maps to Warehouse fulfill/cancel/return calls]` still block any live paid/provider stock effect.
+Result: `[RESOLVED: Warehouse source evidence for component-line stock hold/release/fulfill/cancel/return mapping]` for existing component product reservations. The original runtime blocker is only narrowed, not globally cleared: `[MISSING: owner-approved paid/provider checkout smoke with stock and refund/cancel rollback plan]` and `[RESOLVED/NARROWED: Orders/Payments completed|failed|cancelled source mapping plus Orders cancellation cleanup gate are source-defined; runtime remains blocked on exact provider proof, target order hash/state, named actor, side-effect acknowledgements, live Warehouse readback, and final mutation approval]` still block any live paid/provider stock effect.
 
 ## Paid/Provider Checkout Smoke Boundary
 
@@ -143,7 +143,7 @@ The Warehouse-owned approval packet for the remaining stock-window and post-fulf
 - `[RESOLVED/NARROWED: owner-approved Warehouse stock decrement/fulfillment rollback criteria for paid bundle smoke at source-policy level; live stock window and max quantity remain missing]`
 - `[RESOLVED/NARROWED: Warehouse owner-approved cleanup operation for reserved-only, fulfilled/stock-decremented, return, partial component failure, and timeout component-line states; max quantity and live hold/release window remain missing]`
 - `[RESOLVED/NARROWED: deterministic Warehouse component-line cleanup packet for reserved-only, fulfilled, cancel, return, partial failure, and timeout states]`
-- `[MISSING: Orders/Payments provider-success, provider-cancel, refund, and post-fulfillment cancellation event contract that maps to Warehouse fulfill/cancel/return calls]`
+- `[RESOLVED/NARROWED: Orders/Payments completed|failed|cancelled source mapping plus Orders cancellation cleanup gate are source-defined; runtime remains blocked on exact provider proof, target order hash/state, named actor, side-effect acknowledgements, live Warehouse readback, and final mutation approval]`
 - `[MISSING: final integration owner approval before any live Warehouse reservation, fulfillment, decrement, cancel, return, or release smoke]`
 
 ## Parallel Execution
