@@ -20,6 +20,7 @@
     "test": "jest",
     "check:hosted-auth": "node scripts/check-hosted-auth-contract.js",
     "verify:stock-authority-live": "node scripts/verify-stock-authority-live.js",
+    "verify:goal24-warehouse-no-mutation-ack": "node scripts/verify-goal24-warehouse-no-mutation-ack.js",
     "verify:goal24-selected-reservation-lookup": "node scripts/verify-goal24-selected-reservation-lookup.js",
     "verify:bundle-component-reservation": "node scripts/verify-bundle-component-reservation-contract.js",
     "test:watch": "jest --watch",
