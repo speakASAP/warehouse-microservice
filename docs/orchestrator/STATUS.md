@@ -14,7 +14,7 @@ Resolved/narrowed blocker:
 Remaining gates:
 
 - `[RESOLVED/NARROWED: candidate target component stock rows and max component quantity are source-documented from Catalog packet]; [MISSING: live current target row readback at execution time]; [MISSING: renewed owner-approved execution window and Warehouse hold/release duration]; [MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]`
-- `[MISSING: Orders/Payments provider-success, provider-cancel, refund, and post-fulfillment cancellation event contract that maps to Warehouse fulfill/cancel/return calls]`
+- `[RESOLVED/NARROWED: Orders/Payments completed|failed|cancelled source mapping plus Orders cancellation cleanup gate are source-defined; runtime remains blocked on exact provider proof, target order hash/state, named actor, side-effect acknowledgements, live Warehouse readback, and final mutation approval]`
 - `[MISSING: final integration owner approval before any live Warehouse reservation, fulfillment, decrement, cancel, return, expire, or release smoke]`
 
 Boundary decision: no Warehouse source reservation behavior, live stock, live reservation, fulfillment, decrement, release, cancel, return, expire, provider call, Orders mutation, Payments mutation, migration, deploy, Kubernetes manifest, or secret value was changed or executed.
@@ -73,7 +73,7 @@ Remaining gates:
 
 - `[MISSING: owner-approved paid/provider checkout smoke with stock and refund/cancel rollback plan]`
 - `[RESOLVED/NARROWED: candidate target component stock rows and max component quantity are source-documented from Catalog packet]; [MISSING: live current target row readback at execution time]; [MISSING: renewed owner-approved execution window and Warehouse hold/release duration]; [MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]`
-- `[MISSING: Orders/Payments provider-success, provider-cancel, refund, and post-fulfillment cancellation event contract that maps to Warehouse fulfill/cancel/return calls]`
+- `[RESOLVED/NARROWED: Orders/Payments completed|failed|cancelled source mapping plus Orders cancellation cleanup gate are source-defined; runtime remains blocked on exact provider proof, target order hash/state, named actor, side-effect acknowledgements, live Warehouse readback, and final mutation approval]`
 - `[MISSING: final integration owner approval before any live Warehouse reservation, fulfillment, decrement, cancel, return, or release smoke]`
 
 Boundary decision: no Warehouse source reservation behavior, live stock, live reservation, fulfillment, decrement, release, return, provider call, Orders mutation, Payments mutation, migration, deploy, Kubernetes manifest, or secret value was changed or executed.
@@ -82,14 +82,14 @@ Next action: hand the operation matrix back to Orders/Catalog integration; keep 
 
 # 2026-07-03 - Goal 24 Paid/Provider Bundle Rollback Readiness
 
-Result: Warehouse paid/provider bundle readiness remains fail-closed beyond existing pending-order reservation/release evidence. The Warehouse-owned component-line lifecycle is documented as `reserve`, `release`, `fulfill`, `cancel`, `expire`, and `return`, but Warehouse cannot approve a paid/provider checkout smoke until an owner-approved cross-service plan maps Orders/Payments provider-success, provider-cancel, refund, and post-fulfillment cancellation events to component-line Warehouse calls.
+Result: Warehouse paid/provider bundle readiness remains fail-closed beyond existing pending-order reservation/release evidence. The Warehouse-owned component-line lifecycle is documented as `reserve`, `release`, `fulfill`, `cancel`, `expire`, and `return`, but Warehouse cannot approve a paid/provider checkout smoke until the runtime packet supplies exact provider proof, target order hash/state, named Orders actor, side-effect acknowledgements, live Warehouse readback, and final Warehouse mutation approval for the already source-defined mapping.
 
 IPS chain: Vision -> Warehouse remains stock and reservation authority for component product lines only; Goal Impact -> `[MISSING: owner-approved paid/provider checkout smoke with stock and refund/cancel rollback plan]` is narrowed but not resolved; System -> Catalog owns `catalog.bundle.v1`, Orders owns order lifecycle, Payments/provider owners own payment/refund/cancel events, Warehouse owns component stock effects; Feature -> paid/provider rollback readiness boundary; Task -> harden Warehouse docs/verifier without live mutation; Execution Plan -> docs/verifier/state only, no deploy, migration, live reservation, fulfillment decrement, release, provider call, Orders mutation, Payments mutation, or secret read; Coding Prompt -> fail closed and do not infer paid/provider approval from source sign-off; Code -> `docs/contracts/catalog-bundle-component-reservation-contract.md`, `scripts/verify-bundle-component-reservation-contract.js`, validation/status/state docs; Validation -> `npm test -- --runInBand test/reservations.service.spec.ts` passed 1 suite / 4 tests; `npm run verify:bundle-component-reservation` passed; `npm run build` passed; `git diff --check` passed.
 
 Blockers:
 
 - `[MISSING: owner-approved paid/provider checkout smoke with stock and refund/cancel rollback plan]`
-- `[MISSING: Orders/Payments provider-success, provider-cancel, refund, and post-fulfillment cancellation event contract that maps to Warehouse fulfill/cancel/return calls]`
+- `[RESOLVED/NARROWED: Orders/Payments completed|failed|cancelled source mapping plus Orders cancellation cleanup gate are source-defined; runtime remains blocked on exact provider proof, target order hash/state, named actor, side-effect acknowledgements, live Warehouse readback, and final mutation approval]`
 - `[MISSING: final integration owner approval before any live Warehouse reservation, fulfillment, decrement, cancel, return, or release smoke]`
 
 Boundary decision: no Warehouse source reservation behavior, live stock, live reservation, fulfillment, decrement, release, return, provider call, Orders mutation, Payments mutation, migration, deploy, Kubernetes manifest, or secret value was changed or executed.

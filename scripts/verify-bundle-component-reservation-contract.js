@@ -65,7 +65,7 @@ const contractMarkers = [
   'paid/provider bundle checkout smoke beyond the already recorded pending-order reservation and release evidence',
   'transition each active component reservation to `fulfilled`',
   'refund/cancel after fulfillment',
-  'Orders/Payments provider-success, provider-cancel, refund, and post-fulfillment cancellation event contract',
+  '[RESOLVED/NARROWED: Orders/Payments completed|failed|cancelled source mapping plus Orders cancellation cleanup gate are source-defined; runtime remains blocked on exact provider proof, target order hash/state, named actor, side-effect acknowledgements, live Warehouse readback, and final mutation approval]',
   'Paid Bundle Cleanup Operation Matrix',
   'Reserved-only `active` hold, no stock decrement',
   'Approved Warehouse operation',
@@ -207,7 +207,9 @@ console.log('catalog.bundle.v1 Warehouse component-line rollback boundary verifi
 const staleGoal24WarehouseMarkers = [
   '[MISSING: target component stock rows]',
   '[MISSING: owner-approved Warehouse stock hold/release window and max quantity]',
+  '[MISSING: Orders/Payments provider-success, provider-cancel, refund, and post-fulfillment cancellation event contract that maps to Warehouse fulfill/cancel/return calls]',
 ];
+const sourceDefinedCrossServiceMappingMarker = '[RESOLVED/NARROWED: Orders/Payments completed|failed|cancelled source mapping plus Orders cancellation cleanup gate are source-defined; runtime remains blocked on exact provider proof, target order hash/state, named actor, side-effect acknowledgements, live Warehouse readback, and final mutation approval]';
 for (const [label, source] of [
   ['approval packet', approvalPacket],
   ['validation report', validation],
@@ -224,9 +226,17 @@ for (const [label, source] of [
   assertIncludes(source, '[MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]', `${label} missing final Warehouse mutation approval blocker`);
 }
 for (const [label, source] of [
+  ['validation report', validation],
+  ['component reservation contract', contract],
+  ['orchestrator status', read('docs/orchestrator/STATUS.md')],
+]) {
+  assertIncludes(source, sourceDefinedCrossServiceMappingMarker, `${label} missing source-defined cross-service mapping marker`);
+}
+for (const [label, source] of [
   ['approval packet', approvalPacket],
   ['validation report', validation],
   ['component reservation contract', contract],
+  ['orchestrator status', read('docs/orchestrator/STATUS.md')],
 ]) {
   for (const marker of staleGoal24WarehouseMarkers) {
     assert(!source.includes(marker), `${label} still contains stale Warehouse marker ${marker}`);

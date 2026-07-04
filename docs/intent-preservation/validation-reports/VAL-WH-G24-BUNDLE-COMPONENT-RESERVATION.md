@@ -95,7 +95,7 @@ Evidence matrix:
 - Return after fulfillment: `StockService.returnReservation` and focused stock tests prove return restocks `quantity`, marks `returned`, and records a `return` movement.
 - Aggregate bundle identity: DTO guards and reservation tests prove `bundleId`, `bundleSku`, `bundleStockId`, and `bundleContractVersion` cannot become Warehouse reservation identity.
 
-Result: `[RESOLVED: Warehouse source evidence for component-line stock hold/release/fulfill/cancel/return mapping]`. Runtime remains blocked on `[MISSING: owner-approved paid/provider checkout smoke with stock and refund/cancel rollback plan]`, `[MISSING: renewed owner-approved execution window and Warehouse hold/release duration]; [MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]`, and `[MISSING: Orders/Payments provider-success, provider-cancel, refund, and post-fulfillment cancellation event contract that maps to Warehouse fulfill/cancel/return calls]`.
+Result: `[RESOLVED: Warehouse source evidence for component-line stock hold/release/fulfill/cancel/return mapping]`. Runtime remains blocked on `[MISSING: owner-approved paid/provider checkout smoke with stock and refund/cancel rollback plan]`, `[MISSING: renewed owner-approved execution window and Warehouse hold/release duration]; [MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]`, and `[RESOLVED/NARROWED: Orders/Payments completed|failed|cancelled source mapping plus Orders cancellation cleanup gate are source-defined; runtime remains blocked on exact provider proof, target order hash/state, named actor, side-effect acknowledgements, live Warehouse readback, and final mutation approval]`.
 
 Current branch validation:
 
@@ -142,7 +142,7 @@ Remaining blockers:
 
 - `[MISSING: owner-approved paid/provider checkout smoke with stock and refund/cancel rollback plan]`
 - `[MISSING: renewed owner-approved execution window and Warehouse hold/release duration]; [MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]`
-- `[MISSING: Orders/Payments provider-success, provider-cancel, refund, and post-fulfillment cancellation event contract that maps to Warehouse fulfill/cancel/return calls]`
+- `[RESOLVED/NARROWED: Orders/Payments completed|failed|cancelled source mapping plus Orders cancellation cleanup gate are source-defined; runtime remains blocked on exact provider proof, target order hash/state, named actor, side-effect acknowledgements, live Warehouse readback, and final mutation approval]`
 - `[MISSING: final integration owner approval before any live Warehouse reservation, fulfillment, decrement, cancel, return, or release smoke]`
 
 Parallel execution:
