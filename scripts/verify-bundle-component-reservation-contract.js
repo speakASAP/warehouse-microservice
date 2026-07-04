@@ -16,6 +16,7 @@ const stockService = read('src/stock/stock.service.ts');
 const contract = read('docs/contracts/catalog-bundle-component-reservation-contract.md');
 const validation = read('docs/intent-preservation/validation-reports/VAL-WH-G24-BUNDLE-COMPONENT-RESERVATION.md');
 const warehouseLiveTargetReadbackWordingSync = read('reports/validation/VAL-GOAL-24-warehouse-live-target-readback-wording-sync-2026-07-04.md');
+const warehouseLiveTargetReadbackRuntime = read('reports/validation/VAL-GOAL-24-warehouse-live-target-readback-runtime-2026-07-04.md');
 const approvalPacket = read('docs/contracts/goal24-warehouse-cleanup-approval-packet.md');
 const catalogApprovalPacket = read('/home/ssf/Documents/Github/catalog-microservice/docs/orchestrator/2026-07-03-goal24-paid-provider-smoke-approval-packet.md');
 
@@ -266,6 +267,22 @@ for (const [label, source] of [
   assertIncludes(source, '[RESOLVED/NARROWED: approval intake 003 supplies the bounded smoke execution window]; [MISSING: Warehouse hold/release duration]', `${label} missing renewed Warehouse window blocker`);
   assertIncludes(source, '[MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]', `${label} missing final Warehouse mutation approval blocker`);
 }
+
+for (const [label, source] of [
+  ['live target readback runtime report', warehouseLiveTargetReadbackRuntime],
+  ['implementation state', read('docs/IMPLEMENTATION_STATE.md')],
+  ['orchestrator status', read('docs/orchestrator/STATUS.md')],
+]) {
+  assertIncludes(source, '[RESOLVED/NARROWED: live current target row readback at execution time captured through protected Warehouse API without mutation]', `${label} missing live target readback runtime marker`);
+  assert(source.includes('mutation=false') || source.includes('mutation: false'), `${label} missing no-mutation evidence`);
+}
+assertIncludes(warehouseLiveTargetReadbackRuntime, 'token_output: false', 'live target readback runtime report missing token output boundary');
+assertIncludes(warehouseLiveTargetReadbackRuntime, 'secret_output: false', 'live target readback runtime report missing secret output boundary');
+assertIncludes(warehouseLiveTargetReadbackRuntime, 'raw_ids_printed: false', 'live target readback runtime report missing raw id output boundary');
+assertIncludes(warehouseLiveTargetReadbackRuntime, 'reserved=0', 'live target readback runtime report missing reserved count evidence');
+assertIncludes(warehouseLiveTargetReadbackRuntime, '[MISSING: Warehouse hold/release duration]', 'live target readback runtime report must preserve hold/release blocker');
+assertIncludes(warehouseLiveTargetReadbackRuntime, '[MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]', 'live target readback runtime report must preserve final mutation approval blocker');
+
 for (const [label, source] of [
   ['validation report', validation],
   ['component reservation contract', contract],
