@@ -1,3 +1,35 @@
+
+## 2026-07-04 Catalog Candidate Target Facts Reconcile
+
+Scope: Warehouse-owned docs/static verifier only. No live checkout, payment creation, provider callback, refund, correction, Orders mutation, Warehouse reservation, stock mutation, fulfillment, release, cancel, return, expire, deployment, migration, secret read, production DB mutation, or raw reservation/order/payment/customer output was performed.
+
+Intent Preservation Chain: Vision -> Goal Impact -> System -> Feature -> Task -> Execution Plan -> Coding Prompt -> Code -> Validation -> State Update.
+
+- Vision: future Fiobanka paid/provider smoke can use Warehouse stock only when candidate target facts, live timing, and mutation approval are separated precisely.
+- Goal Impact: narrows the target-row/max-quantity blocker to source-documented candidate facts while preserving live window and final approval hard stops.
+- System: Catalog documents candidate bundle/component facts; Warehouse owns live stock rows and reservation cleanup; Orders owns exact target order lifecycle; Payments owns provider/refund evidence.
+- Feature: Catalog candidate target facts reconciliation for Warehouse cleanup packet.
+- Task: consume current Catalog/Orders/Payments/FlipFlop head-sync evidence into Warehouse wording without approving runtime stock effects.
+- Execution Plan: update Warehouse approval packet, validation report, static verifier, state/task notes only.
+- Coding Prompt: do not infer live stock availability, hold duration, target order id, or mutation approval from Catalog candidate facts.
+- Code: `docs/contracts/goal24-warehouse-cleanup-approval-packet.md`, this report, `scripts/verify-bundle-component-reservation-contract.js`, state/task docs.
+- Validation: static verifier, focused stock/reservation tests, build, and diff check.
+- State Update: [RESOLVED/NARROWED: candidate target component stock rows and max component quantity are source-documented from Catalog packet]; [MISSING: renewed owner-approved execution window and Warehouse hold/release duration]; [MISSING: final owner approval before any live Warehouse reservation/cleanup mutation].
+
+Catalog source packet facts consumed:
+
+- target bundle `919be990-1c76-4f9c-b100-829281c6a709`.
+- component product `ce4a51aa-2d12-4ab7-a965-7a36609d01fc` qty `1`.
+- component product `dbc51dde-fc66-4511-b178-f929183f4647` qty `1`.
+- Warehouse `c0de0000-0000-4000-8000-000000000013`.
+- max hold quantity `1` per component.
+
+Decision:
+
+- [RESOLVED/NARROWED: candidate target component stock rows and max component quantity are source-documented from Catalog packet].
+- [MISSING: renewed owner-approved execution window and Warehouse hold/release duration] remains unresolved because the 2026-07-03 window is historical/expired and Warehouse has no renewed hold/release duration approval.
+- [MISSING: final owner approval before any live Warehouse reservation/cleanup mutation] remains unresolved; no live Warehouse reservation, release, fulfill, cancel, return, expire, or stock mutation is approved.
+
 # VAL-WH-G24-BUNDLE-COMPONENT-RESERVATION
 
 ```yaml
