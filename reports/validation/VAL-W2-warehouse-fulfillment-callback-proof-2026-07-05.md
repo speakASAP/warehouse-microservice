@@ -1,6 +1,6 @@
 # W2 Warehouse Fulfillment Callback Proof
 
-status: runtime_admin_lifecycle_verified_customer_session_gated
+status: runtime_customer_and_admin_lifecycle_verified
 created_at: 2026-07-05
 workstream: W2 Warehouse fulfillment callback proof
 repo: /home/ssf/Documents/Github/warehouse-microservice
@@ -25,7 +25,7 @@ Coding Prompt -> Remote-only on `alfares`; do not deploy; do not mutate producti
 
 Code -> Existing Warehouse source: `src/fulfillment/fulfillment-orders.service.ts`, `src/fulfillment/fulfillment-orders.controller.ts`, `test/fulfillment-orders.service.spec.ts`, `test/fulfillment-orders.controller.spec.ts`. Existing Orders source was inspected read-only for callback projection.
 
-Validation -> Source verification passed. Runtime smoke remains gated by missing owner-approved redacted runtime packet and would require fulfillment status mutation.
+Validation -> Source verification passed. Approved runtime proof passed for Warehouse to Orders admin lifecycle and customer-scoped lifecycle readback. Focused Warehouse tests passed.
 
 ## Source Evidence
 
@@ -102,13 +102,11 @@ order fulfillment handoff verification ok
 warehouse handoff contract verification ok
 ```
 
-## Runtime Smoke Status
+## Initial Runtime Smoke Gate
 
-No live fulfillment status mutation, stock mutation, deploy, DB write, provider call, raw token readout, raw customer/address/payment/tracking output, raw provider payload output, or invented delivery provider contract was used in this W2 pass.
+Before owner approval, live smoke was gated by missing redacted runtime facts. After approval, the addenda below record admin and customer-scoped runtime proof without deploy, provider calls, token output, raw customer/address/payment/tracking output, raw provider payload output, or raw DB row output.
 
-Runtime smoke is not executed in this handoff because the available prompt does not include an owner-approved redacted runtime packet for a specific order/fulfillment row, allowed target status transition, actor, reason code, idempotency/reference policy, and expected Orders readback path.
-
-Blockers:
+Original blockers before approval:
 
 - `[MISSING: owner-approved redacted runtime packet naming the exact safe central order/fulfillment target by non-sensitive identifier or hash]`
 - `[MISSING: allowed Warehouse fulfillment transition for that target, including current status, next status, reasonCode, actor, reference/idempotency policy, and rollback/no-rollback expectation]`
@@ -117,7 +115,7 @@ Blockers:
 
 ## Verdict
 
-Warehouse fulfillment callback proof is source-verified, and the approved runtime addendum below proves the existing synthetic Warehouse fulfillment transition synced to Orders admin lifecycle. Customer-scoped lifecycle readback remains gated on an approved buyer/customer session packet.
+Warehouse fulfillment callback proof is source-verified, and the approved runtime addendum below proves the existing synthetic Warehouse fulfillment transition synced to Orders admin lifecycle. Customer-scoped lifecycle readback is now proven in the approved runtime addendum below.
 
 ## Approved Runtime Smoke Addendum
 
@@ -197,6 +195,55 @@ Runtime addendum verdict:
 - Orders admin lifecycle readback confirmed the same hashed order projected to lifecycle stage `received`, delivery status `received`, and status projection `delivered`.
 - Customer lifecycle readback was not proven because the available service token returned HTTP 403 for the customer-scoped endpoint.
 
-Remaining blocker after approved runtime addendum:
+Customer proof blocker status:
 
-- `[MISSING: approved buyer/customer bearer or session packet for customer-scoped lifecycle readback of the same hashed order without exposing token, raw customer data, address, payment data, provider payload, tracking value, or raw DB row]`
+- RESOLVED: approved Auth test bearer was used in-pod without token, email, password, customer, address, payment, tracking, provider payload, or raw DB row output; customer lifecycle readback returned HTTP 200 for the matching hashed order.
+
+## Approved Customer-Scoped Runtime Addendum
+
+approved_at: 2026-07-05
+approval_source: owner chat reply `do it yourself. I approve`
+runtime_mode: fresh synthetic Auth/customer lifecycle order
+status: customer_lifecycle_verified
+
+This approved live proof created a fresh synthetic order with the Auth test bearer subject as `customer.authSubject`, completed payment, read the resulting Warehouse fulfillment order, advanced Warehouse fulfillment from `requested` to `collecting`, and read customer lifecycle using the same private human bearer. This run intentionally performed bounded synthetic order/reservation/payment/fulfillment side effects after owner approval. It did not deploy, call providers, print raw token/email/password/customer/address/payment/tracking data, print raw DB rows, or expose provider payloads.
+
+Customer runtime result:
+
+```json
+{
+  "loginHttpStatus": 201,
+  "validateHttpStatus": 201,
+  "validateValid": true,
+  "subjectHash": "b1d9bb84c0bd",
+  "createHttpStatus": 201,
+  "orderIdHash": "7df173126b7e",
+  "initialWarehouseReserved": true,
+  "paymentHttpStatus": 200,
+  "fulfillmentReadHttpStatus": 200,
+  "fulfillmentBeforeStatus": "requested",
+  "warehouseUpdateHttpStatus": 201,
+  "warehouseAfterStatus": "collecting",
+  "customerLifecycleHttpStatus": 200,
+  "customerMatchPresent": true,
+  "customerStage": "warehouse_collecting",
+  "customerDeliveryStatus": "not_started",
+  "customerStatusProjection": "processing",
+  "tokenPrinted": false,
+  "emailPrinted": false,
+  "passwordPrinted": false,
+  "rawCustomerPrinted": false,
+  "rawAddressPrinted": false,
+  "rawPaymentPrinted": false,
+  "rawTrackingPrinted": false,
+  "stockMutation": true
+}
+```
+
+Customer runtime verdict:
+
+- Auth test login and token validation succeeded without printing bearer, email, or password.
+- Orders created a synthetic order for the private Auth subject with HTTP 201 and initial Warehouse reservation evidence.
+- Payment completion returned HTTP 200 and produced a Warehouse fulfillment order.
+- Warehouse accepted the approved fulfillment transition `requested -> collecting` with HTTP 201.
+- Customer lifecycle readback returned HTTP 200 and included the same hashed order at lifecycle stage `warehouse_collecting`, delivery status `not_started`, and status projection `processing`.
