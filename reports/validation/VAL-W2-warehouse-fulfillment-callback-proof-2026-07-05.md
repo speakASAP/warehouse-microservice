@@ -1,6 +1,6 @@
 # W2 Warehouse Fulfillment Callback Proof
 
-status: source_verified_runtime_smoke_gated
+status: runtime_admin_lifecycle_verified_customer_session_gated
 created_at: 2026-07-05
 workstream: W2 Warehouse fulfillment callback proof
 repo: /home/ssf/Documents/Github/warehouse-microservice
@@ -117,4 +117,86 @@ Blockers:
 
 ## Verdict
 
-Warehouse fulfillment callback proof is source-verified. The code path proves Warehouse status updates are persisted and sent to Orders as bounded lifecycle input, and Orders source verification proves those bounded statuses project into canonical lifecycle/read models. Runtime smoke remains gated until the missing owner-approved redacted runtime facts exist.
+Warehouse fulfillment callback proof is source-verified, and the approved runtime addendum below proves the existing synthetic Warehouse fulfillment transition synced to Orders admin lifecycle. Customer-scoped lifecycle readback remains gated on an approved buyer/customer session packet.
+
+## Approved Runtime Smoke Addendum
+
+approved_at: 2026-07-05
+approval_source: owner chat reply `I approve. Go ahead`
+runtime_mode: existing synthetic fulfillment row, no stock mutation
+status: admin_lifecycle_verified_customer_session_gated
+
+The approved live proof used the previously documented synthetic fulfillment order only. It did not create a new order, reserve stock, fulfill a reservation, deploy, read or write provider data, print raw tokens, print raw customer/address/payment/tracking data, or print raw DB rows.
+
+Runtime command summary:
+
+```bash
+ssh alfares kubectl -n statex-apps exec deployment/warehouse-microservice -- node -e <sanitized W2 fulfillment status transition>
+```
+
+Runtime result:
+
+```json
+{
+  "orderIdHash": "c076547cdbeb",
+  "beforeHttpStatus": 200,
+  "beforeFulfillmentStatus": "in_delivery",
+  "updateHttpStatus": 201,
+  "afterHttpStatus": 200,
+  "afterFulfillmentStatus": "delivered",
+  "fulfillmentOrderIdHash": "8da159bb0e89",
+  "lineCount": 1,
+  "tokenPrinted": false,
+  "rawCustomerPrinted": false,
+  "rawAddressPrinted": false,
+  "rawTrackingPrinted": false
+}
+```
+
+Orders lifecycle readback command summary:
+
+```bash
+ssh alfares kubectl -n statex-apps exec deployment/orders-microservice -- node -e <sanitized Orders lifecycle readback>
+```
+
+Orders lifecycle readback result:
+
+```json
+{
+  "orderIdHash": "c076547cdbeb",
+  "customerHttpStatus": 403,
+  "adminHttpStatus": 200,
+  "customer": {
+    "count": 0,
+    "matchPresent": false,
+    "stage": null,
+    "deliveryStatus": null,
+    "statusProjection": null,
+    "aggregateReceived": 0
+  },
+  "admin": {
+    "count": 1,
+    "matchPresent": true,
+    "stage": "received",
+    "deliveryStatus": "received",
+    "statusProjection": "delivered",
+    "aggregateReceived": 1
+  },
+  "tokenPrinted": false,
+  "rawCustomerPrinted": false,
+  "rawAddressPrinted": false,
+  "rawPaymentPrinted": false,
+  "rawTrackingPrinted": false
+}
+```
+
+Runtime addendum verdict:
+
+- Warehouse runtime accepted the approved existing synthetic fulfillment transition `in_delivery -> delivered` with HTTP 201.
+- Warehouse readback confirmed fulfillment status `delivered` for the same hashed order and hashed fulfillment order.
+- Orders admin lifecycle readback confirmed the same hashed order projected to lifecycle stage `received`, delivery status `received`, and status projection `delivered`.
+- Customer lifecycle readback was not proven because the available service token returned HTTP 403 for the customer-scoped endpoint.
+
+Remaining blocker after approved runtime addendum:
+
+- `[MISSING: approved buyer/customer bearer or session packet for customer-scoped lifecycle readback of the same hashed order without exposing token, raw customer data, address, payment data, provider payload, tracking value, or raw DB row]`
