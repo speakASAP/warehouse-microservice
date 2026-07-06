@@ -24,7 +24,8 @@
     "verify:goal24-selected-reservation-lookup": "node scripts/verify-goal24-selected-reservation-lookup.js",
     "verify:bundle-component-reservation": "node scripts/verify-bundle-component-reservation-contract.js",
     "test:watch": "jest --watch",
-    "test:cov": "jest --coverage"
+    "test:cov": "jest --coverage",
+    "verify:business-health-stock-authority-contract": "node scripts/verify-business-health-stock-authority-contract.js"
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",
