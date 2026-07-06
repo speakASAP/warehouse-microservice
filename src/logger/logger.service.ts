@@ -184,9 +184,13 @@ export class LoggerService implements NestLoggerService {
       return;
     }
 
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    const token = process.env.LOGGING_SERVICE_TOKEN?.trim();
+    if (token) headers.Authorization = `Bearer ${token}`;
+
     await fetch(url, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify(payload),
     });
   }

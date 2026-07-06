@@ -13,6 +13,7 @@ describe("LoggerService central transport", () => {
     process.env.LOGGING_SERVICE_URL = "http://logging-microservice:3367";
     delete process.env.LOGGING_SERVICE_API_PATH;
     process.env.SERVICE_NAME = "warehouse-microservice";
+    process.env.LOGGING_SERVICE_TOKEN = "warehouse-log-token";
     consoleLogSpy = jest
       .spyOn(console, "log")
       .mockImplementation(() => undefined);
@@ -53,7 +54,10 @@ describe("LoggerService central transport", () => {
       "http://logging-microservice:3367/api/logs",
       {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer warehouse-log-token",
+        },
         body: expect.any(String),
       },
     );
@@ -75,7 +79,8 @@ describe("LoggerService central transport", () => {
     });
   });
 
-  it("is fail-open when central transport rejects", async () => {
+  it("is fail-open and omits auth when central transport rejects without token", async () => {
+    delete process.env.LOGGING_SERVICE_TOKEN;
     (global.fetch as jest.Mock).mockRejectedValueOnce(
       new Error("logging unavailable"),
     );
@@ -91,6 +96,9 @@ describe("LoggerService central transport", () => {
     );
     expect(consoleErrorSpy).toHaveBeenCalledWith("stack");
     expect(global.fetch).toHaveBeenCalledTimes(1);
+    expect((global.fetch as jest.Mock).mock.calls[0][1].headers).toEqual({
+      "Content-Type": "application/json",
+    });
   });
 
   it("skips transport when LOGGING_SERVICE_URL is missing", () => {
