@@ -22,9 +22,9 @@ Execution Plan -> Use existing source/docs only; preserve invariants from `docs/
 
 Coding Prompt -> Alfares remote-only lane. Allowed files are this handoff, a narrow read-only verifier, and optional package verify script. Do not edit stock mutation source, migrations, k8s/deploy files, or production data. Do not run live synthetic mutation.
 
-Code -> `docs/orchestrator/2026-07-06-warehouse-business-health-handoff.md`, `scripts/verify-business-health-stock-authority-contract.js`, and `package.json` verify script only.
+Code -> `src/business-health/*`, `src/app.module.ts`, `scripts/verify-business-health-stock-authority-contract.js`, and this handoff document only. Endpoint path: `GET /api/business-health/stock-authority`.
 
-Validation -> `npm run verify:business-health-stock-authority-contract`; `git diff --check`.
+Validation -> `npm run verify:business-health-stock-authority-contract`; `npm run build`; `git diff --check`.
 
 ## Business-Health Contract Boundary
 
@@ -119,7 +119,10 @@ Result on 2026-07-06:
 
 ```bash
 npm run verify:business-health-stock-authority-contract
-# passed; emitted contract warehouse.stock_authority_business_health.v1, businessHealthContract stock-order-marketplace-business-health.v1, mutatesWarehouse false, checkedAssertions 11
+# passed; emitted contract warehouse.stock_authority_business_health.v1, businessHealthContract stock-order-marketplace-business-health.v1, endpoint /api/business-health/stock-authority, mutatesWarehouse false, checkedAssertions 11, forbiddenEndpointCodePatternsChecked 26
+
+npm run build
+# passed; TypeScript compiled with BusinessHealthModule wired into AppModule
 
 git diff --check
 # passed; no whitespace or conflict-marker findings
