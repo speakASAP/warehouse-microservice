@@ -60,7 +60,7 @@ describe("LoggerService central transport", () => {
 
     const body = JSON.parse((global.fetch as jest.Mock).mock.calls[0][1].body);
     expect(body).toEqual({
-      level: "log",
+      level: "info",
       message: "stock updated",
       service: "warehouse-microservice",
       timestamp: "2026-07-06T10:11:12.000Z",

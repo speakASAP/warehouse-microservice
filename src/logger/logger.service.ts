@@ -1,6 +1,7 @@
 import { Injectable, LoggerService as NestLoggerService } from "@nestjs/common";
 
 type LogLevel = "log" | "error" | "warn" | "debug" | "verbose";
+type CentralLogLevel = "info" | "error" | "warn" | "debug";
 type LoggerMetadata = Record<string, unknown>;
 
 type NormalizedLogInput = {
@@ -9,7 +10,7 @@ type NormalizedLogInput = {
 };
 
 type CentralLogPayload = {
-  level: LogLevel;
+  level: CentralLogLevel;
   message: string;
   service: string;
   timestamp: string;
@@ -152,7 +153,7 @@ export class LoggerService implements NestLoggerService {
   ): CentralLogPayload {
     const { duration_ms, correlation_id, ...metadataFields } = metadata;
     const payload: CentralLogPayload = {
-      level,
+      level: this.toCentralLevel(level),
       message,
       service: this.serviceName,
       timestamp: new Date().toISOString(),
@@ -168,6 +169,11 @@ export class LoggerService implements NestLoggerService {
     }
 
     return payload;
+  }
+
+  private toCentralLevel(level: LogLevel): CentralLogLevel {
+    if (level === "error" || level === "warn" || level === "debug") return level;
+    return "info";
   }
 
   private async postLog(
