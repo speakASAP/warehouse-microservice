@@ -770,3 +770,22 @@ td code {
     grid-template-columns: 1fr;
   }
 }
+
+.picker-stack {
+  display: grid;
+  gap: 8px;
+}
+
+.picker-field label,
+.picker-toolbar label {
+  display: grid;
+  gap: 8px;
+}
+
+.picker-toolbar {
+  align-items: end;
+}
+
+.reservation-grid {
+  margin-top: 4px;
+}

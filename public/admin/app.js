@@ -10,6 +10,7 @@
 
   const defaultApiBase = `${window.location.origin}/api`;
   const defaultAuthBase = 'https://auth.alfares.cz';
+  const defaultCatalogApiBase = 'https://catalog.alfares.cz/api';
   const authClientId = 'warehouse-microservice';
   const adminRoles = new Set(['global:superadmin', 'internal:warehouse-microservice:admin']);
   const state = {
@@ -24,6 +25,8 @@
     supplierReconciliation: null,
     supplierConflicts: [],
     selectedProductId: '',
+    catalogApiBase: defaultCatalogApiBase,
+    productSearchTimers: new WeakMap(),
   };
 
   const $ = (selector, root = document) => root.querySelector(selector);
@@ -128,6 +131,7 @@
     $('#authGate').classList.add('hidden');
     $('#adminShell').classList.remove('hidden');
     $('#sessionEmail').textContent = state.user?.email || 'Authenticated admin';
+    preparePickerForms().catch((error) => showMessage(error.message, true));
   }
 
   function lockAdminShell(showDenied) {
@@ -220,6 +224,11 @@
     $('#movementLookupForm').addEventListener('submit', submitMovementLookup);
     $('#stockActionForm').addEventListener('submit', submitStockAction);
     $('#reservationActionForm').addEventListener('submit', submitReservationAction);
+    $('#stockOperationSelect')?.addEventListener('change', (event) => {
+      toggleStockReservationFields(event.target.value);
+    });
+    $$('[data-product-picker]').forEach((root) => bindProductPicker(root));
+    toggleStockReservationFields($('#stockOperationSelect')?.value || 'increment');
     $('#supplierReconciliationForm').addEventListener('submit', submitSupplierReconciliation);
     $('#supplierConflictFilterForm').addEventListener('submit', submitSupplierConflictFilter);
     $('#supplierConflictReviewForm').addEventListener('submit', submitSupplierConflictReview);
@@ -244,6 +253,9 @@
     }
     if (panelId === 'suppliers' && !state.supplierConflicts.length) {
       loadSupplierConflicts().catch((error) => showMessage(error.message, true));
+    }
+    if (panelId === 'actions' || panelId === 'stock') {
+      preparePickerForms().catch((error) => showMessage(error.message, true));
     }
   }
 
@@ -298,6 +310,7 @@
     state.warehouses = asArray(response.data);
     renderWarehouses();
     renderWarehouseSummary();
+    populateWarehousePickers();
     if (showToast) showMessage('Warehouses loaded.');
   }
 
@@ -370,7 +383,11 @@
 
   async function submitStockLookup(event) {
     event.preventDefault();
-    const productId = formData(event.currentTarget).productId.trim();
+    const productId = readProductPickerValue(event.currentTarget);
+    if (!productId) {
+      showMessage('Choose a product first.', true);
+      return;
+    }
     state.selectedProductId = productId;
     $('#selectedProduct').textContent = productId;
     const [stockResponse, totalResponse] = await Promise.all([
@@ -381,6 +398,7 @@
     $('#totalAvailable').textContent = totalResponse?.data?.totalAvailable ?? '-';
     $('#topologyProductId').value = productId;
     await loadInventoryTopology(false, productId);
+    syncProductPickers(productId);
     showMessage('Stock loaded.');
   }
 
@@ -411,10 +429,21 @@
 
   async function submitStockAction(event) {
     event.preventDefault();
-    const data = formData(event.currentTarget);
+    const form = event.currentTarget;
+    const data = formData(form);
     const operation = data.operation;
     delete data.operation;
+    data.productId = readProductPickerValue(form);
     data.quantity = Number(data.quantity);
+
+    if (!data.productId) {
+      showMessage('Choose a product first.', true);
+      return;
+    }
+    if (!data.warehouseId) {
+      showMessage('Choose a warehouse first.', true);
+      return;
+    }
 
     if ((operation === 'reserve' || operation === 'unreserve') && (!data.orderId || !data.channel)) {
       showMessage('Order ID and channel are required for reserve and unreserve.', true);
@@ -427,21 +456,37 @@
       delete data.expiresAt;
     }
     if (!data.expiresAt) delete data.expiresAt;
+    if (!data.reference) delete data.reference;
 
     const response = await request(`stock/${operation}`, { method: 'POST', body: data });
     showMessage(`${operation} completed. Available: ${response?.data?.available ?? 'updated'}.`);
     if (data.productId) {
-      $('#stockLookupForm').elements.productId.value = data.productId;
-      $('#stockLookupForm').requestSubmit();
+      syncProductPickers(data.productId);
+      const stockLookupForm = $('#stockLookupForm');
+      if (stockLookupForm) {
+        setProductPickerValue(stockLookupForm, data.productId);
+        stockLookupForm.requestSubmit();
+      }
     }
   }
 
   async function submitReservationAction(event) {
     event.preventDefault();
-    const data = formData(event.currentTarget);
+    const form = event.currentTarget;
+    const data = formData(form);
     const operation = data.operation;
     delete data.operation;
+    data.productId = readProductPickerValue(form);
+    if (!data.productId) {
+      showMessage('Choose a product first.', true);
+      return;
+    }
+    if (!data.warehouseId) {
+      showMessage('Choose a warehouse first.', true);
+      return;
+    }
     if (!data.channel) delete data.channel;
+    if (!data.reference) delete data.reference;
     const response = await request(`reservations/${operation}`, { method: 'POST', body: data });
     showMessage(`${operation} completed. Available: ${response?.data?.available ?? 'updated'}.`);
     await loadReservations();
@@ -908,6 +953,169 @@
 
   function escapeAttr(value) {
     return escapeHtml(value).replaceAll('`', '&#096;');
+  }
+
+  function toggleStockReservationFields(operation) {
+    const panel = $('#stockReservationFields');
+    if (!panel) return;
+    panel.classList.toggle('hidden', operation !== 'reserve' && operation !== 'unreserve');
+  }
+
+  async function preparePickerForms() {
+    if (!state.token) return;
+    if (!state.warehouses.length) {
+      await loadWarehouses(false);
+    } else {
+      populateWarehousePickers();
+    }
+
+    const urlProductId = new URLSearchParams(window.location.search).get('productId')?.trim();
+    const productId = urlProductId || state.selectedProductId;
+    if (productId) {
+      await preloadProductPickers(productId);
+    }
+  }
+
+  function populateWarehousePickers() {
+    $$('[data-warehouse-select]').forEach((select) => {
+      const selectedId = select.value || select.dataset.selectedId || '';
+      const options = ['<option value="">Choose warehouse...</option>'];
+      state.warehouses
+        .filter((warehouse) => warehouse.isActive !== false)
+        .sort((left, right) => String(left.name || '').localeCompare(String(right.name || '')))
+        .forEach((warehouse) => {
+          const selected = warehouse.id === selectedId ? ' selected' : '';
+          options.push(
+            `<option value="${escapeAttr(warehouse.id)}"${selected}>${escapeHtml(warehouse.name)} (${escapeHtml(warehouse.code)})</option>`,
+          );
+        });
+      select.innerHTML = options.join('');
+    });
+  }
+
+  function bindProductPicker(root) {
+    if (root.dataset.pickerBound === 'true') return;
+    root.dataset.pickerBound = 'true';
+    const search = root.querySelector('[data-product-search]');
+    const select = root.querySelector('[data-product-select]');
+    if (!select) return;
+
+    const runSearch = () => {
+      const existingTimer = state.productSearchTimers.get(root);
+      if (existingTimer) window.clearTimeout(existingTimer);
+      state.productSearchTimers.set(
+        root,
+        window.setTimeout(() => {
+          loadProductOptions(select, search?.value || '', select.value).catch((error) => {
+            showMessage(error.message, true);
+          });
+        }, 250),
+      );
+    };
+
+    search?.addEventListener('input', runSearch);
+    search?.addEventListener('search', runSearch);
+  }
+
+  function readProductPickerValue(formOrRoot) {
+    const select = formOrRoot.querySelector?.('[data-product-select]') || formOrRoot.elements?.productId;
+    return String(select?.value || '').trim();
+  }
+
+  function setProductPickerValue(formOrRoot, productId) {
+    const select = formOrRoot.querySelector?.('[data-product-select]') || formOrRoot.elements?.productId;
+    if (select) select.value = productId;
+  }
+
+  async function syncProductPickers(productId) {
+    state.selectedProductId = productId;
+    await preloadProductPickers(productId);
+  }
+
+  async function preloadProductPickers(productId) {
+    const product = await fetchCatalogProduct(productId);
+    $$('[data-product-select]').forEach((select) => {
+      populateProductSelect(select, product ? [product] : [], productId);
+      const search = select.closest('[data-product-picker]')?.querySelector('[data-product-search]');
+      if (search && product) {
+        search.value = product.sku || product.title || '';
+      }
+    });
+  }
+
+  async function loadProductOptions(select, search, selectedId = '') {
+    const query = String(search || '').trim();
+    const keepId = String(selectedId || select.value || '').trim();
+
+    if (!query && !keepId) {
+      select.innerHTML = '<option value="">Search SKU or title above...</option>';
+      return;
+    }
+
+    let products = [];
+    if (query.length >= 2) {
+      products = await searchCatalogProducts(query);
+    } else if (keepId) {
+      const product = await fetchCatalogProduct(keepId);
+      if (product) products = [product];
+    }
+
+    if (keepId && !products.some((product) => product.id === keepId)) {
+      const selectedProduct = await fetchCatalogProduct(keepId);
+      if (selectedProduct) products.unshift(selectedProduct);
+    }
+
+    populateProductSelect(select, products, keepId);
+  }
+
+  function populateProductSelect(select, products, selectedId = '') {
+    const keepId = selectedId || select.value;
+    const options = ['<option value="">Choose product...</option>'];
+    products.forEach((product) => {
+      const selected = product.id === keepId ? ' selected' : '';
+      const sku = product.sku || 'SKU?';
+      const title = product.title || product.id;
+      options.push(`<option value="${escapeAttr(product.id)}"${selected}>${escapeHtml(sku)} — ${escapeHtml(title)}</option>`);
+    });
+    select.innerHTML = options.join('');
+  }
+
+  async function searchCatalogProducts(search) {
+    const params = new URLSearchParams({ limit: '30', catalogScope: 'effective' });
+    const query = String(search || '').trim();
+    if (query) params.set('search', query);
+    const payload = await catalogRequest(`products?${params.toString()}`);
+    return asArray(payload?.data);
+  }
+
+  async function fetchCatalogProduct(productId) {
+    const id = String(productId || '').trim();
+    if (!id) return null;
+    const payload = await catalogRequest(`products/${encodeURIComponent(id)}`);
+    return payload?.data || null;
+  }
+
+  async function catalogRequest(path) {
+    if (!state.token) {
+      throw new Error('Sign in required before loading catalog products.');
+    }
+
+    const response = await fetch(`${state.catalogApiBase}/${path}`, {
+      headers: {
+        Accept: 'application/json',
+        Authorization: `Bearer ${state.token}`,
+      },
+    });
+
+    const contentType = response.headers.get('content-type') || '';
+    const payload = contentType.includes('application/json') ? await response.json() : await response.text();
+    if (!response.ok) {
+      const message = typeof payload === 'string'
+        ? `Catalog request failed with ${response.status}`
+        : payload.message || payload.error || `Catalog request failed with ${response.status}`;
+      throw new Error(Array.isArray(message) ? message.join(', ') : message);
+    }
+    return payload;
   }
 
   document.addEventListener('DOMContentLoaded', init);

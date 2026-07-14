@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Warehouse Admin</title>
-    <link rel="stylesheet" href="/admin/style.css?v=wh-g10">
+    <link rel="stylesheet" href="/admin/style.css?v=wh-g11">
   </head>
   <body>
     <section class="auth-gate" id="authGate">
@@ -229,8 +229,17 @@
               <p>Lookup product inventory across warehouses.</p>
             </div>
           </div>
-          <form class="toolbar" id="stockLookupForm">
-            <label>Product ID<input name="productId" required placeholder="catalog-product-id"></label>
+          <form class="toolbar picker-toolbar" id="stockLookupForm">
+            <div class="picker-field" data-product-picker>
+              <label>Product
+                <div class="picker-stack">
+                  <input data-product-search type="search" placeholder="Search SKU or title">
+                  <select name="productId" data-product-select required>
+                    <option value="">Search SKU or title above...</option>
+                  </select>
+                </div>
+              </label>
+            </div>
             <button class="button primary" type="submit">Load stock</button>
           </form>
           <div class="grid two">
@@ -443,24 +452,47 @@
           <div class="grid two">
             <form class="surface form-grid compact" id="stockActionForm">
               <h3 class="span-2">Stock mutation</h3>
-              <label>Operation
-                <select name="operation">
-                  <option value="set">set</option>
-                  <option value="increment">increment</option>
-                  <option value="decrement">decrement</option>
-                  <option value="reserve">reserve</option>
-                  <option value="unreserve">unreserve</option>
+              <label>Action
+                <select name="operation" id="stockOperationSelect">
+                  <option value="increment">Add stock</option>
+                  <option value="decrement">Remove stock</option>
+                  <option value="set">Set exact quantity</option>
+                  <option value="reserve">Reserve for order</option>
+                  <option value="unreserve">Release reservation</option>
                 </select>
               </label>
-              <label>Quantity<input name="quantity" type="number" min="0" step="1" required></label>
-              <label>Product ID<input name="productId" required></label>
-              <label>Warehouse ID<input name="warehouseId" required></label>
-              <label>Order ID<input name="orderId"></label>
-              <label>Channel<input name="channel" value="admin"></label>
-              <label>Expires at<input name="expiresAt" type="datetime-local"></label>
-              <label>Reference<input name="reference"></label>
-              <label>Reason code<input name="reasonCode" required placeholder="cycle-count"></label>
-              <label>Actor<input name="actor" required placeholder="admin@example.com"></label>
+              <label>Quantity<input name="quantity" type="number" min="1" step="1" value="1" required></label>
+              <div class="span-2 picker-field" data-product-picker>
+                <label>Product
+                  <div class="picker-stack">
+                    <input data-product-search type="search" placeholder="Search SKU or title">
+                    <select name="productId" data-product-select required>
+                      <option value="">Search SKU or title above...</option>
+                    </select>
+                  </div>
+                </label>
+              </div>
+              <label>Warehouse
+                <select name="warehouseId" data-warehouse-select required>
+                  <option value="">Choose warehouse...</option>
+                </select>
+              </label>
+              <label>Reason
+                <select name="reasonCode" required>
+                  <option value="initial-receipt">initial-receipt</option>
+                  <option value="cycle-count">cycle-count</option>
+                  <option value="correction">correction</option>
+                  <option value="manual-adjustment">manual-adjustment</option>
+                </select>
+              </label>
+              <label>Reference (optional)<input name="reference" placeholder="invoice or note"></label>
+              <div class="span-2 hidden" id="stockReservationFields">
+                <div class="form-grid compact reservation-grid">
+                  <label>Order ID<input name="orderId"></label>
+                  <label>Channel<input name="channel" value="admin"></label>
+                  <label class="span-2">Expires at<input name="expiresAt" type="datetime-local"></label>
+                </div>
+              </div>
               <div class="form-actions span-2">
                 <button class="button primary" type="submit">Run stock action</button>
               </div>
@@ -476,13 +508,31 @@
                   <option value="return">return</option>
                 </select>
               </label>
-              <label>Product ID<input name="productId" required></label>
-              <label>Warehouse ID<input name="warehouseId" required></label>
               <label>Order ID<input name="orderId" required></label>
-              <label>Channel<input name="channel"></label>
-              <label>Reason code<input name="reasonCode" required></label>
-              <label>Actor<input name="actor" required></label>
-              <label class="span-2">Reference<input name="reference"></label>
+              <div class="span-2 picker-field" data-product-picker>
+                <label>Product
+                  <div class="picker-stack">
+                    <input data-product-search type="search" placeholder="Search SKU or title">
+                    <select name="productId" data-product-select required>
+                      <option value="">Search SKU or title above...</option>
+                    </select>
+                  </div>
+                </label>
+              </div>
+              <label>Warehouse
+                <select name="warehouseId" data-warehouse-select required>
+                  <option value="">Choose warehouse...</option>
+                </select>
+              </label>
+              <label>Channel<input name="channel" value="admin"></label>
+              <label>Reason
+                <select name="reasonCode" required>
+                  <option value="manual-action">manual-action</option>
+                  <option value="order-cancelled">order-cancelled</option>
+                  <option value="order-returned">order-returned</option>
+                </select>
+              </label>
+              <label class="span-2">Reference (optional)<input name="reference"></label>
               <div class="form-actions span-2">
                 <button class="button primary" type="submit">Run reservation action</button>
               </div>
@@ -496,6 +546,6 @@
       <tr><td colspan="9" class="empty">No data loaded.</td></tr>
     </template>
 
-    <script src="/admin/app.js?v=wh-g10-validation-messages" defer></script>
+    <script src="/admin/app.js?v=wh-g11-product-warehouse-pickers" defer></script>
   </body>
 </html>
