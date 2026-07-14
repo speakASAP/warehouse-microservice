@@ -94,7 +94,9 @@ run_database_migrations() {
   kubectl logs job/"${SERVICE_NAME}-migrations" -n "$NAMESPACE"
 }
 
-deploy_timing_run_phase "Database migrations" run_database_migrations
+deploy_timing_phase_start "Database migrations"
+run_database_migrations
+deploy_timing_phase_end "Database migrations"
 
 deploy_timing_phase_start "Set deployment image"
 kubectl set image "deployment/${SERVICE_NAME}" app="$IMAGE" -n "$NAMESPACE"
