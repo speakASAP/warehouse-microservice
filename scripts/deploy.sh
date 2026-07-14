@@ -44,7 +44,7 @@ preflight_service_health() {
 }
 
 echo -e "${BLUE}╔════════════════════════════════════════════════════════╗${NC}"
-echo -e "${BLUE}║  warehouse-microservice - Kubernetes Deployment${NC}"
+echo -e "${BLUE}║      warehouse-microservice - Kubernetes Deployment    ║${NC}"
 echo -e "${BLUE}╚════════════════════════════════════════════════════════╝${NC}"
 
 if [ ! -d "$K8S_DIR" ]; then
