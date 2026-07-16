@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Query, Req } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query, Req, ParseUUIDPipe } from '@nestjs/common';
 import { Request } from 'express';
 import { getAuthenticatedMutationActor } from '../auth/authenticated-actor';
 import { StockService } from './stock.service';
@@ -42,6 +42,51 @@ export class StockController {
       includeKnown: query.includeKnown === true || query.includeKnown === 'true',
     });
     return { success: true, data: report };
+  }
+
+  /**
+   * Search catalog products for Warehouse Admin (proxies Catalog API with caller JWT).
+   * GET /api/stock/admin/catalog/products
+   */
+  @Get('admin/catalog/products')
+  async searchCatalogProductsForAdmin(
+    @Query('search') search: string | undefined,
+    @Query('limit') limit: string | undefined,
+    @Req() request: Request,
+  ) {
+    this.logger.log('GET /api/stock/admin/catalog/products', 'StockController');
+    if (!this.catalogProductReconciliation) {
+      throw new Error('Catalog product reconciliation service is not configured');
+    }
+    const result = await this.catalogProductReconciliation.searchProductsForAdmin(
+      request.headers.authorization,
+      { search, limit },
+    );
+    return {
+      success: true,
+      data: result.items,
+      pagination: result.pagination,
+    };
+  }
+
+  /**
+   * Get one catalog product for Warehouse Admin (proxies Catalog API with caller JWT).
+   * GET /api/stock/admin/catalog/products/:productId
+   */
+  @Get('admin/catalog/products/:productId')
+  async getCatalogProductForAdmin(
+    @Param('productId', ParseUUIDPipe) productId: string,
+    @Req() request: Request,
+  ) {
+    this.logger.log(`GET /api/stock/admin/catalog/products/${productId}`, 'StockController');
+    if (!this.catalogProductReconciliation) {
+      throw new Error('Catalog product reconciliation service is not configured');
+    }
+    const product = await this.catalogProductReconciliation.getProductForAdmin(
+      request.headers.authorization,
+      productId,
+    );
+    return { success: true, data: product };
   }
 
   /**

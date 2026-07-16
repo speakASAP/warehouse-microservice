@@ -10,7 +10,6 @@
 
   const defaultApiBase = `${window.location.origin}/api`;
   const defaultAuthBase = 'https://auth.alfares.cz';
-  const defaultCatalogApiBase = 'https://catalog.alfares.cz/api';
   const authClientId = 'warehouse-microservice';
   const adminRoles = new Set(['global:superadmin', 'internal:warehouse-microservice:admin']);
   const state = {
@@ -25,7 +24,6 @@
     supplierReconciliation: null,
     supplierConflicts: [],
     selectedProductId: '',
-    catalogApiBase: defaultCatalogApiBase,
     productSearchTimers: new WeakMap(),
   };
 
@@ -1081,41 +1079,18 @@
   }
 
   async function searchCatalogProducts(search) {
-    const params = new URLSearchParams({ limit: '30', catalogScope: 'effective' });
+    const params = new URLSearchParams({ limit: '30' });
     const query = String(search || '').trim();
     if (query) params.set('search', query);
-    const payload = await catalogRequest(`products?${params.toString()}`);
+    const payload = await request(`stock/admin/catalog/products?${params.toString()}`);
     return asArray(payload?.data);
   }
 
   async function fetchCatalogProduct(productId) {
     const id = String(productId || '').trim();
     if (!id) return null;
-    const payload = await catalogRequest(`products/${encodeURIComponent(id)}`);
+    const payload = await request(`stock/admin/catalog/products/${encodeURIComponent(id)}`);
     return payload?.data || null;
-  }
-
-  async function catalogRequest(path) {
-    if (!state.token) {
-      throw new Error('Sign in required before loading catalog products.');
-    }
-
-    const response = await fetch(`${state.catalogApiBase}/${path}`, {
-      headers: {
-        Accept: 'application/json',
-        Authorization: `Bearer ${state.token}`,
-      },
-    });
-
-    const contentType = response.headers.get('content-type') || '';
-    const payload = contentType.includes('application/json') ? await response.json() : await response.text();
-    if (!response.ok) {
-      const message = typeof payload === 'string'
-        ? `Catalog request failed with ${response.status}`
-        : payload.message || payload.error || `Catalog request failed with ${response.status}`;
-      throw new Error(Array.isArray(message) ? message.join(', ') : message);
-    }
-    return payload;
   }
 
   document.addEventListener('DOMContentLoaded', init);

@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, HttpException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import axios, { AxiosError } from 'axios';
 import { In, Repository } from 'typeorm';
@@ -231,6 +231,55 @@ export class CatalogProductReconciliationService {
     return results;
   }
 
+  async searchProductsForAdmin(
+    authorization: string | undefined,
+    query: { search?: string; limit?: number | string },
+  ): Promise<{
+    items: Array<{ id: string; sku?: string; title?: string }>;
+    pagination?: { total: number; page: number; limit: number; pages: number };
+  }> {
+    const limit = Math.min(Math.max(this.normalizeLimit(query.limit ?? 30), 1), 100);
+    const params: Record<string, string> = {
+      limit: String(limit),
+      catalogScope: 'effective',
+    };
+    const search = String(query.search ?? '').trim();
+    if (search) {
+      params.search = search;
+    }
+
+    const payload = await this.catalogApiGet<{
+      success?: boolean;
+      data?: Array<{ id: string; sku?: string; title?: string }>;
+      pagination?: { total: number; page: number; limit: number; pages: number };
+    }>(authorization, 'products', params);
+
+    if (payload.success !== true || !Array.isArray(payload.data)) {
+      throw new HttpException('Catalog product search returned an invalid response', 502);
+    }
+
+    return {
+      items: payload.data,
+      pagination: payload.pagination,
+    };
+  }
+
+  async getProductForAdmin(
+    authorization: string | undefined,
+    productId: string,
+  ): Promise<{ id: string; sku?: string; title?: string }> {
+    const payload = await this.catalogApiGet<{
+      success?: boolean;
+      data?: { id: string; sku?: string; title?: string };
+    }>(authorization, `products/${encodeURIComponent(productId)}`);
+
+    if (payload.success !== true || !payload.data?.id) {
+      throw new HttpException('Catalog product lookup returned an invalid response', 502);
+    }
+
+    return payload.data;
+  }
+
   private async fetchCatalogIdentity(productId: string): Promise<{
     status: 'known';
     identity: CatalogProductIdentity;
@@ -351,6 +400,34 @@ export class CatalogProductReconciliationService {
       return this.defaultLimit;
     }
     return Math.min(Math.max(Math.trunc(parsed), 1), this.maxLimit);
+  }
+
+  private catalogApiGet<T>(
+    authorization: string | undefined,
+    path: string,
+    query?: Record<string, string>,
+  ): Promise<T> {
+    const queryString = query ? `?${new URLSearchParams(query).toString()}` : '';
+    const normalizedPath = path.replace(/^\//, '');
+    const url = `${this.catalogBaseUrl()}/api/${normalizedPath}${queryString}`;
+    const headers: Record<string, string> = { Accept: 'application/json' };
+    if (authorization) {
+      headers.Authorization = authorization.startsWith('Bearer ') ? authorization : `Bearer ${authorization}`;
+    }
+
+    return axios
+      .get<T>(url, {
+        headers,
+        timeout: Number(process.env.CATALOG_PRODUCT_VALIDATION_TIMEOUT_MS || 5000),
+      })
+      .then((response) => response.data)
+      .catch((error: AxiosError) => {
+        const status = error.response?.status ?? 502;
+        const body = error.response?.data as { message?: string | string[]; error?: string } | undefined;
+        const rawMessage = body?.message ?? body?.error ?? error.message ?? 'Catalog request failed';
+        const message = Array.isArray(rawMessage) ? rawMessage.join(', ') : rawMessage;
+        throw new HttpException(message, status >= 400 && status < 600 ? status : 502);
+      });
   }
 
   private catalogBaseUrl(): string {
