@@ -75,6 +75,7 @@
     url.searchParams.set('client_id', authClientId);
     url.searchParams.set('return_url', returnUrl.toString());
     url.searchParams.set('state', nonce);
+    url.searchParams.set('lang', 'cs');
     return url.toString();
   }
 

@@ -32,6 +32,7 @@ has(app, /hostedAuthUrl\(path\)/, 'hosted Auth URL builder exists');
 has(app, /url\.searchParams\.set\('client_id', authClientId\)/, 'hosted URL sets client_id');
 has(app, /url\.searchParams\.set\('return_url', returnUrl\.toString\(\)\)/, 'hosted URL sets return_url');
 has(app, /url\.searchParams\.set\('state', nonce\)/, 'hosted URL sets state');
+has(app, /url\.searchParams\.set\('lang', 'cs'\)/, 'hosted URL sets lang');
 has(app, /sessionStorage\.setItem\(storage\.authState, nonce\)/, 'state is stored before redirect');
 has(app, /consumeHostedAuthFragment\(\)/, 'callback fragment consumer is invoked');
 has(app, /window\.location\.hash\.includes\('access_token='\)/, 'callback reads access_token fragment');
