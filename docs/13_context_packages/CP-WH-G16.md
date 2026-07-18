@@ -8,9 +8,9 @@ created: 2026-07-02
 last_updated: 2026-07-02
 completeness_level: complete
 upstream:
-  - docs/intent-preservation/execution-plans/EP-WH-G16.md
+  - docs/21_execution_plans/EP-WH-G16.md
 downstream:
-  - docs/intent-preservation/coding-prompts/PROMPT-WH-G16.md
+  - docs/14_prompts/PROMPT-WH-G16.md
 related_adrs: []
 ```
 

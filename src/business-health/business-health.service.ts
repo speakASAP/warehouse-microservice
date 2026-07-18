@@ -150,7 +150,7 @@ export class BusinessHealthService {
         checkedSourceFiles: [
           'docs/orchestrator/2026-07-06-warehouse-business-health-handoff.md',
           'docs/governance/PROJECT_INVARIANTS.md',
-          'docs/intent-preservation/TRACEABILITY_MATRIX.md',
+          'docs/12_validation/TRACEABILITY_MATRIX.md',
           'src/stock/stock.service.ts',
           'src/reservations/reservations.service.ts',
           'src/reservations/stock-reservation.entity.ts',

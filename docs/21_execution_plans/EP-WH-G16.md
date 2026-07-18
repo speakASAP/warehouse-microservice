@@ -8,11 +8,11 @@ created: 2026-07-02
 last_updated: 2026-07-02
 completeness_level: complete
 upstream:
-  - docs/intent-preservation/tasks/WH-G16-T1.md
+  - docs/11_tasks/WH-G16-T1.md
 downstream:
-  - docs/intent-preservation/context-packages/CP-WH-G16.md
-  - docs/intent-preservation/coding-prompts/PROMPT-WH-G16.md
-  - docs/intent-preservation/validation-reports/VAL-WH-G16.md
+  - docs/13_context_packages/CP-WH-G16.md
+  - docs/14_prompts/PROMPT-WH-G16.md
+  - docs/12_validation/VAL-WH-G16.md
 related_adrs: []
 ```
 

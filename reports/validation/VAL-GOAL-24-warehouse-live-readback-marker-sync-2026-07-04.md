@@ -11,7 +11,7 @@ Vision -> Goal Impact -> System -> Feature -> Task -> Execution Plan -> Coding P
 - Task: remove stale combined live stock window/max quantity wording from current Warehouse operator-facing contract/status/report and verifier expectations.
 - Execution Plan: source/docs/verifier only in `/home/ssf/Documents/Github/warehouse-microservice`; no runtime access or mutation.
 - Coding Prompt: do not infer Warehouse stock effects from Payments refund state and do not approve live Warehouse mutation from source-documented target facts.
-- Code: `docs/orchestrator/STATUS.md`, `docs/contracts/catalog-bundle-component-reservation-contract.md`, `docs/intent-preservation/validation-reports/VAL-WH-G24-BUNDLE-COMPONENT-RESERVATION.md`, `scripts/verify-bundle-component-reservation-contract.js`, this validation report.
+- Code: `docs/orchestrator/STATUS.md`, `docs/contracts/catalog-bundle-component-reservation-contract.md`, `docs/12_validation/VAL-WH-G24-BUNDLE-COMPONENT-RESERVATION.md`, `scripts/verify-bundle-component-reservation-contract.js`, this validation report.
 - Validation: `npm run verify:bundle-component-reservation`, `node --check scripts/verify-bundle-component-reservation-contract.js`, `git diff --check`.
 - State Update: source-governance wording is synchronized; runtime remains blocked.
 

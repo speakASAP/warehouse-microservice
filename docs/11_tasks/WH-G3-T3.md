@@ -12,7 +12,7 @@ upstream:
   - docs/orchestrator/warehouse-intent-plan.md
   - docs/governance/PROJECT_INVARIANTS.md
 downstream:
-  - docs/intent-preservation/validation-reports/VAL-WH-G3.md
+  - docs/12_validation/VAL-WH-G3.md
 related_adrs: []
 ```
 
@@ -74,7 +74,7 @@ Tests must include deterministic failure and retry-sensitive cases where practic
 
 ## Validation Task
 
-Historical validation evidence is recorded in `TASKS.md` and `docs/intent-preservation/validation-reports/VAL-WH-G3.md`.
+Historical validation evidence is recorded in `TASKS.md` and `docs/12_validation/VAL-WH-G3.md`.
 
 ## Required Gates
 

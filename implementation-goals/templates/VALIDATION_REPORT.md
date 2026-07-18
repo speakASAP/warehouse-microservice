@@ -8,7 +8,7 @@ created: YYYY-MM-DD
 last_updated: YYYY-MM-DD
 completeness_level: skeletal
 upstream:
-  - docs/intent-preservation/execution-plans/EP-WH-GX.md
+  - docs/21_execution_plans/EP-WH-GX.md
 downstream:
   - docs/IMPLEMENTATION_STATE.md
   - TASKS.md

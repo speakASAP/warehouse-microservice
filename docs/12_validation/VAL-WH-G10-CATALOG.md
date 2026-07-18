@@ -23,9 +23,9 @@ Task: WH-G10-CATALOG-T1
 Repository root: `/home/ssf/Documents/Github/warehouse-microservice`
 Git status: `## main...origin/main` before edits
 Remote status: clean before edits
-Execution plan: `docs/intent-preservation/execution-plans/EP-WH-G10-CATALOG.md`
-Context package: `docs/intent-preservation/context-packages/CP-WH-G10-CATALOG.md`
-Coding prompt: `docs/intent-preservation/coding-prompts/PROMPT-WH-G10-CATALOG.md`
+Execution plan: `docs/21_execution_plans/EP-WH-G10-CATALOG.md`
+Context package: `docs/13_context_packages/CP-WH-G10-CATALOG.md`
+Coding prompt: `docs/14_prompts/PROMPT-WH-G10-CATALOG.md`
 Invariants checked: Warehouse stock authority, Catalog product identity authority, Auth/RBAC boundary, no production mutation, no deploy.
 Sensitive-data classification: no secrets; report includes product IDs and aggregate stock quantities.
 Contract/schema impact: additive protected read-only endpoint; no database migration.

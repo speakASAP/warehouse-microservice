@@ -33,11 +33,11 @@ Owner approved the following candidate goals for parallel start on 2026-06-13. T
 
 | Goal | Status | Evidence | Notes |
 | --- | --- | --- | --- |
-| WH-G10-CATALOG - Catalog identity validation | deployed | `docs/intent-preservation/validation-reports/VAL-WH-G10-CATALOG.md` | Read-only reconciliation endpoint/report. |
-| WH-G11-OUTBOX - Transactional stock event outbox | deployed | `docs/intent-preservation/validation-reports/VAL-WH-G11-OUTBOX.md` | Requires migration before deployment. |
-| WH-G12 - Automatic reservation expiry | deployed | `docs/intent-preservation/validation-reports/VAL-WH-G12.md` | Adds protected batch endpoint and Kubernetes CronJob. |
-| WH-G13-CONFLICTS - Supplier conflict operations | deployed | `docs/intent-preservation/validation-reports/VAL-WH-G13-CONFLICTS.md` | Added during collection because prior WH-G13 artifacts described older admin topology work. |
-| WH-G14-AUTH - Authenticated actor enforcement | deployed | `docs/intent-preservation/validation-reports/VAL-WH-G14-AUTH.md` | Uses suffixed ID to avoid overwriting completed WH-G14 product-logistics evidence. |
+| WH-G10-CATALOG - Catalog identity validation | deployed | `docs/12_validation/VAL-WH-G10-CATALOG.md` | Read-only reconciliation endpoint/report. |
+| WH-G11-OUTBOX - Transactional stock event outbox | deployed | `docs/12_validation/VAL-WH-G11-OUTBOX.md` | Requires migration before deployment. |
+| WH-G12 - Automatic reservation expiry | deployed | `docs/12_validation/VAL-WH-G12.md` | Adds protected batch endpoint and Kubernetes CronJob. |
+| WH-G13-CONFLICTS - Supplier conflict operations | deployed | `docs/12_validation/VAL-WH-G13-CONFLICTS.md` | Added during collection because prior WH-G13 artifacts described older admin topology work. |
+| WH-G14-AUTH - Authenticated actor enforcement | deployed | `docs/12_validation/VAL-WH-G14-AUTH.md` | Uses suffixed ID to avoid overwriting completed WH-G14 product-logistics evidence. |
 
 ## Current Integration Validation
 

@@ -6,9 +6,9 @@ Goal: WH-G10
 Task: WH-G10-T1
 Repository root: /home/ssf/Documents/Github/warehouse-microservice
 Git status: checked before coding
-Execution plan: docs/intent-preservation/execution-plans/EP-WH-G10.md
-Context package: docs/intent-preservation/context-packages/CP-WH-G10.md
-Coding prompt: docs/intent-preservation/coding-prompts/PROMPT-WH-G10.md
+Execution plan: docs/21_execution_plans/EP-WH-G10.md
+Context package: docs/13_context_packages/CP-WH-G10.md
+Coding prompt: docs/14_prompts/PROMPT-WH-G10.md
 Invariants checked: Auth owns login/JWT/RBAC; warehouse remains stock authority; server API guards remain authoritative; no production stock mutation; no deployment without owner approval.
 Sensitive-data classification: credentials entered by user only; no secrets written to docs, logs, or frontend config.
 Contract/schema impact: frontend consumes Auth login/register contract; no warehouse schema/API change.

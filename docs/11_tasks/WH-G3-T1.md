@@ -12,8 +12,8 @@ upstream:
   - docs/orchestrator/warehouse-intent-plan.md
   - docs/governance/PROJECT_INVARIANTS.md
 downstream:
-  - docs/intent-preservation/execution-plans/EP-WH-G3.md
-  - docs/intent-preservation/coding-prompts/PROMPT-WH-G3.md
+  - docs/21_execution_plans/EP-WH-G3.md
+  - docs/14_prompts/PROMPT-WH-G3.md
 related_adrs: []
 ```
 

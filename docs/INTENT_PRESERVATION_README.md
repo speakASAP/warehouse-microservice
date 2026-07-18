@@ -11,8 +11,8 @@ upstream:
   - docs/orchestrator/warehouse-intent-plan.md
   - docs/governance/PROJECT_INVARIANTS.md
 downstream:
-  - docs/intent-preservation/TRACEABILITY_MATRIX.md
-  - docs/intent-preservation/PRE_CODING_GATE.md
+  - docs/12_validation/TRACEABILITY_MATRIX.md
+  - docs/12_validation/PRE_CODING_GATE.md
 related_adrs: []
 ```
 
@@ -74,11 +74,11 @@ Agents must not change these rules without owner approval:
 
 For each implementation task, create or update:
 
-- task document under `docs/intent-preservation/tasks/`;
-- execution plan under `docs/intent-preservation/execution-plans/`;
-- context package under `docs/intent-preservation/context-packages/`;
-- coding prompt under `docs/intent-preservation/coding-prompts/`;
-- validation report draft under `docs/intent-preservation/validation-reports/`.
+- task document under `docs/11_tasks/`;
+- execution plan under `docs/21_execution_plans/`;
+- context package under `docs/13_context_packages/`;
+- coding prompt under `docs/14_prompts/`;
+- validation report draft under `docs/12_validation/`.
 
 These documents may be `draft` before coding, but they must be meaningful and traceable. Do not use vague placeholders. If information cannot be derived, use `[MISSING: ...]` or `[UNKNOWN: ...]` and block coding until resolved when the missing item affects behavior.
 

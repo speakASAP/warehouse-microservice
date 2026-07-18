@@ -8,7 +8,7 @@ created: 2026-07-02
 last_updated: 2026-07-02
 completeness_level: validated
 upstream:
-  - docs/intent-preservation/coding-prompts/PROMPT-WH-G16.md
+  - docs/14_prompts/PROMPT-WH-G16.md
 downstream: []
 related_adrs: []
 ```

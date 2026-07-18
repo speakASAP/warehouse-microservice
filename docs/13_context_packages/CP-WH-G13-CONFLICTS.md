@@ -10,7 +10,7 @@ Metadata:
 ## Required Context
 
 - `implementation-goals/GOAL-13-supplier-conflict-operations.md`
-- `docs/intent-preservation/tasks/WH-G13-CONFLICTS-T1.md`
+- `docs/11_tasks/WH-G13-CONFLICTS-T1.md`
 - `src/suppliers/supplier-reconciliation.service.ts`
 - `src/suppliers/supplier-reconciliation.controller.ts`
 - `src/suppliers/dto/supplier-stock-reconciliation.dto.ts`

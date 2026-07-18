@@ -8,9 +8,9 @@ created: 2026-07-02
 last_updated: 2026-07-02
 completeness_level: complete
 upstream:
-  - docs/intent-preservation/context-packages/CP-WH-G16.md
+  - docs/13_context_packages/CP-WH-G16.md
 downstream:
-  - docs/intent-preservation/validation-reports/VAL-WH-G16.md
+  - docs/12_validation/VAL-WH-G16.md
 related_adrs: []
 ```
 
@@ -20,7 +20,7 @@ Implement a Warehouse-owned paid-order fulfillment handoff/pick-ticket contract 
 
 ## Execution Plan Link
 
-`docs/intent-preservation/execution-plans/EP-WH-G16.md`
+`docs/21_execution_plans/EP-WH-G16.md`
 
 ## Required Context
 

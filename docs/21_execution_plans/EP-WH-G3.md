@@ -104,7 +104,7 @@ Allowed documentation files:
 - `docs/IMPLEMENTATION_STATE.md`
 - `TASKS.md`
 - `STATE.json`
-- `docs/intent-preservation/validation-reports/VAL-WH-G3.md`
+- `docs/12_validation/VAL-WH-G3.md`
 
 ## Files That Must Not Be Modified
 
@@ -167,7 +167,7 @@ python3 scripts/deployment_readiness_gate.py --root .
 
 ## Documentation Updates
 
-- Update `docs/intent-preservation/validation-reports/VAL-WH-G3.md` with evidence.
+- Update `docs/12_validation/VAL-WH-G3.md` with evidence.
 - Update `docs/IMPLEMENTATION_STATE.md` with goal status and validation evidence.
 - Update `TASKS.md` with completed WH-G3 tasks.
 - Update `STATE.json` with current state and next focus.
@@ -178,7 +178,7 @@ Revert only WH-G3 implementation changes. Preserve documentation evidence by app
 
 ## Agent Handoff Prompt
 
-Implement WH-G3 from `docs/intent-preservation/execution-plans/EP-WH-G3.md`. Preserve the warehouse intent from `docs/orchestrator/warehouse-intent-plan.md`, keep stock authority and movement evidence intact, do not mutate production stock, do not deploy without owner approval, and report validation evidence in `docs/intent-preservation/validation-reports/VAL-WH-G3.md`.
+Implement WH-G3 from `docs/21_execution_plans/EP-WH-G3.md`. Preserve the warehouse intent from `docs/orchestrator/warehouse-intent-plan.md`, keep stock authority and movement evidence intact, do not mutate production stock, do not deploy without owner approval, and report validation evidence in `docs/12_validation/VAL-WH-G3.md`.
 
 ## Completion Checklist
 

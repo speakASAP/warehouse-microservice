@@ -12,7 +12,7 @@ Metadata:
 ## Upstream Traceability
 
 - implementation-goals/GOAL-11-stock-origin-visibility.md
-- docs/intent-preservation/tasks/WH-G11-T1.md
+- docs/11_tasks/WH-G11-T1.md
 
 ## Goal Impact
 
@@ -55,11 +55,11 @@ No Catalog bridge propagation yet. No Suppliers-to-Warehouse mutation client. No
 ## Files To Create
 
 - implementation-goals/GOAL-11-stock-origin-visibility.md
-- docs/intent-preservation/tasks/WH-G11-T1.md
-- docs/intent-preservation/execution-plans/EP-WH-G11-T1.md
-- docs/intent-preservation/context-packages/CP-WH-G11-T1.md
-- docs/intent-preservation/coding-prompts/PROMPT-WH-G11-T1.md
-- docs/intent-preservation/validation-reports/VAL-WH-G11-T1.md
+- docs/11_tasks/WH-G11-T1.md
+- docs/21_execution_plans/EP-WH-G11-T1.md
+- docs/13_context_packages/CP-WH-G11-T1.md
+- docs/14_prompts/PROMPT-WH-G11-T1.md
+- docs/12_validation/VAL-WH-G11-T1.md
 
 ## Files To Modify
 

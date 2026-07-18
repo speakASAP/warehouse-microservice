@@ -1429,7 +1429,7 @@ For issues or questions:
 
 ## Warehouse Intent Preservation
 
-Warehouse implementation work now follows the project-local Intent Preservation System overlay under `docs/intent-preservation/`. Before future coding, agents must preserve this chain:
+Warehouse implementation work now follows the project-local Intent Preservation System overlay under the numbered `docs/NN_*` layers. Before future coding, agents must preserve this chain:
 
 ```text
 Intent -> Invariants -> Goal -> Task -> Execution Plan -> Context Package -> Coding Prompt -> Code -> Validation Report -> State Update
@@ -1437,10 +1437,10 @@ Intent -> Invariants -> Goal -> Task -> Execution Plan -> Context Package -> Cod
 
 Start future owner-approved warehouse goals with:
 
-- `docs/intent-preservation/PRE_CODING_GATE.md`
-- `docs/intent-preservation/TRACEABILITY_MATRIX.md`
-- task docs under `docs/intent-preservation/tasks/`
-- execution plans under `docs/intent-preservation/execution-plans/`
-- context packages under `docs/intent-preservation/context-packages/`
-- coding prompts under `docs/intent-preservation/coding-prompts/`
-- validation reports under `docs/intent-preservation/validation-reports/`
+- `docs/12_validation/PRE_CODING_GATE.md`
+- `docs/12_validation/TRACEABILITY_MATRIX.md`
+- task docs under `docs/11_tasks/`
+- execution plans under `docs/21_execution_plans/`
+- context packages under `docs/13_context_packages/`
+- coding prompts under `docs/14_prompts/`
+- validation reports under `docs/12_validation/`

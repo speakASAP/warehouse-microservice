@@ -8,10 +8,10 @@ created: YYYY-MM-DD
 last_updated: YYYY-MM-DD
 completeness_level: skeletal
 upstream:
-  - docs/intent-preservation/context-packages/CP-WH-GX.md
-  - docs/intent-preservation/execution-plans/EP-WH-GX.md
+  - docs/13_context_packages/CP-WH-GX.md
+  - docs/21_execution_plans/EP-WH-GX.md
 downstream:
-  - docs/intent-preservation/validation-reports/VAL-WH-GX.md
+  - docs/12_validation/VAL-WH-GX.md
 related_adrs: []
 ```
 
@@ -21,7 +21,7 @@ State the implementation task.
 
 ## Execution Plan Link
 
-Use `docs/intent-preservation/execution-plans/EP-WH-GX.md`.
+Use `docs/21_execution_plans/EP-WH-GX.md`.
 
 ## Required Context
 

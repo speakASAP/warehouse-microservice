@@ -11,8 +11,8 @@ upstream:
   - implementation-goals/GOAL-16-fulfillment-handoff.md
   - docs/orchestrator/2026-07-02-orders-fulfillment-handoff-plan.md
 downstream:
-  - docs/intent-preservation/execution-plans/EP-WH-G16.md
-  - docs/intent-preservation/validation-reports/VAL-WH-G16.md
+  - docs/21_execution_plans/EP-WH-G16.md
+  - docs/12_validation/VAL-WH-G16.md
 related_adrs: []
 ```
 

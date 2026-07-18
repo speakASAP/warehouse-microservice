@@ -16,7 +16,7 @@ Record known validation failures or process gaps that are not caused by the curr
 | ID | Date | Command | Failure Summary | Scope | Owner | Blocks Current Task? | Unblock Condition | Evidence |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | VD-001 | 2026-06-14 | orchestration collection | Historical WH-G10-WH-G15 numbering already exists, while newer approved parallel wave reused WH-G10/WH-G11/WH-G14 labels. Suffixed IDs are used for new artifacts to avoid overwriting completed evidence. | repo-wide process | orchestrator | no | Owner accepts suffixed IDs or schedules numbering normalization docs-only pass. | `docs/orchestrator/GOALS.md` |
-| VD-002 | 2026-06-14 | WH-G13 collection | Supplier conflict operations source existed without dedicated IPS artifacts; orchestrator reconstructed WH-G13-CONFLICTS artifacts from source diff and validation evidence. | WH-G13-CONFLICTS process | orchestrator | no | Dedicated artifacts now exist; future workers must create IPS artifacts before source edits. | `docs/intent-preservation/validation-reports/VAL-WH-G13-CONFLICTS.md` |
+| VD-002 | 2026-06-14 | WH-G13 collection | Supplier conflict operations source existed without dedicated IPS artifacts; orchestrator reconstructed WH-G13-CONFLICTS artifacts from source diff and validation evidence. | WH-G13-CONFLICTS process | orchestrator | no | Dedicated artifacts now exist; future workers must create IPS artifacts before source edits. | `docs/12_validation/VAL-WH-G13-CONFLICTS.md` |
 
 ## Current-Task Decision Checklist
 

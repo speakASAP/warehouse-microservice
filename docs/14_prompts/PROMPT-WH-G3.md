@@ -8,10 +8,10 @@ created: 2026-06-12
 last_updated: 2026-06-12
 completeness_level: validated
 upstream:
-  - docs/intent-preservation/context-packages/CP-WH-G3.md
-  - docs/intent-preservation/execution-plans/EP-WH-G3.md
+  - docs/13_context_packages/CP-WH-G3.md
+  - docs/21_execution_plans/EP-WH-G3.md
 downstream:
-  - docs/intent-preservation/validation-reports/VAL-WH-G3.md
+  - docs/12_validation/VAL-WH-G3.md
 related_adrs: []
 ```
 
@@ -21,7 +21,7 @@ Implement WH-G3 stock mutation invariants in `warehouse-microservice`.
 
 ## Execution Plan Link
 
-Use `docs/intent-preservation/execution-plans/EP-WH-G3.md`.
+Use `docs/21_execution_plans/EP-WH-G3.md`.
 
 ## Required Context
 
@@ -30,7 +30,7 @@ Read these documents before source edits:
 - `docs/orchestrator/warehouse-intent-plan.md`
 - `docs/governance/PROJECT_INVARIANTS.md`
 - `implementation-goals/GOAL-03-stock-mutation-invariants.md`
-- `docs/intent-preservation/context-packages/CP-WH-G3.md`
+- `docs/13_context_packages/CP-WH-G3.md`
 
 Inspect these files before implementation:
 

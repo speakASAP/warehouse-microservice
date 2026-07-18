@@ -12,7 +12,7 @@ upstream:
   - docs/orchestrator/warehouse-intent-plan.md
   - docs/governance/PROJECT_INVARIANTS.md
 downstream:
-  - docs/intent-preservation/tasks/WH-G16-T1.md
+  - docs/11_tasks/WH-G16-T1.md
   - docs/contracts/fulfillment-handoff-contract.md
 related_adrs: []
 ```

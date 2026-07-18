@@ -45,7 +45,7 @@ WH-G1 through WH-G9 are complete in the remote production repository. Future goa
 
 1. Read `AGENTS.md`, `SYSTEM.md`, `TASKS.md`, `STATE.json`, `docs/IMPLEMENTATION_STATE.md`, `docs/IMPLEMENTATION_ORCHESTRATOR.md`, and the selected goal file.
 2. Run status checks before editing.
-3. Create or update the IPS task document, execution plan, context package, coding prompt, and validation report draft under `docs/intent-preservation/`.
+3. Create or update the IPS task document, execution plan, context package, coding prompt, and validation report draft under the numbered `docs/NN_*` layers.
 4. Complete the pre-coding gate before source edits.
 5. Keep implementation inside selected goal scope.
 6. Use subagents only when file ownership is disjoint.

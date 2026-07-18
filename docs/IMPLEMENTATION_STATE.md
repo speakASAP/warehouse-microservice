@@ -146,8 +146,8 @@ WAREHOUSE ORCHESTRATOR: define next goal
 - Intent source: `docs/orchestrator/warehouse-intent-plan.md`
 - Agent entrypoint: `AGENTS.md`
 - Process gates: `docs/process/OPERATIONAL_GATES.md`
-- IPS gate: `docs/intent-preservation/PRE_CODING_GATE.md`
-- IPS traceability: `docs/intent-preservation/TRACEABILITY_MATRIX.md`
+- IPS gate: `docs/12_validation/PRE_CODING_GATE.md`
+- IPS traceability: `docs/12_validation/TRACEABILITY_MATRIX.md`
 - Project invariants: `docs/governance/PROJECT_INVARIANTS.md`
 - Remote repository: `/home/ssf/Documents/Github/warehouse-microservice`
 - Production URL: `https://warehouse.alfares.cz/api/health`
@@ -281,9 +281,9 @@ docs/orchestrator/warehouse-intent-plan.md
 docs/IMPLEMENTATION_ORCHESTRATOR.md
 docs/governance/PROJECT_INVARIANTS.md
 docs/process/OPERATIONAL_GATES.md
-docs/intent-preservation/README.md
-docs/intent-preservation/TRACEABILITY_MATRIX.md
-docs/intent-preservation/PRE_CODING_GATE.md
+docs/INTENT_PRESERVATION_README.md
+docs/12_validation/TRACEABILITY_MATRIX.md
+docs/12_validation/PRE_CODING_GATE.md
 docs/contracts/fulfillment-handoff-contract.md
 TASKS.md
 STATE.json

@@ -51,9 +51,9 @@ Task: WH-G11-OUTBOX-T1
 Repository root: `/home/ssf/Documents/Github/warehouse-microservice`
 Git status: clean before edits on `main...origin/main`
 Remote status: remote-only edits over SSH
-Execution plan: `docs/intent-preservation/execution-plans/EP-WH-G11-OUTBOX.md`
-Context package: `docs/intent-preservation/context-packages/CP-WH-G11-OUTBOX.md`
-Coding prompt: `docs/intent-preservation/coding-prompts/PROMPT-WH-G11-OUTBOX.md`
+Execution plan: `docs/21_execution_plans/EP-WH-G11-OUTBOX.md`
+Context package: `docs/13_context_packages/CP-WH-G11-OUTBOX.md`
+Coding prompt: `docs/14_prompts/PROMPT-WH-G11-OUTBOX.md`
 Invariants checked: 1, 6, 7, 8, 9, 10, 11, 12
 Sensitive-data classification: no secrets, no production payloads
 Contract/schema impact: additive outbox table, additive `eventId` in stock event payloads

@@ -8,9 +8,9 @@ created: 2026-06-12
 last_updated: 2026-06-12
 completeness_level: validated
 upstream:
-  - docs/intent-preservation/execution-plans/EP-WH-G3.md
+  - docs/21_execution_plans/EP-WH-G3.md
 downstream:
-  - docs/intent-preservation/coding-prompts/PROMPT-WH-G3.md
+  - docs/14_prompts/PROMPT-WH-G3.md
 related_adrs: []
 ```
 
@@ -23,10 +23,10 @@ Implement WH-G3 by enforcing validated stock mutation contracts, required reason
 - `docs/orchestrator/warehouse-intent-plan.md`
 - `docs/governance/PROJECT_INVARIANTS.md`
 - `implementation-goals/GOAL-03-stock-mutation-invariants.md`
-- `docs/intent-preservation/tasks/WH-G3-T1.md`
-- `docs/intent-preservation/tasks/WH-G3-T2.md`
-- `docs/intent-preservation/tasks/WH-G3-T3.md`
-- `docs/intent-preservation/execution-plans/EP-WH-G3.md`
+- `docs/11_tasks/WH-G3-T1.md`
+- `docs/11_tasks/WH-G3-T2.md`
+- `docs/11_tasks/WH-G3-T3.md`
+- `docs/21_execution_plans/EP-WH-G3.md`
 
 ## Relevant Files
 

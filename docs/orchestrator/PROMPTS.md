@@ -18,7 +18,7 @@ WAREHOUSE ORCHESTRATOR: implement goal number N
 WAREHOUSE ORCHESTRATOR: define next goal
 ```
 
-Before coding the new goal, create the IPS task document, execution plan, context package, coding prompt, validation report draft, and pre-coding gate evidence under `docs/intent-preservation/`.
+Before coding the new goal, create the IPS task document, execution plan, context package, coding prompt, validation report draft, and pre-coding gate evidence under the numbered `docs/NN_*` layers.
 
 ## Required Final Report Shape
 

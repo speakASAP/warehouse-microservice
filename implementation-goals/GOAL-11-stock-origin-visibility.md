@@ -7,8 +7,8 @@ Metadata:
 - created: 2026-06-13
 - last_updated: 2026-06-13
 - completeness_level: complete
-- upstream: BUSINESS.md, SYSTEM.md, docs/orchestrator/warehouse-intent-plan.md, docs/intent-preservation/TRACEABILITY_MATRIX.md, catalog-microservice docs/IMPLEMENTATION_STATE.md, suppliers-microservice docs/IMPLEMENTATION_STATE.md
-- downstream: docs/intent-preservation/tasks/WH-G11-T1.md, docs/intent-preservation/execution-plans/EP-WH-G11-T1.md
+- upstream: BUSINESS.md, SYSTEM.md, docs/orchestrator/warehouse-intent-plan.md, docs/12_validation/TRACEABILITY_MATRIX.md, catalog-microservice docs/IMPLEMENTATION_STATE.md, suppliers-microservice docs/IMPLEMENTATION_STATE.md
+- downstream: docs/11_tasks/WH-G11-T1.md, docs/21_execution_plans/EP-WH-G11-T1.md
 
 ## Intent
 

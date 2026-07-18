@@ -49,9 +49,9 @@ Before implementation, branch orchestration, or launching workers, read:
 README.md
 SYSTEM.md
 docs/orchestrator/warehouse-intent-plan.md
-docs/intent-preservation/README.md
-docs/intent-preservation/TRACEABILITY_MATRIX.md
-docs/intent-preservation/PRE_CODING_GATE.md
+docs/INTENT_PRESERVATION_README.md
+docs/12_validation/TRACEABILITY_MATRIX.md
+docs/12_validation/PRE_CODING_GATE.md
 docs/IMPLEMENTATION_STATE.md
 docs/IMPLEMENTATION_ORCHESTRATOR.md
 docs/governance/PROJECT_INVARIANTS.md
@@ -90,9 +90,9 @@ Reading order:
 1. `BUSINESS.md` (immutable by AI)
 2. `SYSTEM.md`
 3. `docs/orchestrator/warehouse-intent-plan.md`
-4. `docs/intent-preservation/README.md`
-5. `docs/intent-preservation/TRACEABILITY_MATRIX.md`
-6. `docs/intent-preservation/PRE_CODING_GATE.md`
+4. `docs/INTENT_PRESERVATION_README.md`
+5. `docs/12_validation/TRACEABILITY_MATRIX.md`
+6. `docs/12_validation/PRE_CODING_GATE.md`
 7. `docs/IMPLEMENTATION_STATE.md`
 8. `docs/IMPLEMENTATION_ORCHESTRATOR.md`
 9. `implementation-goals/README.md`

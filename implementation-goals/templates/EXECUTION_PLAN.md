@@ -4,7 +4,7 @@
 id: EP-WH-GX
 status: draft
 source_task:
-  - docs/intent-preservation/tasks/WH-GX-T1.md
+  - docs/11_tasks/WH-GX-T1.md
 owner: warehouse-owner
 created: YYYY-MM-DD
 last_updated: YYYY-MM-DD

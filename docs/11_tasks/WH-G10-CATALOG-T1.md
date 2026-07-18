@@ -18,7 +18,7 @@ operational_gates:
 
 - `docs/orchestrator/warehouse-intent-plan.md`
 - `docs/governance/PROJECT_INVARIANTS.md`
-- `docs/intent-preservation/PRE_CODING_GATE.md`
+- `docs/12_validation/PRE_CODING_GATE.md`
 - `docs/contracts/availability-contracts.md`
 - Delegated owner approval for Catalog Identity Validation on 2026-06-13.
 

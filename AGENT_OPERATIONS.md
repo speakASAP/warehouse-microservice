@@ -19,7 +19,7 @@ Vision -> Goal Impact -> System -> Feature -> Task -> Execution Plan -> Coding P
 
 ## Before Work
 
-Read repository-local instructions and planning sources first, including any `AGENTS.md`, `TASKS.md`, `STATE.json`, `docs/orchestrator/*`, `docs/intent-preservation/*`, or project-specific equivalents.
+Read repository-local instructions and planning sources first, including any `AGENTS.md`, `TASKS.md`, `STATE.json`, `docs/orchestrator/*`, `docs/[0-2][0-9]_*/*`, or project-specific equivalents.
 
 Before coding, verify:
 
@@ -48,7 +48,7 @@ Every parallel workstream must declare:
 
 ## Validation Debt
 
-Use `docs/orchestrator/VALIDATION_DEBT.md`, `docs/intent-preservation/VALIDATION_DEBT.md`, or the nearest repo-standard ledger to record known out-of-scope validation failures.
+Use `docs/orchestrator/VALIDATION_DEBT.md`, `docs/12_validation/VALIDATION_DEBT.md`, or the nearest repo-standard ledger to record known out-of-scope validation failures.
 
 Validation debt does not excuse current-task failures. If a failure touches current-task files or acceptance criteria, treat it as blocking.
 

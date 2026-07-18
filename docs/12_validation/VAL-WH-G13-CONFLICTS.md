@@ -19,9 +19,9 @@ Task: WH-G13-CONFLICTS-T1
 Repository root: `/home/ssf/Documents/Github/warehouse-microservice`
 Git status: remote working tree contained parallel-worker changes before collection
 Remote status: uncommitted integrated worker output
-Execution plan: `docs/intent-preservation/execution-plans/EP-WH-G13-CONFLICTS.md`
-Context package: `docs/intent-preservation/context-packages/CP-WH-G13-CONFLICTS.md`
-Coding prompt: `docs/intent-preservation/coding-prompts/PROMPT-WH-G13-CONFLICTS.md`
+Execution plan: `docs/21_execution_plans/EP-WH-G13-CONFLICTS.md`
+Context package: `docs/13_context_packages/CP-WH-G13-CONFLICTS.md`
+Coding prompt: `docs/14_prompts/PROMPT-WH-G13-CONFLICTS.md`
 Invariants checked: Warehouse stock authority, supplier reconciliation evidence ownership, Auth/RBAC boundary, migration discipline.
 Sensitive-data classification: no secrets; supplier/product/warehouse identifiers and operator notes are operational data.
 Contract/schema impact: additive supplier reconciliation list/review contract and additive review metadata columns.

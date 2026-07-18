@@ -8,12 +8,12 @@ created: 2026-06-12
 last_updated: 2026-06-12
 completeness_level: complete
 upstream:
-  - docs/intent-preservation/README.md
+  - docs/INTENT_PRESERVATION_README.md
   - docs/process/OPERATIONAL_GATES.md
   - docs/governance/PROJECT_INVARIANTS.md
 downstream:
-  - docs/intent-preservation/execution-plans/
-  - docs/intent-preservation/validation-reports/
+  - docs/21_execution_plans/
+  - docs/12_validation/
 related_adrs: []
 ```
 
@@ -24,7 +24,7 @@ This gate prevents coding from starting from vague intent. It must be completed 
 ## Required Inputs
 
 - selected goal from `implementation-goals/`;
-- task document from `docs/intent-preservation/tasks/`;
+- task document from `docs/11_tasks/`;
 - current implementation state from `docs/IMPLEMENTATION_STATE.md`;
 - current task backlog from `TASKS.md`;
 - project invariants from `docs/governance/PROJECT_INVARIANTS.md`;

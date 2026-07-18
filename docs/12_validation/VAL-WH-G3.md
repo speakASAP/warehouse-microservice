@@ -8,7 +8,7 @@ created: 2026-06-12
 last_updated: 2026-06-12
 completeness_level: validated
 upstream:
-  - docs/intent-preservation/execution-plans/EP-WH-G3.md
+  - docs/21_execution_plans/EP-WH-G3.md
 downstream:
   - docs/IMPLEMENTATION_STATE.md
   - TASKS.md
@@ -54,9 +54,9 @@ Task: WH-G3-T1, WH-G3-T2, WH-G3-T3
 Repository root: remote-sync local documentation mirror
 Git status: remote-sync is untracked in the local workspace
 Remote status: WH-G3 completion evidence already recorded in TASKS.md
-Execution plan: docs/intent-preservation/execution-plans/EP-WH-G3.md
-Context package: docs/intent-preservation/context-packages/CP-WH-G3.md
-Coding prompt: docs/intent-preservation/coding-prompts/PROMPT-WH-G3.md
+Execution plan: docs/21_execution_plans/EP-WH-G3.md
+Context package: docs/13_context_packages/CP-WH-G3.md
+Coding prompt: docs/14_prompts/PROMPT-WH-G3.md
 Result: pass as historical backfill; future coding requires pre-coding gate before source edits
 ```
 

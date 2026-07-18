@@ -18,7 +18,7 @@ operational_gates:
 
 - `docs/orchestrator/warehouse-intent-plan.md`
 - `docs/governance/PROJECT_INVARIANTS.md`
-- `docs/intent-preservation/TRACEABILITY_MATRIX.md`
+- `docs/12_validation/TRACEABILITY_MATRIX.md`
 - `implementation-goals/GOAL-10-landing-auth-admin-gate.md`
 - `auth-microservice/docs/UNIFIED_AUTH_CONTRACT.md`
 

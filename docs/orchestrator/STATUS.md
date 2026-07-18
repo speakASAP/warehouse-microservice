@@ -307,7 +307,7 @@ Intent chain:
 - Task: document accepted snapshot envelope, status mapping, idempotency/ledger expectations, redaction policy, rejection rules, Orders callback role, and exact runtime gates.
 - Execution Plan: docs-only; do not implement runtime consumer code, DB migrations, secrets, deploy changes, live calls, or Allegro/Orders edits.
 - Coding Prompt: remote-only on Alfares, Warehouse `docs/**` only, no `src/**`.
-- Code: `docs/contracts/fulfillment-provider-status-intake-contract.md`, `docs/contracts/fulfillment-handoff-contract.md`, `docs/intent-preservation/validation-reports/VAL-WH-ALLEGRO-SNAPSHOT-CONSUMER.md`, state/status docs.
+- Code: `docs/contracts/fulfillment-provider-status-intake-contract.md`, `docs/contracts/fulfillment-handoff-contract.md`, `docs/12_validation/VAL-WH-ALLEGRO-SNAPSHOT-CONSUMER.md`, state/status docs.
 - Validation: `git diff --check`; safe static checker `npm run check:hosted-auth`.
 
 Evidence:

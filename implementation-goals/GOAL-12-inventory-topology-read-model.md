@@ -7,8 +7,8 @@ Metadata:
 - created: 2026-06-13
 - last_updated: 2026-06-13
 - completeness_level: complete
-- upstream: GOAL-11-stock-origin-visibility.md, docs/contracts/availability-contracts.md, docs/intent-preservation/TRACEABILITY_MATRIX.md
-- downstream: docs/intent-preservation/tasks/WH-G12-T1.md, docs/intent-preservation/execution-plans/EP-WH-G12.md
+- upstream: GOAL-11-stock-origin-visibility.md, docs/contracts/availability-contracts.md, docs/12_validation/TRACEABILITY_MATRIX.md
+- downstream: docs/11_tasks/WH-G12-T1.md, docs/21_execution_plans/EP-WH-G12.md
 
 ## Intent
 

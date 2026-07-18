@@ -11,7 +11,7 @@ Metadata:
 ## Upstream Traceability
 
 - implementation-goals/GOAL-11-transactional-stock-event-outbox.md
-- docs/intent-preservation/tasks/WH-G11-OUTBOX-T1.md
+- docs/11_tasks/WH-G11-OUTBOX-T1.md
 
 ## Plan
 

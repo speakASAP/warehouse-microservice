@@ -13,9 +13,9 @@ SYSTEM.md
 TASKS.md
 STATE.json
 docs/orchestrator/warehouse-intent-plan.md
-docs/intent-preservation/README.md
-docs/intent-preservation/TRACEABILITY_MATRIX.md
-docs/intent-preservation/PRE_CODING_GATE.md
+docs/INTENT_PRESERVATION_README.md
+docs/12_validation/TRACEABILITY_MATRIX.md
+docs/12_validation/PRE_CODING_GATE.md
 docs/IMPLEMENTATION_STATE.md
 docs/IMPLEMENTATION_ORCHESTRATOR.md
 implementation-goals/README.md
