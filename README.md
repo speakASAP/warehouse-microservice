@@ -14,24 +14,24 @@ Create a technological ecosystem where multiple microservices are available on t
 
 ### Application list
 
-|     Application     | Authentication | Database |  Logging  |   Nginx   | Notifications |  Payment  |
+|     Application     | Authentication | Database |  Logging  | Ingress | Notifications |  Payment  |
 | ------------------- | -------------- | -------- | --------- | --------- | ------------- | --------- |
-| **allegro-service** |   ✅ Shared    | ✅ Shared | ✅ Shared | ✅ Shared |    ✅ Shared   | ✅ Shared |
-| **crypto-ai-agent** |   ✅ Shared    | ✅ Shared | ✅ Shared | ✅ Shared |    ✅ Shared   | ✅ Shared |
-| **flipflop-service**|   ✅ Shared    | ✅ Shared | ✅ Shared | ✅ Shared |    ✅ Shared   | ✅ Shared |
-| **marathon**        |   ✅ Shared    | ✅ Shared | ✅ Shared | ✅ Shared |    ✅ Shared   | ✅ Shared |
-| **shop-assistant**  |   ✅ Shared    | ✅ Shared | ✅ Shared | ✅ Shared |               |           |
-| **statex**          |   ✅ Shared    | ✅ Shared | ✅ Shared | ✅ Shared |    ✅ Shared   | ✅ Shared |
+| **allegro-service** |   ✅ Shared    | ✅ Shared | ✅ Shared | ✅ Traefik |    ✅ Shared   | ✅ Shared |
+| **crypto-ai-agent** |   ✅ Shared    | ✅ Shared | ✅ Shared | ✅ Traefik |    ✅ Shared   | ✅ Shared |
+| **flipflop-service**|   ✅ Shared    | ✅ Shared | ✅ Shared | ✅ Traefik |    ✅ Shared   | ✅ Shared |
+| **marathon**        |   ✅ Shared    | ✅ Shared | ✅ Shared | ✅ Traefik |    ✅ Shared   | ✅ Shared |
+| **shop-assistant**  |   ✅ Shared    | ✅ Shared | ✅ Shared | ✅ Traefik |               |           |
+| **statex**          |   ✅ Shared    | ✅ Shared | ✅ Shared | ✅ Traefik |    ✅ Shared   | ✅ Shared |
 
 ### Microserices list
 
-|    Microservice     | Authentication | Database  |  Logging  |   Nginx   | Notifications |  Payment  |
+|    Microservice     | Authentication | Database  |  Logging  | Ingress | Notifications |  Payment  |
 | ------------------- | -------------- | --------- | --------- | --------- | ------------- | --------- |
 | **AI**              |                | ✅ Shared | ✅ Shared |           |               |           |
 | **auth**            |                | ✅ Shared | ✅ Shared |           |               |           |
 | **database**        |                |           | ✅ Shared |           |               |           |
 | **logging**         |                |           |           |           |               |           |
-| **nginx**           |                |           | ✅ Shared |           |               |           |
+| **traefik-ingress** |                |           | ✅ Shared |           |               |           |
 | **notifications**   |                | ✅ Shared | ✅ Shared |           |               |           |
 | **payment**         |                | ✅ Shared | ✅ Shared |           |   ✅ Shared   |           |
 
@@ -66,17 +66,17 @@ Create a technological ecosystem where multiple microservices are available on t
 
 ### Core Infrastructure Services
 
-#### 1. **nginx-microservice**
+#### 1. **Traefik Ingress Controller**
 
-- **Purpose**: Reverse proxy, SSL termination, and blue/green deployment management
+- **Purpose**: Kubernetes-native reverse proxy, SSL termination, and service routing
 - **Access**:
-  - Production: Managed via nginx-microservice container
-  - Configuration: `~/Documents/Github/nginx-microservice`
+  - Kubernetes Ingress resources define routes automatically
+  - Configuration: `k8s/<service>-ingress.yaml` in each service repository
 - **Features**:
-  - Automatic SSL certificate management (Let's Encrypt/Certbot)
-  - Blue/green deployment orchestration
-  - Load balancing and routing
-  - Used by: All applications (alfares.cz, flipfloalfares.czczcz, crypto-ai-agalfares.cz.cz.cz, etc.)
+  - Automatic SSL certificate management (cert-manager with Let's Encrypt)
+  - Traffic routing based on Ingress rules
+  - Service health checking
+  - Used by: All applications via Kubernetes DNS (`<service-name>.<namespace>.svc.cluster.local`)
 
 #### 2. **database-server**
 
