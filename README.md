@@ -335,7 +335,7 @@ Create a technological ecosystem where multiple microservices are available on t
   - LiveKit SFU with built-in TURN server for A/V calls
   - Element X web client
   - Blue/green deployment support
-  - Automatic SSL certificate management via nginx-microservice
+  - Automatic SSL certificate management via Traefik + cert-manager (K8s)
 
 ### 9. **beauty** (beauty.alfares.cz)
 
@@ -362,7 +362,7 @@ Create a technological ecosystem where multiple microservices are available on t
 - **Location**: `~/Documents/Github/marathon`
 - **Repository**: `git@github.com:speakASAP/marathon.git`
 - **Uses**: All shared microservices (database, notifications, logging, payments, auth)
-- **Notes**: Production-only deployment with blue/green via nginx-microservice
+- **Notes**: Production deployment on Kubernetes (K8s) with rolling updates via Traefik ingress
 
 ### 11. **shop-assistant** (shop-assistant.alfares.cz)
 
@@ -372,7 +372,7 @@ Create a technological ecosystem where multiple microservices are available on t
 - **Documentation**: See `shop-assistant/README.md`
 - **Uses**: Shared microservices (database, logging, auth), ai-microservice (ASR, LLM), external search API (e.g. Serper)
 - **Port range**: 45xx (4500 blue, 4501 green)
-- **Notes**: Blue/green deployment via nginx-microservice; search is global (internet), not internal catalog
+- **Notes**: Kubernetes (K8s) deployment with rolling updates via Traefik ingress; search is global (internet), not internal catalog
 
 ---
 
@@ -510,7 +510,7 @@ kubectl exec -n statex-apps deploy/db-server-postgres -- psql -U dbadmin -d <dat
 ### Docker Network Access
 
 ```bash
-# From within a container on nginx-network
+# From within a Kubernetes pod (K8s internal)
 # Ports configured in respective .env files
 curl http://notifications-microservice:${PORT:-3368}/health  # notifications-microservice/.env
 curl http://logging-microservice:${PORT:-3367}/health  # logging-microservice/.env
@@ -526,7 +526,6 @@ kubectl exec -n statex-apps deploy/db-server-postgres -- psql -U dbadmin -d <dat
 ssh alfares
 
 # Access microservice directories
-cd ~/Documents/Github/nginx-microservice
 cd ~/Documents/Github/database-server
 cd ~/Documents/Github/notifications-microservice
 cd ~/Documents/Github/logging-microservice
@@ -641,42 +640,47 @@ await database.query('SELECT * FROM orders');
    git clone <repo-url> <new-microservice>
    ```
 
-3. **Connect to shared network**:
+3. **For Kubernetes deployment** (recommended):
 
    ```yaml
-   # docker-compose.yml
-   networks:
-     nginx-network:
-       external: true
-       name: nginx-network
+   # k8s/ingress.yaml
+   apiVersion: networking.k8s.io/v1
+   kind: Ingress
+   metadata:
+     name: <service-name>-ingress
+     namespace: statex-apps
+   spec:
+     ingressClassName: traefik
+     rules:
+     - host: <service>.alfares.cz
+       http:
+         paths:
+         - path: /
+           pathType: Prefix
+           backend:
+             service:
+               name: <service-name>
+               port:
+                 number: 3000
    ```
 
-4. **Deploy using nginx-microservice scripts** (if needs external access):
+   Then deploy: `kubectl apply -f k8s/ingress.yaml`
 
-   ```bash
-   cd ~/nginx-microservice
-   ./scripts/blue-green/deploy-smart.sh <service-name>
-   ```
+4. **For legacy Docker deployments**:
 
-   The deployment script will automatically:
-   - Create/update service registry file in `nginx-microservice/service-registry/`
-   - Generate nginx configuration with correct container names
-   - Set up SSL certificates
-   - Deploy using blue/green deployment pattern
+   - Production infrastructure now runs on Kubernetes with Traefik ingress controller
 
 5. **Document in this README**:
    - Add service description
    - Document access methods
    - Provide integration examples
 
-### ⚠️ Service Registry - Important Rules
+### ⚠️ Service Registry - Important Rules (ARCHIVED)
 
-**DO NOT** create `service-registry.json` files in individual service codebases!
-
-- Service registry files are **automatically created and managed** by the nginx-microservice deployment script
-- They are stored in `nginx-microservice/service-registry/` directory
-- The deployment script auto-detects service configuration from docker-compose files and environment variables
-- Nginx configurations are automatically generated from service registry files
+For **Kubernetes deployments** (current standard):
+- Use native Kubernetes Ingress resources (`k8s/<service>-ingress.yaml`)
+- No manual service registry files needed — K8s DNS handles service discovery
+- Traefik automatically routes traffic based on Ingress rules
 
 For complete documentation, see [Service Registry Documentation](./docs/SERVICE_REGISTRY.md).
 
@@ -684,11 +688,14 @@ For complete documentation, see [Service Registry Documentation](./docs/SERVICE_
 
 The following services are **production-ready** and should **NOT** be modified:
 
-- **database-server** - Shared PostgreSQL and Redis database
-- **auth-microservice** - Authentication and user management
-- **nginx-microservice** - Reverse proxy and SSL management
-- **logging-microservice** - Centralized logging service
+The following services are **production-ready** and should **NOT** be modified:
 
+- **database-server** - Shared PostgreSQL and Redis database (Kubernetes)
+- **auth-microservice** - Authentication and user management (Kubernetes)
+- **logging-microservice** - Centralized logging service (Kubernetes)
+- **traefik-ingress** - Kubernetes ingress controller with automatic SSL (Let's Encrypt via cert-manager)
+
+#### Rules for Production-Ready Services
 #### Rules for Production-Ready Services
 
 1. **✅ Allowed**: Use scripts from these services' directories
@@ -697,13 +704,19 @@ The following services are **production-ready** and should **NOT** be modified:
 
 #### Using Scripts
 
-You can use scripts from production-ready services:
+#### For Kubernetes Deployments:
+
+Use native Kubernetes tools:
 
 ```bash
-# Example: Use nginx-microservice scripts
-cd ~/nginx-microservice
-./scripts/blue-green/deploy-smart.sh <service-name>
-./scripts/add-domain.sh <domain> <container> <port>
+# Apply Ingress configuration
+kubectl apply -f k8s/<service>-ingress.yaml
+
+# Scale deployments
+kubectl scale deployment <service-name> -n statex-apps --replicas=3
+
+# Update service image
+kubectl set image deployment/<service-name> <service-name>=<image>:<tag> -n statex-apps
 ```
 
 #### Requesting Modifications
@@ -855,7 +868,7 @@ This section documents all ports used by applications and microservices to help 
 
 | Service | Host Port | Container Port | .env Variable | Description | Access Method |
 | ------- | --------- | -------------- | ------------- | ----------- | ------------- |
-| **nginx-microservice** | 80, 443 | 80, 443 | N/A (standard ports) | HTTP/HTTPS reverse proxy | External (production) |
+| **traefik-ingress** | 80, 443 | 80, 443 | N/A (standard ports) | HTTP/HTTPS ingress controller (Kubernetes) | Kubernetes Ingress resources |
 | **database-server** (PostgreSQL) | Kubernetes service | `5432` | ConfigMap | Shared PostgreSQL database | `db-server-postgres:5432` |
 | **database-server** (Redis) | Kubernetes service | `6379` | ConfigMap | Shared Redis cache | `db-server-redis:6379` |
 | **auth-microservice** (Blue) | `${PORT}` | `${PORT}` | `PORT` (auth-microservice/.env) | Authentication service (blue deployment) | Docker: `auth-microservice:${PORT}`, Production: `https://auth.alfares.cz` |
@@ -1116,8 +1129,8 @@ This section documents all ports used by applications and microservices to help 
 
 | Port | Services Using This Port | Conflict Status |
 | ---- | ------------------------ | --------------- |
-| **80** | nginx-microservice | ✅ No conflict (single service) |
-| **443** | nginx-microservice | ✅ No conflict (single service) |
+| **80** | traefik-ingress (Kubernetes) | ✅ Managed by K8s ingress controller |
+| **443** | traefik-ingress (Kubernetes) | ✅ Managed by K8s ingress controller (cert-manager) |
 | **3000** | Container ports (flipflop Frontend, statex Frontend) | ✅ No conflict (different Kubernetes service DNS) |
 | **3001** | statex Frontend Green (container) | ✅ No conflict (green deployment) |
 | **3002-3009** | Container ports (flipflop services) | ✅ No conflict (different Kubernetes service DNS) |
@@ -1221,7 +1234,7 @@ This section documents all ports used by applications and microservices to help 
 
 **What we checked:**
 
-- **Configs used**: all `docker-compose*.yml` files in every app/microservice, plus all top-level `.env` files (allegro-service, flipflop-service, crypto-ai-agent, statex, database-server, nginx-microservice, logging-microservice, notifications-microservice, payments-microservice, auth-microservice, ai-microservice).
+- **Configs used**: all `docker-compose*.yml` files in every app/microservice, plus all top-level `.env` files (allegro-service, flipflop-service, crypto-ai-agent, statex, database-server, logging-microservice, notifications-microservice, payments-microservice, auth-microservice, ai-microservice).
 - **Scope**: Kubernetes service DNS exposed with `ports:` in Kubernetes and all `*_PORT` variables in `.env`.
 - **Verification Date**: 2025-12-04
 - **Status**: ✅ **NO PORT CONFLICTS DETECTED** - All ports verified across all applications and microservices (including ai-microservice ports 3380-3389, aukro-service ports 3700-3705, heureka-service ports 3800-3805, bazos-service ports 3900-3905, messenger ports 4000-4004, beauty ports 4100-4107)
@@ -1234,8 +1247,8 @@ This table lists all Kubernetes service DNS used across all services for quick c
 
 | Port (Default) | .env Variable | Service | Application/Microservice | Notes |
 | -------------- | ------------- | ------- | ------------------------ | ----- |
-| **80** | N/A | nginx | nginx-microservice | HTTP (standard port) |
-| **443** | N/A | nginx | nginx-microservice | HTTPS (standard port) |
+| **80** | N/A | traefik | traefik-ingress (Kubernetes) | HTTP (K8s ingress controller) |
+| **443** | N/A | traefik | traefik-ingress (Kubernetes) | HTTPS (K8s ingress controller + cert-manager) |
 | **3100** | `FRONTEND_PORT` | Frontend | crypto-ai-agent (Blue) | crypto-ai-agent/.env |
 | **3101** | `FRONTEND_PORT_GREEN` | Frontend | crypto-ai-agent (Green) | crypto-ai-agent/.env |
 | **3367** | `PORT` | Logging Service | logging-microservice | logging-microservice/.env |
