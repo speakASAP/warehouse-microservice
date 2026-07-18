@@ -8,7 +8,10 @@ metadata:
     job: reservation-expiry
     managed-by: k8s-migration
 spec:
-  schedule: "*/5 * * * *"
+  # Staggered (was */5, colliding every fire with domain-research-expiry-recheck's
+  # identical */5 schedule). See
+  # shared/docs/DEPLOY_STANDARDIZATION_REPORT.md section 12 addendum.
+  schedule: "3-58/5 * * * *"
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 3
   failedJobsHistoryLimit: 5
