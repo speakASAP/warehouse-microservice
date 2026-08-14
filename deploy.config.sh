@@ -19,7 +19,11 @@ DEPLOYMENTS=(
   "warehouse-microservice|app|warehouse-microservice"
 )
 
-MANIFESTS=(rabbitmq.yaml configmap.yaml external-secret.yaml deployment.yaml service.yaml ingress.yaml reservation-expiry-cronjob.yaml)
+# reservation-expiry-cronjob.yaml is deliberately NOT in MANIFESTS: `kubectl set
+# image` only ever targets deployments, so a statically applied CronJob stays
+# pinned to :latest forever and silently runs whatever was built last, with no
+# deploy event to notice. deploy_post_manifests substitutes the tag instead.
+MANIFESTS=(rabbitmq.yaml configmap.yaml external-secret.yaml deployment.yaml service.yaml ingress.yaml)
 
 deploy_post_manifests() {
   if [ -f "$PROJECT_ROOT/k8s/rabbitmq.yaml" ]; then
@@ -35,4 +39,9 @@ deploy_post_manifests() {
     return 1
   }
   kubectl logs "job/${SERVICE_NAME}-migrations" -n "$NAMESPACE"
+
+  # Apply the CronJob with the real tag substituted (see the MANIFESTS note).
+  sed "s#${REGISTRY}/${SERVICE_NAME}:latest#${image}#g" \
+    "$PROJECT_ROOT/k8s/reservation-expiry-cronjob.yaml" \
+    | kubectl apply -f - -n "$NAMESPACE"
 }
