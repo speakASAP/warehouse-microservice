@@ -2,6 +2,8 @@ import { Body, Controller, Delete, Get, Param, ParseUUIDPipe, Post, Put, Query }
 import { LoggerService } from '../logger/logger.service';
 import { BatchWarehouseLogisticsDto, UpdateWarehouseDto, WarehouseDto } from './dto/warehouse.dto';
 import { WarehousesService } from './warehouses.service';
+import { Roles } from '../auth/roles.decorator';
+import { WAREHOUSE_READ_ROLES, WAREHOUSE_ADMIN_ROLES } from '../auth/roles.constants';
 
 @Controller('warehouses')
 export class WarehousesController {
@@ -10,6 +12,7 @@ export class WarehousesController {
     private readonly logger: LoggerService,
   ) {}
 
+  @Roles(...WAREHOUSE_READ_ROLES)
   @Get()
   async findAll() {
     this.logger.log('GET /api/warehouses', 'WarehousesController');
@@ -17,6 +20,7 @@ export class WarehousesController {
     return { success: true, data: warehouses };
   }
 
+  @Roles(...WAREHOUSE_READ_ROLES)
   @Get('topology')
   async getInventoryTopology(@Query('productId') productId?: string) {
     this.logger.log('GET /api/warehouses/topology', 'WarehousesController');
@@ -24,6 +28,7 @@ export class WarehousesController {
     return { success: true, data: topology };
   }
 
+  @Roles(...WAREHOUSE_READ_ROLES)
   @Get('logistics/:productId')
   async getProductLogistics(@Param('productId') productId: string) {
     this.logger.log('GET /api/warehouses/logistics/' + productId, 'WarehousesController');
@@ -31,6 +36,7 @@ export class WarehousesController {
     return { success: true, data: logistics };
   }
 
+  @Roles(...WAREHOUSE_READ_ROLES)
   @Post('logistics/batch')
   async getBatchProductLogistics(@Body() data: BatchWarehouseLogisticsDto) {
     this.logger.log('POST /api/warehouses/logistics/batch', 'WarehousesController');
@@ -38,6 +44,7 @@ export class WarehousesController {
     return { success: true, data: logistics };
   }
 
+  @Roles(...WAREHOUSE_READ_ROLES)
   @Get(':id')
   async findOne(@Param('id', ParseUUIDPipe) id: string) {
     this.logger.log('GET /api/warehouses/' + id, 'WarehousesController');
@@ -45,6 +52,7 @@ export class WarehousesController {
     return { success: true, data: warehouse };
   }
 
+  @Roles(...WAREHOUSE_ADMIN_ROLES)
   @Post()
   async create(@Body() data: WarehouseDto) {
     this.logger.log('POST /api/warehouses', 'WarehousesController');
@@ -52,6 +60,7 @@ export class WarehousesController {
     return { success: true, data: warehouse };
   }
 
+  @Roles(...WAREHOUSE_ADMIN_ROLES)
   @Put(':id')
   async update(@Param('id', ParseUUIDPipe) id: string, @Body() data: UpdateWarehouseDto) {
     this.logger.log('PUT /api/warehouses/' + id, 'WarehousesController');
@@ -59,6 +68,7 @@ export class WarehousesController {
     return { success: true, data: warehouse };
   }
 
+  @Roles(...WAREHOUSE_ADMIN_ROLES)
   @Delete(':id')
   async remove(@Param('id', ParseUUIDPipe) id: string) {
     this.logger.log('DELETE /api/warehouses/' + id, 'WarehousesController');

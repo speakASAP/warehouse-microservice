@@ -2,6 +2,7 @@ import 'reflect-metadata';
 import { ExecutionContext, ForbiddenException, UnauthorizedException } from '@nestjs/common';
 import axios from 'axios';
 import { JwtRolesGuard } from '../src/auth/jwt-roles.guard';
+import { WAREHOUSE_READ_ROLES, WAREHOUSE_WRITE_ROLES } from '../src/auth/roles.constants';
 import { PUBLIC_KEY, ROLES_KEY } from '../src/auth/roles.decorator';
 
 jest.mock('axios');
@@ -22,7 +23,9 @@ function createGuard(options: { isPublic?: boolean; roles?: string[] } = {}): Jw
   const reflector = {
     getAllAndOverride: jest.fn((key: string) => {
       if (key === PUBLIC_KEY) return options.isPublic ?? false;
-      if (key === ROLES_KEY && options.roles) return { roles: options.roles };
+      if (key === ROLES_KEY) {
+        return { roles: options.roles ?? ['global:superadmin', 'internal:warehouse-microservice:admin'] };
+      }
       return undefined;
     }),
   };
@@ -225,11 +228,11 @@ describe('JwtRolesGuard central Auth validation', () => {
     });
   });
 
-  it('accepts the Cliplot static warehouse service token as a machine actor', async () => {
+  it('grants the Cliplot static warehouse token read-only access, never admin', async () => {
     process.env.CLIPLOT_WAREHOUSE_SERVICE_TOKEN = 'cliplot-warehouse-token';
     const request = { headers: { authorization: 'Bearer cliplot-warehouse-token' } };
 
-    const guard = createGuard();
+    const guard = createGuard({ roles: [...WAREHOUSE_READ_ROLES] });
 
     await expect(guard.canActivate(createContext(request))).resolves.toBe(true);
 
@@ -239,7 +242,7 @@ describe('JwtRolesGuard central Auth validation', () => {
         sub: 'cliplot',
         type: 'service',
         authMethod: 'warehouse-static-service-token',
-        roles: ['internal:warehouse-microservice:admin'],
+        roles: ['internal:warehouse-microservice:readonly'],
         service: 'cliplot',
         serviceName: 'cliplot',
         clientId: 'cliplot',
@@ -248,7 +251,7 @@ describe('JwtRolesGuard central Auth validation', () => {
         sub: 'cliplot',
         type: 'service',
         authMethod: 'warehouse-static-service-token',
-        roles: ['internal:warehouse-microservice:admin'],
+        roles: ['internal:warehouse-microservice:readonly'],
         service: 'cliplot',
         serviceName: 'cliplot',
         clientId: 'cliplot',
@@ -344,4 +347,66 @@ describe('JwtRolesGuard central Auth validation', () => {
 
     await expect(guard.canActivate(createContext(request))).rejects.toThrow(UnauthorizedException);
   });
+
+  it('denies a route that has no @Roles decorator instead of falling back to admin', async () => {
+    const request = { headers: { authorization: 'Bearer any-token' } };
+    const reflector = {
+      getAllAndOverride: jest.fn((key: string) => {
+        if (key === PUBLIC_KEY) return false;
+        return undefined; // route was never decorated
+      }),
+    };
+    const guard = new JwtRolesGuard(reflector as any);
+
+    await expect(guard.canActivate(createContext(request))).rejects.toThrow(ForbiddenException);
+    expect(mockedAxios.post).not.toHaveBeenCalled();
+  });
+
+  it('refuses the read-only Cliplot token on a write route', async () => {
+    process.env.CLIPLOT_WAREHOUSE_SERVICE_TOKEN = 'cliplot-warehouse-token';
+    const request = { headers: { authorization: 'Bearer cliplot-warehouse-token' } };
+
+    const guard = createGuard({ roles: [...WAREHOUSE_WRITE_ROLES] });
+
+    await expect(guard.canActivate(createContext(request))).rejects.toThrow(ForbiddenException);
+  });
+
+  it('refuses a readonly service principal on a write route', async () => {
+    mockedAxios.post.mockResolvedValue({
+      data: {
+        valid: true,
+        user: {
+          sub: '500affb4-1ddb-46ab-abd1-a191891104db',
+          type: 'service',
+          roles: ['internal:warehouse-microservice:readonly'],
+          serviceName: 'catalog-microservice',
+        },
+      },
+    });
+    const request = { headers: { authorization: 'Bearer catalog-readonly-jwt' } };
+
+    const guard = createGuard({ roles: [...WAREHOUSE_WRITE_ROLES] });
+
+    await expect(guard.canActivate(createContext(request))).rejects.toThrow(ForbiddenException);
+  });
+
+  it('accepts a readonly service principal on a read route', async () => {
+    mockedAxios.post.mockResolvedValue({
+      data: {
+        valid: true,
+        user: {
+          sub: '500affb4-1ddb-46ab-abd1-a191891104db',
+          type: 'service',
+          roles: ['internal:warehouse-microservice:readonly'],
+          serviceName: 'catalog-microservice',
+        },
+      },
+    });
+    const request = { headers: { authorization: 'Bearer catalog-readonly-jwt' } };
+
+    const guard = createGuard({ roles: [...WAREHOUSE_READ_ROLES] });
+
+    await expect(guard.canActivate(createContext(request))).resolves.toBe(true);
+  });
+
 });

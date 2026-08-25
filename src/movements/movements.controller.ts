@@ -1,6 +1,8 @@
 import { Controller, Get, Param, Query } from '@nestjs/common';
 import { MovementsService } from './movements.service';
 import { LoggerService } from '../logger/logger.service';
+import { Roles } from '../auth/roles.decorator';
+import { WAREHOUSE_READ_ROLES } from '../auth/roles.constants';
 
 @Controller('movements')
 export class MovementsController {
@@ -9,6 +11,7 @@ export class MovementsController {
     private readonly logger: LoggerService,
   ) {}
 
+  @Roles(...WAREHOUSE_READ_ROLES)
   @Get('product/:productId')
   async findByProduct(@Param('productId') productId: string, @Query('limit') limit?: number) {
     this.logger.log(`GET /api/movements/product/${productId}`, 'MovementsController');
@@ -16,6 +19,7 @@ export class MovementsController {
     return { success: true, data: movements };
   }
 
+  @Roles(...WAREHOUSE_READ_ROLES)
   @Get('warehouse/:warehouseId')
   async findByWarehouse(@Param('warehouseId') warehouseId: string, @Query('limit') limit?: number) {
     this.logger.log(`GET /api/movements/warehouse/${warehouseId}`, 'MovementsController');

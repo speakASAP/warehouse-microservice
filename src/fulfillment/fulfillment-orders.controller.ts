@@ -7,6 +7,7 @@ import { FulfillmentProviderShipmentCorrelationService } from './fulfillment-pro
 import { FulfillmentProviderStatusSnapshotAdapterService } from './fulfillment-provider-status-snapshot-adapter.service';
 import { CreateFulfillmentOrderDto, FulfillmentOrderStatusTransitionDto, FulfillmentOrderTransitionDto, InternalDeliveryStatusUpdateDto, ProviderShipmentCorrelationDto } from './dto/fulfillment-order.dto';
 import { FulfillmentOrdersService } from './fulfillment-orders.service';
+import { WAREHOUSE_READ_ROLES, FULFILLMENT_WRITE_ROLES, ALLEGRO_FULFILLMENT_ROLES } from '../auth/roles.constants';
 
 @Controller('fulfillment-orders')
 export class FulfillmentOrdersController {
@@ -17,6 +18,7 @@ export class FulfillmentOrdersController {
     private readonly logger: LoggerService,
   ) {}
 
+  @Roles(...FULFILLMENT_WRITE_ROLES)
   @Post()
   async create(@Body() body: CreateFulfillmentOrderDto, @Req() request: Request) {
     this.logger.log('POST /api/fulfillment-orders', 'FulfillmentOrdersController');
@@ -27,6 +29,7 @@ export class FulfillmentOrdersController {
     return { success: true, data: fulfillmentOrder };
   }
 
+  @Roles(...WAREHOUSE_READ_ROLES)
   @Get('order/:orderId')
   async findByOrder(@Param('orderId') orderId: string) {
     this.logger.log(`GET /api/fulfillment-orders/order/${orderId}`, 'FulfillmentOrdersController');
@@ -35,7 +38,7 @@ export class FulfillmentOrdersController {
   }
 
   @Post('provider-status/allegro-shipment-snapshots')
-  @Roles('internal:allegro-service:service')
+  @Roles(...ALLEGRO_FULFILLMENT_ROLES)
   async recordAllegroShipmentStatusSnapshot(
     @Body() body: any,
     @Req() request: Request,
@@ -66,7 +69,7 @@ export class FulfillmentOrdersController {
   }
 
   @Post('order/:orderId/provider-shipment-correlations')
-  @Roles('internal:allegro-service:service')
+  @Roles(...ALLEGRO_FULFILLMENT_ROLES)
   async registerProviderShipmentCorrelation(
     @Param('orderId') orderId: string,
     @Body() body: ProviderShipmentCorrelationDto,
@@ -93,6 +96,7 @@ export class FulfillmentOrdersController {
     return { success: true, data: correlation };
   }
 
+  @Roles(...FULFILLMENT_WRITE_ROLES)
   @Post('order/:orderId/status')
   async updateStatus(
     @Param('orderId') orderId: string,
@@ -108,7 +112,7 @@ export class FulfillmentOrdersController {
   }
 
   @Post('order/:orderId/internal-delivery-status')
-  @Roles('internal:warehouse-microservice:admin')
+  @Roles(...FULFILLMENT_WRITE_ROLES)
   async recordInternalDeliveryStatus(
     @Param('orderId') orderId: string,
     @Body() body: InternalDeliveryStatusUpdateDto,
@@ -122,6 +126,7 @@ export class FulfillmentOrdersController {
     return { success: true, data: result };
   }
 
+  @Roles(...FULFILLMENT_WRITE_ROLES)
   @Post('order/:orderId/cancel')
   async cancel(
     @Param('orderId') orderId: string,
@@ -136,6 +141,7 @@ export class FulfillmentOrdersController {
     return { success: true, data: fulfillmentOrder };
   }
 
+  @Roles(...FULFILLMENT_WRITE_ROLES)
   @Post('order/:orderId/return')
   async returnOrder(
     @Param('orderId') orderId: string,

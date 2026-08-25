@@ -1,6 +1,8 @@
 import { Body, Controller, Get, Param, Post, Query, Req, ParseUUIDPipe } from '@nestjs/common';
 import { Request } from 'express';
 import { getAuthenticatedMutationActor } from '../auth/authenticated-actor';
+import { Roles } from '../auth/roles.decorator';
+import { WAREHOUSE_READ_ROLES, WAREHOUSE_WRITE_ROLES } from '../auth/roles.constants';
 import { StockService } from './stock.service';
 import { LoggerService } from '../logger/logger.service';
 import { CatalogProductReconciliationService } from './catalog-product-reconciliation.service';
@@ -24,6 +26,7 @@ export class StockController {
    * Report warehouse stock rows whose productId no longer resolves in catalog.
    * GET /api/stock/catalog/reconciliation
    */
+  @Roles(...WAREHOUSE_READ_ROLES)
   @Get('catalog/reconciliation')
   async getCatalogReconciliation(@Query() query: {
     productIds?: string | string[];
@@ -48,6 +51,7 @@ export class StockController {
    * Search catalog products for Warehouse Admin (proxies Catalog API with caller JWT).
    * GET /api/stock/admin/catalog/products
    */
+  @Roles(...WAREHOUSE_READ_ROLES)
   @Get('admin/catalog/products')
   async searchCatalogProductsForAdmin(
     @Query('search') search: string | undefined,
@@ -73,6 +77,7 @@ export class StockController {
    * Get one catalog product for Warehouse Admin (proxies Catalog API with caller JWT).
    * GET /api/stock/admin/catalog/products/:productId
    */
+  @Roles(...WAREHOUSE_READ_ROLES)
   @Get('admin/catalog/products/:productId')
   async getCatalogProductForAdmin(
     @Param('productId', ParseUUIDPipe) productId: string,
@@ -93,6 +98,7 @@ export class StockController {
    * Get stock for a product across all warehouses
    * GET /api/stock/:productId
    */
+  @Roles(...WAREHOUSE_READ_ROLES)
   @Get(':productId')
   async getStockByProduct(@Param('productId') productId: string) {
     this.logger.log(`GET /api/stock/${productId}`, 'StockController');
@@ -104,6 +110,7 @@ export class StockController {
    * Get total available stock for a product
    * GET /api/stock/:productId/total
    */
+  @Roles(...WAREHOUSE_READ_ROLES)
   @Get(':productId/total')
   async getTotalAvailable(@Param('productId') productId: string) {
     this.logger.log(`GET /api/stock/${productId}/total`, 'StockController');
@@ -115,6 +122,7 @@ export class StockController {
    * Get availability for multiple products
    * POST /api/stock/availability/batch
    */
+  @Roles(...WAREHOUSE_READ_ROLES)
   @Post('availability/batch')
   async getBatchAvailability(@Body() body: BatchAvailabilityDto) {
     this.logger.log('POST /api/stock/availability/batch', 'StockController');
@@ -126,6 +134,7 @@ export class StockController {
    * Set stock quantity
    * POST /api/stock/set
    */
+  @Roles(...WAREHOUSE_WRITE_ROLES)
   @Post('set')
   async setStock(@Body() body: SetStockDto, @Req() request: Request) {
     this.logger.log(`POST /api/stock/set`, 'StockController');
@@ -141,6 +150,7 @@ export class StockController {
    * Increment stock
    * POST /api/stock/increment
    */
+  @Roles(...WAREHOUSE_WRITE_ROLES)
   @Post('increment')
   async incrementStock(@Body() body: PositiveStockMutationDto, @Req() request: Request) {
     this.logger.log(`POST /api/stock/increment`, 'StockController');
@@ -156,6 +166,7 @@ export class StockController {
    * Decrement stock
    * POST /api/stock/decrement
    */
+  @Roles(...WAREHOUSE_WRITE_ROLES)
   @Post('decrement')
   async decrementStock(@Body() body: PositiveStockMutationDto, @Req() request: Request) {
     this.logger.log(`POST /api/stock/decrement`, 'StockController');
@@ -171,6 +182,7 @@ export class StockController {
    * Reserve stock for order
    * POST /api/stock/reserve
    */
+  @Roles(...WAREHOUSE_WRITE_ROLES)
   @Post('reserve')
   async reserveStock(@Body() body: ReserveStockDto, @Req() request: Request) {
     this.logger.log(`POST /api/stock/reserve`, 'StockController');
@@ -189,6 +201,7 @@ export class StockController {
    * Release reserved stock
    * POST /api/stock/unreserve
    */
+  @Roles(...WAREHOUSE_WRITE_ROLES)
   @Post('unreserve')
   async unreserveStock(@Body() body: UnreserveStockDto, @Req() request: Request) {
     this.logger.log(`POST /api/stock/unreserve`, 'StockController');

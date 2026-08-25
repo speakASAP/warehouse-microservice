@@ -8,6 +8,8 @@ import {
   SupplierStockReconciliationDto,
 } from './dto/supplier-stock-reconciliation.dto';
 import { SupplierReconciliationService } from './supplier-reconciliation.service';
+import { Roles } from '../auth/roles.decorator';
+import { WAREHOUSE_READ_ROLES, WAREHOUSE_ADMIN_ROLES } from '../auth/roles.constants';
 
 @Controller('supplier-reconciliations')
 export class SupplierReconciliationController {
@@ -16,6 +18,7 @@ export class SupplierReconciliationController {
     private readonly logger: LoggerService,
   ) {}
 
+  @Roles(...WAREHOUSE_READ_ROLES)
   @Get()
   async list(@Query() query: SupplierReconciliationQueryDto) {
     this.logger.log('GET /api/supplier-reconciliations', 'SupplierReconciliationController');
@@ -23,6 +26,7 @@ export class SupplierReconciliationController {
     return { success: true, data: reconciliations };
   }
 
+  @Roles(...WAREHOUSE_ADMIN_ROLES)
   @Patch(':id/review')
   async reviewConflict(@Param('id') id: string, @Body() body: SupplierConflictReviewDto) {
     this.logger.log(`PATCH /api/supplier-reconciliations/${id}/review`, 'SupplierReconciliationController');
@@ -30,6 +34,7 @@ export class SupplierReconciliationController {
     return { success: true, data: reconciliation };
   }
 
+  @Roles(...WAREHOUSE_ADMIN_ROLES)
   @Post()
   async reconcile(@Body() body: SupplierStockReconciliationDto, @Req() request: Request) {
     this.logger.log('POST /api/supplier-reconciliations', 'SupplierReconciliationController');

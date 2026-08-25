@@ -6,6 +6,7 @@ import {
   Injectable,
   CanActivate,
   ExecutionContext,
+  Logger,
   UnauthorizedException,
   ForbiddenException,
 } from '@nestjs/common';
@@ -40,6 +41,8 @@ const DEFAULT_AUTH_VALIDATE_TIMEOUT_MS = 3000;
 
 @Injectable()
 export class JwtRolesGuard implements CanActivate {
+  private readonly logger = new Logger(JwtRolesGuard.name);
+
   constructor(private reflector: Reflector) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -53,7 +56,22 @@ export class JwtRolesGuard implements CanActivate {
       context.getHandler(),
       context.getClass(),
     ]);
-    const requiredRoles = rolesMetadata?.roles?.length ? rolesMetadata.roles : this.getDefaultRoles();
+
+    // Deny by default. An undecorated route used to fall back to the service's
+    // broadest role set, which silently granted stock-mutation rights to callers
+    // that only ever needed to read. Failing loudly here forces every new route
+    // to declare its own least-privilege role set.
+    if (!rolesMetadata?.roles?.length) {
+      const handler = context.getHandler()?.name ?? 'unknown';
+      const controller = context.getClass()?.name ?? 'unknown';
+      this.logger.error(
+        `Route ${controller}.${handler} has no @Roles decorator; denying request. ` +
+          `Decorate it with a constant from src/auth/roles.constants.ts.`,
+      );
+      throw new ForbiddenException('Route is missing an authorization policy');
+    }
+
+    const requiredRoles = rolesMetadata.roles;
 
     const request = context.switchToHttp().getRequest<Request>();
     const authHeader = request.headers.authorization;
@@ -95,14 +113,24 @@ export class JwtRolesGuard implements CanActivate {
     return true;
   }
 
+  /**
+   * Legacy shared-secret bypass. This credential is a static string held by more
+   * than one pod and is not revocable through Auth, so it is scoped to read-only
+   * rather than admin. Slated for replacement by a per-pair RS256 service JWT;
+   * see docs/RS256_SERVICE_TOKEN_MIGRATION_PLAN.md.
+   */
   private resolveStaticServiceActor(token: string): AuthValidationUser | null {
     const cliplotToken = process.env.CLIPLOT_WAREHOUSE_SERVICE_TOKEN;
     if (cliplotToken && this.safeEqual(token, cliplotToken)) {
+      this.logger.warn(
+        'Request authenticated with the legacy static cliplot warehouse token; ' +
+          'this credential is shared and unrevocable, and is restricted to read-only routes.',
+      );
       return {
         sub: 'cliplot',
         type: 'service',
         authMethod: 'warehouse-static-service-token',
-        roles: ['internal:warehouse-microservice:admin'],
+        roles: ['internal:warehouse-microservice:readonly'],
         service: 'cliplot',
         serviceName: 'cliplot',
         clientId: 'cliplot',
@@ -138,11 +166,6 @@ export class JwtRolesGuard implements CanActivate {
   private getAuthValidateTimeoutMs(): number {
     const configured = Number(process.env.AUTH_VALIDATE_TIMEOUT_MS);
     return Number.isFinite(configured) && configured > 0 ? configured : DEFAULT_AUTH_VALIDATE_TIMEOUT_MS;
-  }
-
-  private getDefaultRoles(): string[] {
-    const name = process.env.SERVICE_NAME || 'warehouse-microservice';
-    return [`global:superadmin`, `internal:${name}:admin`];
   }
 
   private safeEqual(left: string, right: string): boolean {
