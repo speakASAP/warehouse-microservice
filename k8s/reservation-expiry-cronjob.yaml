@@ -73,9 +73,9 @@ spec:
                   (async () => {
                     const baseUrl = process.env.WAREHOUSE_BASE_URL || 'http://warehouse-microservice:3201';
                     const limit = Number.parseInt(process.env.RESERVATION_EXPIRY_LIMIT || '100', 10);
-                    const token = process.env.CLIPLOT_WAREHOUSE_SERVICE_TOKEN;
+                    const token = process.env.WAREHOUSE_MAINTENANCE_TOKEN;
                     if (!token) {
-                      throw new Error('CLIPLOT_WAREHOUSE_SERVICE_TOKEN is required for reservation expiry CronJob');
+                      throw new Error('WAREHOUSE_MAINTENANCE_TOKEN is required for reservation expiry CronJob');
                     }
                     const response = await fetchWithRetry(`${baseUrl}/api/reservations/expire-due`, {
                       method: 'POST',

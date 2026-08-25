@@ -52,3 +52,21 @@ export const FULFILLMENT_WRITE_ROLES = [
   'internal:warehouse-microservice:action-admin',
   'internal:orders-microservice:service',
 ] as const;
+
+/**
+ * Warehouse's own scheduled maintenance (the reservation-expiry CronJob calling
+ * POST /api/reservations/expire-due). This is warehouse acting on itself, not a
+ * cross-service call, so it gets a dedicated identity rather than borrowing a
+ * caller's credential.
+ *
+ * It previously ran on CLIPLOT_WAREHOUSE_SERVICE_TOKEN, which is cliplot's
+ * external credential sourced from `secret/prod/cliplot` and also mounted by
+ * heureka. Restricting that token to read-only broke this job, which is the
+ * correct signal: a shared external token should never have carried write rights.
+ */
+export const WAREHOUSE_MAINTENANCE_ROLES = [
+  'global:superadmin',
+  'internal:warehouse-microservice:admin',
+  'internal:warehouse-microservice:action-admin',
+  'internal:warehouse-microservice:maintenance',
+] as const;

@@ -120,6 +120,22 @@ export class JwtRolesGuard implements CanActivate {
    * see docs/RS256_SERVICE_TOKEN_MIGRATION_PLAN.md.
    */
   private resolveStaticServiceActor(token: string): AuthValidationUser | null {
+    // Warehouse's own scheduled maintenance identity, used by the
+    // reservation-expiry CronJob. Separate from any caller's credential so that
+    // restricting an external token cannot disable internal maintenance.
+    const maintenanceToken = process.env.WAREHOUSE_MAINTENANCE_TOKEN;
+    if (maintenanceToken && this.safeEqual(token, maintenanceToken)) {
+      return {
+        sub: 'warehouse-maintenance',
+        type: 'service',
+        authMethod: 'warehouse-maintenance-token',
+        roles: ['internal:warehouse-microservice:maintenance'],
+        service: 'warehouse-microservice',
+        serviceName: 'warehouse-microservice',
+        clientId: 'warehouse-maintenance',
+      };
+    }
+
     const cliplotToken = process.env.CLIPLOT_WAREHOUSE_SERVICE_TOKEN;
     if (cliplotToken && this.safeEqual(token, cliplotToken)) {
       this.logger.warn(

@@ -2,7 +2,7 @@ import 'reflect-metadata';
 import { ExecutionContext, ForbiddenException, UnauthorizedException } from '@nestjs/common';
 import axios from 'axios';
 import { JwtRolesGuard } from '../src/auth/jwt-roles.guard';
-import { WAREHOUSE_READ_ROLES, WAREHOUSE_WRITE_ROLES } from '../src/auth/roles.constants';
+import { WAREHOUSE_READ_ROLES, WAREHOUSE_WRITE_ROLES, WAREHOUSE_MAINTENANCE_ROLES } from '../src/auth/roles.constants';
 import { PUBLIC_KEY, ROLES_KEY } from '../src/auth/roles.decorator';
 
 jest.mock('axios');
@@ -407,6 +407,37 @@ describe('JwtRolesGuard central Auth validation', () => {
     const guard = createGuard({ roles: [...WAREHOUSE_READ_ROLES] });
 
     await expect(guard.canActivate(createContext(request))).resolves.toBe(true);
+  });
+
+
+  it('accepts the maintenance token on the maintenance route', async () => {
+    process.env.WAREHOUSE_MAINTENANCE_TOKEN = 'maintenance-token';
+    const request = { headers: { authorization: 'Bearer maintenance-token' } };
+
+    const guard = createGuard({ roles: [...WAREHOUSE_MAINTENANCE_ROLES] });
+
+    await expect(guard.canActivate(createContext(request))).resolves.toBe(true);
+    expect(mockedAxios.post).not.toHaveBeenCalled();
+    delete process.env.WAREHOUSE_MAINTENANCE_TOKEN;
+  });
+
+  it('refuses the maintenance token on a general write route', async () => {
+    process.env.WAREHOUSE_MAINTENANCE_TOKEN = 'maintenance-token';
+    const request = { headers: { authorization: 'Bearer maintenance-token' } };
+
+    const guard = createGuard({ roles: [...WAREHOUSE_WRITE_ROLES] });
+
+    await expect(guard.canActivate(createContext(request))).rejects.toThrow(ForbiddenException);
+    delete process.env.WAREHOUSE_MAINTENANCE_TOKEN;
+  });
+
+  it('refuses the read-only cliplot token on the maintenance route', async () => {
+    process.env.CLIPLOT_WAREHOUSE_SERVICE_TOKEN = 'cliplot-warehouse-token';
+    const request = { headers: { authorization: 'Bearer cliplot-warehouse-token' } };
+
+    const guard = createGuard({ roles: [...WAREHOUSE_MAINTENANCE_ROLES] });
+
+    await expect(guard.canActivate(createContext(request))).rejects.toThrow(ForbiddenException);
   });
 
 });

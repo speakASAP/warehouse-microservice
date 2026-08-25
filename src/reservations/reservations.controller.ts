@@ -5,7 +5,7 @@ import { ReservationsService } from './reservations.service';
 import { LoggerService } from '../logger/logger.service';
 import { ExpireDueReservationsDto, ReservationLifecycleDto, ReserveStockDto, UnreserveStockDto } from '../stock/dto/stock-mutation.dto';
 import { Roles } from '../auth/roles.decorator';
-import { WAREHOUSE_READ_ROLES, WAREHOUSE_WRITE_ROLES } from '../auth/roles.constants';
+import { WAREHOUSE_READ_ROLES, WAREHOUSE_WRITE_ROLES, WAREHOUSE_MAINTENANCE_ROLES } from '../auth/roles.constants';
 
 @Controller('reservations')
 export class ReservationsController {
@@ -78,7 +78,7 @@ export class ReservationsController {
     return { success: true, data: stock };
   }
 
-  @Roles(...WAREHOUSE_WRITE_ROLES)
+  @Roles(...WAREHOUSE_MAINTENANCE_ROLES)
   @Post('expire-due')
   async expireDue(@Body() body: ExpireDueReservationsDto) {
     this.logger.log('POST /api/reservations/expire-due', 'ReservationsController');
