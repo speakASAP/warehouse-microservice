@@ -272,6 +272,29 @@ export class FulfillmentOrdersService {
     return parsed.toISOString();
   }
 
+  /**
+   * ORDERS_SERVICE_TOKEN is the per-pair RS256 principal
+   * (svc-warehouse-microservice--orders-microservice@internal.alfares.cz), verified by
+   * orders through /auth/validate. JWT_TOKEN is the shared static credential, accepted
+   * by byte-comparison with identity taken from x-service-name; it remains only as a
+   * cutover fallback and logs at error level on every use.
+   */
+  private resolveOrdersAuthHeader(token: string): Record<string, string> {
+    const bearer = process.env.ORDERS_SERVICE_TOKEN?.trim();
+    if (bearer) {
+      return { Authorization: bearer.startsWith('Bearer ') ? bearer : `Bearer ${bearer}` };
+    }
+
+    this.logger.error(
+      'ORDERS_SERVICE_TOKEN is unset; falling back to the shared static JWT_TOKEN '
+        + 'header for orders-microservice. This credential is header-authenticated and '
+        + 'scheduled for retirement — set ORDERS_SERVICE_TOKEN.',
+      undefined,
+      'FulfillmentOrdersService',
+    );
+    return { 'x-internal-service-token': token };
+  }
+
   private async notifyOrdersStatus(
     order: FulfillmentOrder,
     body: FulfillmentStatusTransitionCommand,
@@ -298,12 +321,22 @@ export class FulfillmentOrdersService {
           timeout: 5000,
           headers: {
             'x-service-name': 'warehouse-microservice',
-            'x-internal-service-token': token.trim(),
+            ...this.resolveOrdersAuthHeader(token.trim()),
           },
         },
       );
-    } catch {
-      this.logger.warn('orders fulfillment status sync failed', 'FulfillmentOrdersService');
+    } catch (error: any) {
+      // Was `catch {}` + a context-free warn: a 401 here was indistinguishable from
+      // a transport blip, so a dead credential could go unnoticed indefinitely.
+      const httpStatus = error?.response?.status ?? 'n/a';
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        `orders fulfillment status sync failed: orderId=${order.orderId}, `
+          + `fulfillmentOrderId=${order.id}, status=${order.status}, `
+          + `httpStatus=${httpStatus}, error=${errorMessage}`,
+        error instanceof Error ? error.stack : undefined,
+        'FulfillmentOrdersService',
+      );
     }
   }
 
