@@ -67,19 +67,17 @@ STATE.json
 
 For a specific goal, also read the matching file in `implementation-goals/`.
 
-## Knowledge Retrieval (query before reading files)
-Query the RAG service first to reuse indexed ecosystem context before reading raw files:
+## Knowledge Retrieval
 
-```bash
-curl -s -X POST http://docs-rag-microservice.statex-apps.svc.cluster.local:3397/retrieval/agent-context \
-  -H "Authorization: Bearer $JWT_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"query": "YOUR QUESTION HERE", "maxTokens": 3000}'
-```
+Use `docs-rag-microservice` for bounded discovery when it is healthy, then
+verify deployment, security, database, integration and public-contract facts
+against the cited Git source. Git remains authoritative.
 
-- Internal URL: `http://docs-rag-microservice.statex-apps.svc.cluster.local:3397`
-- Public URL: `https://docs-rag.alfares.cz`
-- Full guide: `docs-rag-microservice/docs/RAG_USAGE.md`
+Authority and fallback rules:
+`/home/ssf/Documents/Github/shared/docs/DOCUMENTATION_AUTHORITY.md`.
+
+Do not generate tokens in documentation or assume an unconfident/failed RAG
+response means that source documentation does not exist.
 
 ## Goal-Driven Coordination
 
