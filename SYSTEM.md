@@ -1,49 +1,34 @@
 # System: warehouse-microservice
 
-## Architecture
+status: reviewed
+completeness_level: complete
 
-NestJS + PostgreSQL. Real-time stock events via RabbitMQ.
+## Purpose
+Inventory and stock management for the e-commerce ecosystem.
 
-- Stock types: own warehouse + supplier dropship
-- Reserve stock for pending orders
-- Events: `stock.updated` published on all changes
+## Responsibilities
+Maintain authoritative stock and inventory operations for commerce consumers.
 
-## Integrations
+## Non-Responsibilities
+Unrelated business domains and consumer-owned data remain outside this repository boundary.
 
-| Dependency | URL |
-|-----------|-----|
-| database-server | db-server-postgres:5432 |
-| logging-microservice | logging-microservice:3367 |
-| RabbitMQ | rabbitmq:5672 (`stock.events` exchange) |
+## Inputs
+Documented service requests, repository configuration, and approved operational inputs.
 
-## Current State
-<!-- AI-maintained -->
-Stage: production
-Health: ok - HTTP health is up, RabbitMQ is reachable from the warehouse pod, and `/admin` is deployed.
+## Outputs
+Documented service, infrastructure, or governance outcomes for ecosystem consumers.
 
-## Known Issues
-<!-- AI-maintained -->
-- No known production blockers after WH-G9.
+## Dependencies
+Reviewed capability decisions are recorded in docs/06_architecture/INTEGRATION_CONTRACT.md.
 
-## Recent Fixes
-<!-- AI-maintained -->
-- 2026-06-12: WH-G1 fixed Dockerfile package installation for `node:24-slim`.
-- 2026-06-12: WH-G1 fixed deploy health check path and changed rollout image updates to use the unique build tag.
-- 2026-06-12: WH-G1 added dependency-aware `/api/health` and `/api/ready` output for database and RabbitMQ.
-- 2026-06-12: WH-G2 provisioned Kubernetes RabbitMQ as `service/rabbitmq` and `statefulset/rabbitmq`.
-- 2026-06-12: WH-G2 changed warehouse `RABBITMQ_URL` to `amqp://guest:guest@rabbitmq:5672`.
-- 2026-06-12: WH-G2 documented and validates stock event payloads before publishing.
-- 2026-06-12: WH-G3 added validated stock mutation DTOs requiring `reasonCode` and `actor`.
-- 2026-06-12: WH-G3 wraps stock writes and movement inserts in one database transaction.
-- 2026-06-12: WH-G3 added unit coverage for missing reason, negative input, insufficient stock, and pessimistic write locking.
-- 2026-06-12: WH-G3 deployed image `localhost:5000/warehouse-microservice:0350b8e`; production health reported database and RabbitMQ up.
-- 2026-06-12: WH-G4 added transactional reservation lifecycle writes for reserve, release, fulfill, cancel, expire, and return.
-- 2026-06-12: WH-G5 added trusted catalog ingestion documentation and `POST /api/stock/availability/batch`.
-- 2026-06-12: WH-G6 added supplier dropship reconciliation at `POST /api/supplier-reconciliations`.
-- 2026-06-12: WH-G6 deployed image `localhost:5000/warehouse-microservice:wh-g6-supplier-reconciliation-20260612`; production health reported database and RabbitMQ up.
-- 2026-06-12: WH-G7 added production operations signals in `/api/health` and `/api/ready`, structured stock mutation/event logs, and `docs/runbooks/operations.md`.
-- 2026-06-12: WH-G7 deployed image `localhost:5000/warehouse-microservice:wh-g7-ops-20260612`; production health reported database, RabbitMQ, and operations fields.
-- 2026-06-12: WH-G8 added a committed TypeORM migration workflow, baseline schema migration, and deploy-time Kubernetes migration Job.
-- 2026-06-12: WH-G8 deployed image `localhost:5000/warehouse-microservice:wh-g8-migrations-20260612`; production health reported database and RabbitMQ up, and `migration:show:prod` reported the baseline migration applied.
-- 2026-06-12: WH-G9 deployed production admin console updates at `/admin`, including supplier reconciliation, event-bus status, dependency health, and operations counters.
-- 2026-06-12: WH-G9 deployed image `localhost:5000/warehouse-microservice:wh-g9-admin-console-20260612`; production health, `/admin`, unauthenticated protected API boundary, and browser smoke checks passed.
+## Upstream Traceability
+BUSINESS.md and existing repository architecture documentation define the current intent.
+
+## Downstream Artifacts
+The integration contract, invariants, and bootstrap planning chain are the canonical IPS outputs.
+
+## Validation Criteria
+Run the IPS planning validator and use existing repository-specific checks when changing runtime behavior.
+
+## Open Questions
+No new runtime or ownership decision is made by this documentation-only adoption.

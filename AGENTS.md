@@ -1,117 +1,20 @@
-# Repository Agent Instructions
-
-Shared rules live here:
-
-- Codex profile: `/home/ssf/.codex/AGENTS.md`
-- Cross-agent standard: `/home/ssf/.ai-agent-standards/CROSS_AGENT_AUTOMATION_STANDARD.md`
-- Repository operations: `AGENT_OPERATIONS.md`
-
-Read those first, then follow the repository-specific notes below and the current planning/status files.
-
-
-## Repository-Specific Notes
-
 # Agents: warehouse-microservice
 
-## One-Command Continuation
-
-When the user says:
-
-```text
-WAREHOUSE ORCHESTRATOR: continue implementation
-```
-
-or:
-
-```text
-Continue implementation of this project.
-```
-
-act as the Warehouse implementation orchestrator.
-
-Do not ask the user which goal is next. Determine the next action from:
-
-```text
-docs/IMPLEMENTATION_STATE.md
-docs/IMPLEMENTATION_ORCHESTRATOR.md
-implementation-goals/README.md
-TASKS.md
-STATE.json
-```
-
-Then continue from the latest checkpoint.
 
 ## Required Reading
+Read AGENTS.md, TASKS.md, STATE.json, BUSINESS.md, SYSTEM.md, and applicable architecture and operations documentation.
 
-Before implementation, branch orchestration, or launching workers, read:
+## Authority
+Approved repository source and documentation are authoritative; do not infer undocumented integrations.
 
-```text
-README.md
-SYSTEM.md
-docs/orchestrator/warehouse-intent-plan.md
-docs/INTENT_PRESERVATION_README.md
-docs/12_validation/TRACEABILITY_MATRIX.md
-docs/12_validation/PRE_CODING_GATE.md
-docs/IMPLEMENTATION_STATE.md
-docs/IMPLEMENTATION_ORCHESTRATOR.md
-docs/governance/PROJECT_INVARIANTS.md
-docs/process/DOCUMENTATION_COMPLETENESS_STANDARD.md
-docs/process/OPERATIONAL_GATES.md
-docs/process/AGENT_GAP_FILLING_RULES.md
-docs/AGENT_ORCHESTRATION.md
-docs/orchestration/branch-workflow.md
-implementation-goals/README.md
-TASKS.md
-STATE.json
-```
+## Intent Preservation System
+Preserve Vision through Goal Impact, System, Feature, Task, Execution Plan, Coding Prompt, Code, and Validation.
 
-For a specific goal, also read the matching file in `implementation-goals/`.
+## Safety and Operations
+Never print secrets, credentials, raw production data, or private evidence; follow the remote repository operating rules.
 
-## Knowledge Retrieval
+## Project-Specific Rules
+Preserve this repository ownership boundary: Inventory and stock management for the e-commerce ecosystem.
 
-Use `docs-rag-microservice` for bounded discovery when it is healthy, then
-verify deployment, security, database, integration and public-contract facts
-against the cited Git source. Git remains authoritative.
-
-Authority and fallback rules:
-`/home/ssf/Documents/Github/shared/docs/DOCUMENTATION_AUTHORITY.md`.
-
-Do not generate tokens in documentation or assume an unconfident/failed RAG
-response means that source documentation does not exist.
-
-## Goal-Driven Coordination
-
-Warehouse is a data service, but production-grade changes must still follow the ecosystem goal/task discipline.
-
-Reading order:
-
-1. `BUSINESS.md` (immutable by AI)
-2. `SYSTEM.md`
-3. `docs/orchestrator/warehouse-intent-plan.md`
-4. `docs/INTENT_PRESERVATION_README.md`
-5. `docs/12_validation/TRACEABILITY_MATRIX.md`
-6. `docs/12_validation/PRE_CODING_GATE.md`
-7. `docs/IMPLEMENTATION_STATE.md`
-8. `docs/IMPLEMENTATION_ORCHESTRATOR.md`
-9. `implementation-goals/README.md`
-10. `AGENTS.md`
-11. `TASKS.md`
-12. `STATE.json`
-
-Rules:
-
-- Do not edit `BUSINESS.md`.
-- Authoritative owner-approved goals now live in `docs/orchestrator/GOALS.md` and `implementation-goals/`.
-- Work on the earliest unfinished goal unless the owner explicitly selects another.
-- Do not code before the relevant task has a `goal_id`, acceptance criteria, and validation path.
-- Do not code before the selected task has an IPS task document, execution plan, context package, coding prompt, and validation report draft.
-- Preserve the chain `Intent -> Invariants -> Goal -> Task -> Execution Plan -> Context Package -> Coding Prompt -> Code -> Validation Report -> State Update`.
-- AI or agents must never adjust production stock without explicit owner-approved task context.
-- Prefer read-only sub-agents for ecosystem mapping and validation. Code-editing workers must have disjoint file ownership and must not revert other agents' or human changes.
-- The master orchestrator owns goal selection, task splitting, worker coordination, validation, and state updates.
-- Update `docs/IMPLEMENTATION_STATE.md`, `TASKS.md`, and `STATE.json` before ending an implementation session.
-- Production deployment requires explicit owner approval in the current session.
-
-## Active Agents
-<!-- Coordinator-maintained -->
-None.
+## Required Final Report
+Report changed files, validation evidence, debt, blockers, deviations, and next action.

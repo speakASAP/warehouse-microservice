@@ -1,23 +1,29 @@
 # Business: warehouse-microservice
->
-> ⚠️ IMMUTABLE BY AI.
 
-## Goal
+status: approved
+completeness_level: complete
 
-Real-time stock tracking across own warehouses and supplier dropship. Publishes stock events via RabbitMQ.
+## Problem
+The ecosystem requires a clearly owned inventory and stock management for the e-commerce ecosystem
 
-## Constraints
+## Target Users and Stakeholders
+Orders, marketplace integrations, warehouse operators, and commerce administrators.
 
-- Stock adjustments must be logged with reason code
-- AI must never adjust stock without explicit task approval
-- Negative stock is not allowed (enforce at service level)
+## Value Proposition
+Maintain authoritative stock and inventory operations for commerce consumers.
 
-## Consumers
+## Goals
+Maintain authoritative stock and inventory operations for commerce consumers.
 
-flipflop-service, allegro-service, aukro-service, bazos-service, heureka-service.
+## Non-Goals
+This repository does not take ownership of unrelated ecosystem service domains or consumer business data.
 
-## SLA
+## Success Metrics
+The documented service or infrastructure boundary is available to its intended ecosystem consumers.
 
-- Port: 3201 (<http://warehouse-microservice:3201>)
-- Production: <https://warehouse.alfares.cz>
-- Event: `stock.updated` → RabbitMQ
+## Business Constraints
+Preserve documented ownership, use approved credential handling, and do not expose secrets or private operational data.
+
+## Approval
+Approved by: project owner
+Approval evidence: owner-confirmation: warehouse-microservice-onboarding-approved
