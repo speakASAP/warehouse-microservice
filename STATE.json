@@ -1,17 +1,4 @@
 {
-  "schemaVersion": 1,
-  "project": "warehouse-microservice",
-  "lifecycle": "planning-adopted",
-  "health": "documented-current-boundary",
-  "activeTask": "No active IPS bootstrap task",
-  "lastUpdated": "2026-08-30",
-  "deployment": {
-    "status": "documentation-only adoption; runtime unchanged"
-  },
-  "blockers": [],
-  "followUps": [
-    "Keep capability decisions synchronized with documented architecture changes."
-  ],
   "schema_version": "1.0",
   "repository": "warehouse-microservice",
   "service": {
