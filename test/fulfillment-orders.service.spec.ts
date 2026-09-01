@@ -216,7 +216,7 @@ describe('FulfillmentOrdersService', () => {
     process.env = {
       ...originalEnv,
       ORDERS_SERVICE_URL: 'http://orders-microservice:3203',
-      JWT_TOKEN: 'warehouse-token',
+      ORDERS_SERVICE_TOKEN: 'warehouse-orders-rs256',
     };
     (axios.put as jest.Mock).mockResolvedValue({ data: { success: true } });
     const existingOrder = {
@@ -252,10 +252,41 @@ describe('FulfillmentOrdersService', () => {
       expect.objectContaining({
         headers: expect.objectContaining({
           'x-service-name': 'warehouse-microservice',
-          'x-internal-service-token': 'warehouse-token',
+          Authorization: 'Bearer warehouse-orders-rs256',
         }),
       }),
     );
+    process.env = originalEnv;
+  });
+
+  it('does not sync to Orders on the shared JWT_TOKEN when the RS256 primary is unset', async () => {
+    // JWT_TOKEN holds the shared a2880693 value. orders stopped accepting it when
+    // header-chosen identity was closed, so falling back to it would produce a 401
+    // that reads as a credential problem on this side. The sync must be skipped and
+    // logged at error level instead.
+    const originalEnv = process.env;
+    process.env = {
+      ...originalEnv,
+      ORDERS_SERVICE_URL: 'http://orders-microservice:3203',
+      JWT_TOKEN: 'shared-a2880693-value',
+    };
+    delete (process.env as Record<string, unknown>).ORDERS_SERVICE_TOKEN;
+    (axios.put as jest.Mock).mockClear();
+    const existingOrder = {
+      id: 'fulfillment-order-1',
+      orderId: 'order-1',
+      status: 'requested' as const,
+      lines: [createPayload.items[0]],
+    };
+    const { service } = createService({ existingOrder });
+
+    await service.updateStatus('order-1', {
+      status: 'collecting',
+      reasonCode: 'WAREHOUSE_PICK_STARTED',
+      actor: 'warehouse-operator',
+    });
+
+    expect(axios.put).not.toHaveBeenCalled();
     process.env = originalEnv;
   });
 

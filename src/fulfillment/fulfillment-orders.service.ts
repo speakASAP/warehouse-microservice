@@ -275,24 +275,22 @@ export class FulfillmentOrdersService {
   /**
    * ORDERS_SERVICE_TOKEN is the per-pair RS256 principal
    * (svc-warehouse-microservice--orders-microservice@internal.alfares.cz), verified by
-   * orders through /auth/validate. JWT_TOKEN is the shared static credential, accepted
-   * by byte-comparison with identity taken from x-service-name; it remains only as a
-   * cutover fallback and logs at error level on every use.
+   * orders through /auth/validate. It is the only credential this lane has: the shared
+   * static JWT_TOKEN fallback was removed once orders stopped accepting that value
+   * on 2026-08-26 and its inbound entry was deleted from orders' ExternalSecret.
    */
   private resolveOrdersAuthHeader(token: string): Record<string, string> {
-    const bearer = process.env.ORDERS_SERVICE_TOKEN?.trim();
-    if (bearer) {
-      return { Authorization: bearer.startsWith('Bearer ') ? bearer : `Bearer ${bearer}` };
+    const bearer = token.trim();
+    if (!bearer) {
+      // Never send this request unauthenticated: it would surface as a 401 from orders
+      // rather than as the missing-configuration error it actually is.
+      throw new Error(
+        'ORDERS_SERVICE_TOKEN is unset; refusing to call orders-microservice '
+          + 'unauthenticated. Set the per-pair RS256 principal for '
+          + 'warehouse-microservice -> orders-microservice.',
+      );
     }
-
-    this.logger.error(
-      'ORDERS_SERVICE_TOKEN is unset; falling back to the shared static JWT_TOKEN '
-        + 'header for orders-microservice. This credential is header-authenticated and '
-        + 'scheduled for retirement — set ORDERS_SERVICE_TOKEN.',
-      undefined,
-      'FulfillmentOrdersService',
-    );
-    return { 'x-internal-service-token': token };
+    return { Authorization: bearer.startsWith('Bearer ') ? bearer : `Bearer ${bearer}` };
   }
 
   private async notifyOrdersStatus(
@@ -300,9 +298,20 @@ export class FulfillmentOrdersService {
     body: FulfillmentStatusTransitionCommand,
   ): Promise<void> {
     const baseUrl = (process.env.ORDERS_SERVICE_URL || '').replace(/\/$/, '');
-    const token = process.env.ORDERS_SERVICE_TOKEN || process.env.JWT_TOKEN;
+    // JWT_TOKEN is deliberately NOT in this chain: it holds the shared a2880693 value,
+    // which orders stopped accepting from any caller when header-chosen identity was
+    // closed on 2026-08-26, and whose inbound entry has since been removed from orders entirely.
+    // Keeping it could only turn a missing primary into a 401 that looks like a
+    // credential problem on this side.
+    const token = process.env.ORDERS_SERVICE_TOKEN?.trim();
     if (!baseUrl || !token) {
-      this.logger.warn('orders fulfillment status sync skipped: missing Orders URL or token', 'FulfillmentOrdersService');
+      this.logger.error(
+        'orders fulfillment status sync skipped: missing ORDERS_SERVICE_URL or '
+          + 'ORDERS_SERVICE_TOKEN. The order status transition was NOT propagated to '
+          + 'orders-microservice.',
+        undefined,
+        'FulfillmentOrdersService',
+      );
       return;
     }
 
