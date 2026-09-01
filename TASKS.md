@@ -1,21 +1,32 @@
-# Tasks: warehouse-microservice
 
+
+
+# Tasks: warehouse-microservice
 
 ## Active
 
+
 No active IPS bootstrap task remains; this documentation adoption is complete.
 
-## Ready Next
+
+## Ready next
+
 
 Future repository work must begin from its existing planning and architecture records.
 - Keep capability decisions synchronized with documented architecture changes.
 
+
 ## Blocked
+
 
 No blocker was identified for this documentation-only adoption.
 
+
 ## Completed
+
 TASK-001-bootstrap-service completed IPS planning adoption on 2026-08-30.
 
+
 ## Handoff
+
 Use canonical IPS artifacts before selecting a future bounded change.
