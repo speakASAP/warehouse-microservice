@@ -53,7 +53,7 @@ Result: pass-with-documented-risk. Live mutation-time validation remains blocked
 
 ## Result
 
-WH-G10-CATALOG source validation passed for the new reconciliation report. Full-suite closure is blocked by an unrelated concurrent outbox test failure outside this task's write ownership.
+WH-G10-CATALOG source validation passed for the new reconciliation report. Full-suite closure was blocked by an unrelated concurrent WH-G11 outbox test failure outside this task's write ownership; WH-G11-OUTBOX has since landed and the full suite (15 suites / 131 tests) now passes cleanly, so closure is no longer blocked (re-verified 2026-09-05).
 
 
 ## Deployment Evidence

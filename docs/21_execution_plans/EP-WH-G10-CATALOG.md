@@ -2,7 +2,7 @@
 
 ```yaml
 id: EP-WH-G10-CATALOG
-status: draft-work
+status: validated
 goal_id: WH-G10-CATALOG-IDENTITY-VALIDATION
 task_ids:
   - WH-G10-CATALOG-T1

@@ -2,7 +2,7 @@
 
 ```yaml
 id: WH-G10-CATALOG-T1
-status: active
+status: done
 goal_id: WH-G10-CATALOG-IDENTITY-VALIDATION
 owner: warehouse-owner
 created: 2026-06-13
