@@ -2,10 +2,10 @@
 
 ```yaml
 id: WH-G16-T1
-status: draft
+status: done
 owner: warehouse-fulfillment-owner
 created: 2026-07-02
-last_updated: 2026-07-02
+last_updated: 2026-09-05
 completeness_level: complete
 upstream:
   - implementation-goals/GOAL-16-fulfillment-handoff.md
@@ -46,7 +46,9 @@ Allowed files are Warehouse fulfillment module files, reservation tests, docs, m
 
 ## Non-Goals
 
-No Orders repo edits, no public landing edits, no deploy, and no delivery provider integration.
+No public landing edits, no delivery provider integration.
+
+**Update (2026-09-05):** owner approved production deployment; deployment and migration executed (see VAL-WH-G16). Orders-microservice integration was already implemented and merged ahead of this deploy (`src/orders/order-fulfillment-handoff.client.ts`, gated by `WAREHOUSE_RESERVATION_ENABLED=true`); confirming it now calls the live endpoint successfully required only a bug fix to its own untested verify script (`orders-microservice` commit `a560071`), not new integration code.
 
 ## Acceptance Criteria
 

@@ -2,10 +2,10 @@
 
 ```yaml
 id: EP-WH-G16
-status: draft
+status: validated
 owner: warehouse-fulfillment-owner
 created: 2026-07-02
-last_updated: 2026-07-02
+last_updated: 2026-09-05
 completeness_level: complete
 upstream:
   - docs/11_tasks/WH-G16-T1.md
@@ -26,7 +26,9 @@ Adds a durable Warehouse handoff record for paid orders without moving order lif
 
 ## Project Invariants
 
-Warehouse remains stock authority; Orders remains order state owner; stock mutation remains on reservation endpoints with authenticated actor and reason context; production deployment is not performed.
+Warehouse remains stock authority; Orders remains order state owner; stock mutation remains on reservation endpoints with authenticated actor and reason context.
+
+**Deployment update (2026-09-05):** owner approved production deployment and migration execution (Option A). Warehouse fulfillment module deployed to production; `POST /api/fulfillment-orders` verified live (401 unauthenticated, guarded by `FULFILLMENT_WRITE_ROLES`). Orders-microservice's existing `OrderFulfillmentHandoffClient` (already merged, gated by `WAREHOUSE_RESERVATION_ENABLED=true` in production) now completes successfully end-to-end; see VAL-WH-G16 for evidence.
 
 ## Sensitive-Data Handling
 
@@ -68,4 +70,4 @@ Before deployment, revert the WH-G16 source/docs commit or remove the module imp
 
 ## Agent Handoff Prompt
 
-Continue WH-G16 by validating and integrating the Warehouse fulfillment handoff. Do not edit public landing files. Do not deploy or push without owner approval.
+WH-G16 is deployed and closed. Orders-microservice already called this endpoint via its pre-existing `OrderFulfillmentHandoffClient`; no further Orders code changes were required. Remaining known gap: delivery-provider/shipment-status source contract is still `[MISSING:]` (see CP-WH-G16.md), tracked separately.

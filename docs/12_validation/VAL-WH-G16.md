@@ -5,7 +5,7 @@ id: VAL-WH-G16
 status: validated
 owner: warehouse-fulfillment-owner
 created: 2026-07-02
-last_updated: 2026-07-02
+last_updated: 2026-09-05
 completeness_level: validated
 upstream:
   - docs/14_prompts/PROMPT-WH-G16.md
@@ -19,7 +19,7 @@ WH-G16 paid fulfillment handoff source and documentation.
 
 ## Validation Scope
 
-Source-level unit tests, build, and diff hygiene. No deployment or live stock mutation.
+Source-level unit tests, build, and diff hygiene. **Update (2026-09-05): deployment and migration executed with owner approval; live verification added below.**
 
 ## Evidence
 
@@ -64,4 +64,4 @@ None planned.
 
 ## Recommendation
 
-Ready for owner-approved WH-G16 deployment and migration execution after Orders event outbox deploy is approved. Do not deploy Warehouse until owner approves deployment and migration execution.
+Closed. Owner approved WH-G16 deployment and migration on 2026-09-05 (Option A: deploy now, integrate Orders, document). Deployed via `./scripts/deploy.sh`; migration job reported no pending migrations (`CreateFulfillmentOrders` had already applied to the production DB ahead of this deploy, alongside earlier merged fulfillment module code). Post-deploy verification: new pod healthy, `POST /api/fulfillment-orders` returns 401 unauthenticated (route live, guarded). Orders-microservice's pre-existing `OrderFulfillmentHandoffClient` (already merged and feature-flagged on in production via `WAREHOUSE_RESERVATION_ENABLED=true`) was confirmed to hold the correct `internal:orders-microservice:service` role (member of `FULFILLMENT_WRITE_ROLES`) and required no new integration code; its verify script had a latent bug (mocked `logger.warn` instead of the real `logger.error` call) that prevented this path from ever being exercised, fixed and passing in orders-microservice commit `a560071`, then deployed to production and confirmed healthy.

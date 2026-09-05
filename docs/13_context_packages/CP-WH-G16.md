@@ -48,7 +48,7 @@ No deployment, no public landing file edits, no Orders repo edits, and no produc
 
 ## Known Risks
 
-Orders must be updated separately to call the new endpoint and supply reservation ids. Delivery-provider status remains `[MISSING: delivery provider or shipment-status source contract]`.
+**Resolved (2026-09-05):** Orders-microservice already had a client (`OrderFulfillmentHandoffClient`) calling this endpoint, merged ahead of Warehouse's deploy and gated behind `WAREHOUSE_RESERVATION_ENABLED=true`; confirmed working end-to-end after Warehouse's production deploy (correct role, correct payload contract). Delivery-provider status remains an open gap: `[MISSING: delivery provider or shipment-status source contract]`.
 
 ## Validation Commands
 
