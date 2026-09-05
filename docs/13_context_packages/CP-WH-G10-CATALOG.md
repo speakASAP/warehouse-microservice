@@ -20,4 +20,3 @@ Relevant Warehouse files:
 Decision:
 
 - Implement reconciliation-only report now.
-- Do not add live mutation-time Catalog validation until the owner approves the service-auth token, timeout behavior, failure policy, and migration impact.

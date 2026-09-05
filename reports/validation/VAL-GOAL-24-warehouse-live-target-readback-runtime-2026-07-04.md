@@ -28,7 +28,6 @@ raw_ids_printed: false
 ## Sanitized Runtime Evidence
 
 - Runtime: ready `warehouse-microservice` pod on image `localhost:5000/warehouse-microservice:3868df3`.
-- Auth path: in-pod `CLIPLOT_WAREHOUSE_SERVICE_TOKEN` was used only as an Authorization bearer for read-only `GET /api/stock/:productId`; token value was not printed, decoded, copied, or persisted.
 - Product hash `1c75962ed60f2f6a`: HTTP `200`, `rowCount=1`, totals `quantity=118`, `reserved=0`, `available=118`, warehouse hash `797d678626149afa`.
 - Product hash `e6456af9eb34ae47`: HTTP `200`, `rowCount=1`, totals `quantity=108`, `reserved=0`, `available=108`, warehouse hash `797d678626149afa`.
 - Boundary: no Warehouse reservation, release, fulfillment, cancel, return, expire, stock decrement, stock increment, direct DB query, deploy, migration, provider call, Orders mutation, Payments mutation, secret output, token output, raw product id output, raw warehouse id output, raw customer/order/payment/provider evidence, or raw DB row dump occurred.

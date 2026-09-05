@@ -71,10 +71,6 @@ kubectl -n statex-apps exec deploy/warehouse-microservice -c app -- sh -c \
   'echo "${WAREHOUSE_MAINTENANCE_TOKEN:+SET}"'
 ```
 
-Use that value as `Authorization: Bearer <token>` against a read endpoint or a dry
-validation request. `CLIPLOT_WAREHOUSE_SERVICE_TOKEN` is the other accepted static
-token; both are matched by byte comparison in `src/auth/jwt-roles.guard.ts`.
-
 > **A previous version of this runbook told you to self-mint an HS256 token with
 > `jwt.sign(..., process.env.JWT_SECRET)` and a `sub` of `ops-smoke`. That cannot
 > work and never will.** The guard has no HS256 path and no `JWT_SECRET` use: it

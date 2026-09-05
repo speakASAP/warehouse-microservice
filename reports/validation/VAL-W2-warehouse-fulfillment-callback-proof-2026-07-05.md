@@ -33,7 +33,6 @@ Warehouse callback implementation evidence:
 
 - `FulfillmentOrdersService.updateStatus()` validates transition, persists `status`, `statusReasonCode`, `statusActor`, and `statusReference`, then calls `notifyOrdersStatus()`.
 - `notifyOrdersStatus()` sends `PUT ${ORDERS_SERVICE_URL}/api/orders/:orderId/warehouse-fulfillment-status` with bounded fields only: `status`, `reasonCode`, `actor`, `reference`, `fulfillmentOrderId`, and `occurredAt`.
-- The Orders callback uses service headers `x-service-name: warehouse-microservice` and `x-internal-service-token` from `ORDERS_SERVICE_TOKEN` or `JWT_TOKEN`; token value was not printed.
 - If Orders URL/token is absent or the callback fails, Warehouse logs a bounded warning and does not expose response bodies.
 
 Orders lifecycle projection evidence, read-only:
