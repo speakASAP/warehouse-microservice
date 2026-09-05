@@ -63,13 +63,31 @@ curl -sk -o /dev/null -w '%{http_code}\n' -X POST -H 'Content-Type: application/
 
 Expected status: `401`.
 
-For service-token smoke tests from inside the running pod:
+For service-token smoke tests from inside the running pod, use the credential the
+service already mounts. **Do not mint one.**
 
 ```bash
-kubectl -n statex-apps exec deploy/warehouse-microservice -- node -e 'const jwt=require("jsonwebtoken"); const token=jwt.sign({sub:"ops-smoke",roles:["internal:warehouse-microservice:admin"]}, process.env.JWT_SECRET, {expiresIn:"2m"}); console.log(token);'
+kubectl -n statex-apps exec deploy/warehouse-microservice -c app -- sh -c \
+  'echo "${WAREHOUSE_MAINTENANCE_TOKEN:+SET}"'
 ```
 
-Use the token as `Authorization: Bearer <token>` against a read endpoint or a dry validation request.
+Use that value as `Authorization: Bearer <token>` against a read endpoint or a dry
+validation request. `CLIPLOT_WAREHOUSE_SERVICE_TOKEN` is the other accepted static
+token; both are matched by byte comparison in `src/auth/jwt-roles.guard.ts`.
+
+> **A previous version of this runbook told you to self-mint an HS256 token with
+> `jwt.sign(..., process.env.JWT_SECRET)` and a `sub` of `ops-smoke`. That cannot
+> work and never will.** The guard has no HS256 path and no `JWT_SECRET` use: it
+> accepts either one of the named static tokens, or an RS256 token validated by
+> auth-microservice, which has verified RS256 only since `9269a86`. Following the
+> old step during an incident produced an opaque 401 and invited the conclusion
+> that the service was broken.
+>
+> It also violated four rules of
+> [`auth-microservice/docs/SERVICE_IDENTITY_CONSUMER_STANDARD.md`](../../../auth-microservice/docs/SERVICE_IDENTITY_CONSUMER_STANDARD.md)
+> at once — self-minted, HS256, an invented `sub` with no principal row so it
+> could not be revoked, and a self-granted `:admin` role. Never mint a credential
+> to test a service; present one the service is configured to accept.
 
 ## Event Verification
 
