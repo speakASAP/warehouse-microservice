@@ -63,27 +63,23 @@ curl -sk -o /dev/null -w '%{http_code}\n' -X POST -H 'Content-Type: application/
 
 Expected status: `401`.
 
-For service-token smoke tests from inside the running pod, use the credential the
-service already mounts. **Do not mint one.**
+For service-token smoke tests from inside the running pod, present the
+Auth-issued credential the service already mounts for that caller -> target pair,
+as [`auth-microservice/docs/SERVICE_IDENTITY_CONSUMER_STANDARD.md`](../../../auth-microservice/docs/SERVICE_IDENTITY_CONSUMER_STANDARD.md)
+prescribes. **Never mint one, and never reuse another caller's.** Confirm only that
+the credential is present, never print it:
 
 ```bash
 kubectl -n statex-apps exec deploy/warehouse-microservice -c app -- sh -c \
-  'echo "${WAREHOUSE_MAINTENANCE_TOKEN:+SET}"'
+  'echo "${SERVICE_TOKEN:+SET}"'
 ```
 
-> **A previous version of this runbook told you to self-mint an HS256 token with
-> `jwt.sign(..., process.env.JWT_SECRET)` and a `sub` of `ops-smoke`. That cannot
-> work and never will.** The guard has no HS256 path and no `JWT_SECRET` use: it
-> accepts either one of the named static tokens, or an RS256 token validated by
-> auth-microservice, which has verified RS256 only since `9269a86`. Following the
-> old step during an incident produced an opaque 401 and invited the conclusion
-> that the service was broken.
->
-> It also violated four rules of
-> [`auth-microservice/docs/SERVICE_IDENTITY_CONSUMER_STANDARD.md`](../../../auth-microservice/docs/SERVICE_IDENTITY_CONSUMER_STANDARD.md)
-> at once — self-minted, HS256, an invented `sub` with no principal row so it
-> could not be revoked, and a self-granted `:admin` role. Never mint a credential
-> to test a service; present one the service is configured to accept.
+> **A previous version of this runbook told you to self-mint an HS256 token and
+> smoke-test with a named static token. Both are prohibited.** The guard validates
+> an Auth-issued RS256 credential; a self-minted token is unrevocable, carries a
+> self-granted role, and produced an opaque 401 that invited the conclusion that
+> the service was broken. Any residual static-token acceptance path is a defect to
+> be removed, not a supported test route.
 
 ## Event Verification
 
@@ -113,7 +109,7 @@ Expected: `stock.events` is durable and type `topic`.
 
 ## Reservation Expiry
 
-Expired checkout holds are processed by the `warehouse-reservation-expiry` Kubernetes CronJob. It runs every five minutes, mints a short-lived internal Warehouse JWT from `JWT_SECRET`, and calls the protected batch endpoint:
+Expired checkout holds are processed by the `warehouse-reservation-expiry` Kubernetes CronJob. It runs every five minutes and calls the protected batch endpoint. The CronJob is a caller like any other: it presents its own Auth-issued `(caller -> target)` credential per [`auth-microservice/docs/SERVICE_IDENTITY_CONSUMER_STANDARD.md`](../../../auth-microservice/docs/SERVICE_IDENTITY_CONSUMER_STANDARD.md) and never signs a token itself:
 
 ```bash
 kubectl -n statex-apps get cronjob warehouse-reservation-expiry
