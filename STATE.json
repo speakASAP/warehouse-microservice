@@ -4,7 +4,7 @@
   "service": {
     "name": "warehouse-microservice",
     "kind": "service",
-    "lifecycle": "planning-adopted",
+    "lifecycle": "planning",
     "deployment": "kubernetes"
   },
   "planning": {
