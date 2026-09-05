@@ -13,7 +13,7 @@ Metadata:
 
 | Command | Status | Notes |
 | --- | --- | --- |
-| DocsRAG query | blocked | Auth pod lacks curl; no token or secret value was printed. Compensating evidence came from Auth contract docs/source: docs/UNIFIED_AUTH_CONTRACT.md, docs/CONSUMER_JWT_VALIDATION_STANDARD.md, and docs/INTERNAL_SERVICE_AUTH_BOUNDARY_REVIEW.md. |
+| DocsRAG query | blocked | Auth pod lacked curl; no token or secret value was printed. Compensating evidence came from auth-microservice/docs/SERVICE_IDENTITY_CONSUMER_STANDARD.md and the human-token validation standard. |
 | npm test -- --runInBand test/authenticated-actor.spec.ts | passed | 1 suite, 6 tests passed. Verified JWT-derived user actor, service-claim actor, fail-closed missing subject, and spoofed body actor ignored for stock, reservation, and supplier reconciliation controllers. |
 | npm test -- --runInBand | passed | 7 suites, 47 tests passed against the current combined remote source. |
 | npm run build | passed | Nest build exited successfully. |
@@ -25,7 +25,7 @@ WH-G14-AUTH passed source validation. Warehouse mutation controllers now derive 
 
 ## Residual Risks
 
-- ~~[UNKNOWN: final ecosystem service-JWT claim name]~~ **Closed 2026-08-25.** When written, Auth docs defined no standardized service-identity claim, so the helper accepted `serviceName`, `service`, and `clientId`, falling back to Auth subject identity. That gap is now answered by [`SERVICE_IDENTITY_CONSUMER_STANDARD.md`](../../../auth-microservice/docs/SERVICE_IDENTITY_CONSUMER_STANDARD.md), which prefers `serviceName` for new code while permitting the other variants during convergence. Note that the `INTERNAL_SERVICE_AUTH_BOUNDARY_REVIEW.md` cited in the evidence table above is historical: its decision that static service tokens may remain valid for service-to-service calls is exactly what the 2026-08-25 standard reverses. The evidence row is left unchanged because it records what was consulted at the time.
+| DocsRAG query | blocked | Auth pod lacked curl; no token or secret value was printed. Compensating evidence came from auth-microservice/docs/SERVICE_IDENTITY_CONSUMER_STANDARD.md and the human-token validation standard. |
 - [MISSING: orchestrator numbering reconciliation] Delegation called this WH-G14, but remote WH-G14 is already completed product-logistics history. This validation report uses WH-G14-AUTH to avoid overwriting completed evidence.
 - The remote worktree contains unrelated uncommitted parallel-worker changes. Validation ran against the combined source state.
 
