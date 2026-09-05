@@ -2,7 +2,7 @@
 
 ```yaml
 id: EP-WH-G10
-status: draft-work
+status: validated
 goal_id: WH-G10
 task_ids:
   - WH-G10-T1

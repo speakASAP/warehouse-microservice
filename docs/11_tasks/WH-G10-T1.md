@@ -2,7 +2,7 @@
 
 ```yaml
 id: WH-G10-T1
-status: active
+status: done
 goal_id: WH-G10
 owner: warehouse-owner
 created: 2026-06-13
