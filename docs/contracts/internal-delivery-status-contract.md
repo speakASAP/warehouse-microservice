@@ -9,6 +9,8 @@ contract: warehouse.internal_delivery_status.v1
 runtime_endpoint: POST /api/fulfillment-orders/order/:orderId/internal-delivery-status
 required_role: internal:warehouse-microservice:admin
 
+Service callers follow the [canonical service identity standard](../../../auth-microservice/docs/SERVICE_IDENTITY_CONSUMER_STANDARD.md).
+
 ## Intent Chain
 
 - Vision: Alfares can advance customer-visible delivery lifecycle for its own delivery operation without waiting for an external carrier/provider feed.

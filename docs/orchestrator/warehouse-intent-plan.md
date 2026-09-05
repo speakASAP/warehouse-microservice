@@ -55,7 +55,7 @@ There are no visible test files or contract tests in the warehouse repo.
 | Service | Ownership | Warehouse relationship |
 | --- | --- | --- |
 | `catalog-microservice` | Product truth, pricing, media, channel readiness | Warehouse stock rows reference catalog product IDs. Catalog admin should be the single manual product entry point and should orchestrate initial stock creation. |
-| `auth-microservice` | Login, JWT, RBAC, service identity | Service identity requirements are defined solely by [`SERVICE_IDENTITY_CONSUMER_STANDARD.md`](../../auth-microservice/docs/SERVICE_IDENTITY_CONSUMER_STANDARD.md). |
+| `auth-microservice` | Login, JWT, RBAC, service identity | Service identity requirements are defined solely by [`SERVICE_IDENTITY_CONSUMER_STANDARD.md`](../../../auth-microservice/docs/SERVICE_IDENTITY_CONSUMER_STANDARD.md). |
 | `flipflop-service` | Storefront, cart, checkout UX, channel projection | Reads catalog products, checks warehouse availability, creates checkout reservations, releases or fulfills stock after payment outcomes. |
 | `orders-microservice` | Central order state and fulfillment status | Order lifecycle should drive reservation fulfillment, stock deduction, cancellation, and return flows through warehouse. |
 | `suppliers-microservice` | Supplier integrations/imports | Supplier dropship stock should be reconciled into warehouse through trusted import/update flows. |
