@@ -228,35 +228,19 @@ describe('JwtRolesGuard central Auth validation', () => {
     });
   });
 
-  it('grants the Cliplot static warehouse token read-only access, never admin', async () => {
+  it('rejects the legacy Cliplot static warehouse token (no static bypass)', async () => {
     process.env.CLIPLOT_WAREHOUSE_SERVICE_TOKEN = 'cliplot-warehouse-token';
     const request = { headers: { authorization: 'Bearer cliplot-warehouse-token' } };
+    mockedAxios.post.mockResolvedValueOnce({ data: { valid: false } } as any);
 
     const guard = createGuard({ roles: [...WAREHOUSE_READ_ROLES] });
 
-    await expect(guard.canActivate(createContext(request))).resolves.toBe(true);
-
-    expect(mockedAxios.post).not.toHaveBeenCalled();
-    expect(request).toMatchObject({
-      user: {
-        sub: 'cliplot',
-        type: 'service',
-        authMethod: 'warehouse-static-service-token',
-        roles: ['internal:warehouse-microservice:readonly'],
-        service: 'cliplot',
-        serviceName: 'cliplot',
-        clientId: 'cliplot',
-      },
-      serviceActor: {
-        sub: 'cliplot',
-        type: 'service',
-        authMethod: 'warehouse-static-service-token',
-        roles: ['internal:warehouse-microservice:readonly'],
-        service: 'cliplot',
-        serviceName: 'cliplot',
-        clientId: 'cliplot',
-      },
-    });
+    await expect(guard.canActivate(createContext(request))).rejects.toThrow(UnauthorizedException);
+    expect(mockedAxios.post).toHaveBeenCalledWith(
+      'http://auth-microservice:3370/auth/validate',
+      { token: 'cliplot-warehouse-token' },
+      { timeout: 3000 },
+    );
   });
 
   it('does not treat a mismatched Cliplot static token as authenticated', async () => {
@@ -362,13 +346,15 @@ describe('JwtRolesGuard central Auth validation', () => {
     expect(mockedAxios.post).not.toHaveBeenCalled();
   });
 
-  it('refuses the read-only Cliplot token on a write route', async () => {
+  it('refuses the legacy Cliplot static token on a write route via Auth rejection', async () => {
     process.env.CLIPLOT_WAREHOUSE_SERVICE_TOKEN = 'cliplot-warehouse-token';
     const request = { headers: { authorization: 'Bearer cliplot-warehouse-token' } };
+    mockedAxios.post.mockResolvedValueOnce({ data: { valid: false } } as any);
 
     const guard = createGuard({ roles: [...WAREHOUSE_WRITE_ROLES] });
 
-    await expect(guard.canActivate(createContext(request))).rejects.toThrow(ForbiddenException);
+    await expect(guard.canActivate(createContext(request))).rejects.toThrow(UnauthorizedException);
+    expect(mockedAxios.post).toHaveBeenCalled();
   });
 
   it('refuses a readonly service principal on a write route', async () => {
@@ -410,34 +396,41 @@ describe('JwtRolesGuard central Auth validation', () => {
   });
 
 
-  it('accepts the maintenance token on the maintenance route', async () => {
+  it('rejects the legacy maintenance static token (no static bypass)', async () => {
     process.env.WAREHOUSE_MAINTENANCE_TOKEN = 'maintenance-token';
     const request = { headers: { authorization: 'Bearer maintenance-token' } };
+    mockedAxios.post.mockResolvedValueOnce({ data: { valid: false } } as any);
 
     const guard = createGuard({ roles: [...WAREHOUSE_MAINTENANCE_ROLES] });
 
-    await expect(guard.canActivate(createContext(request))).resolves.toBe(true);
-    expect(mockedAxios.post).not.toHaveBeenCalled();
+    await expect(guard.canActivate(createContext(request))).rejects.toThrow(UnauthorizedException);
+    expect(mockedAxios.post).toHaveBeenCalledWith(
+      'http://auth-microservice:3370/auth/validate',
+      { token: 'maintenance-token' },
+      { timeout: 3000 },
+    );
     delete process.env.WAREHOUSE_MAINTENANCE_TOKEN;
   });
 
-  it('refuses the maintenance token on a general write route', async () => {
+  it('refuses the legacy maintenance static token on a general write route', async () => {
     process.env.WAREHOUSE_MAINTENANCE_TOKEN = 'maintenance-token';
     const request = { headers: { authorization: 'Bearer maintenance-token' } };
+    mockedAxios.post.mockResolvedValueOnce({ data: { valid: false } } as any);
 
     const guard = createGuard({ roles: [...WAREHOUSE_WRITE_ROLES] });
 
-    await expect(guard.canActivate(createContext(request))).rejects.toThrow(ForbiddenException);
+    await expect(guard.canActivate(createContext(request))).rejects.toThrow(UnauthorizedException);
     delete process.env.WAREHOUSE_MAINTENANCE_TOKEN;
   });
 
-  it('refuses the read-only cliplot token on the maintenance route', async () => {
+  it('refuses the legacy cliplot static token on the maintenance route', async () => {
     process.env.CLIPLOT_WAREHOUSE_SERVICE_TOKEN = 'cliplot-warehouse-token';
     const request = { headers: { authorization: 'Bearer cliplot-warehouse-token' } };
+    mockedAxios.post.mockResolvedValueOnce({ data: { valid: false } } as any);
 
     const guard = createGuard({ roles: [...WAREHOUSE_MAINTENANCE_ROLES] });
 
-    await expect(guard.canActivate(createContext(request))).rejects.toThrow(ForbiddenException);
+    await expect(guard.canActivate(createContext(request))).rejects.toThrow(UnauthorizedException);
   });
 
 });

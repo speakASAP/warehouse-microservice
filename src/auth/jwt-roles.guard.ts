@@ -12,7 +12,6 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import axios from 'axios';
-import { timingSafeEqual } from 'crypto';
 import { Request } from 'express';
 import { RequestWithAuthenticatedUser } from './authenticated-actor';
 import { ROLES_KEY, PUBLIC_KEY } from './roles.decorator';
@@ -81,8 +80,7 @@ export class JwtRolesGuard implements CanActivate {
     }
 
     const token = authHeader.slice(7);
-    const staticServiceActor = this.resolveStaticServiceActor(token);
-    const authUser = staticServiceActor ?? (await this.validateWithAuthService(token));
+    const authUser = await this.validateWithAuthService(token);
     const userRoles = Array.isArray(authUser.roles) ? authUser.roles : [];
 
     const hasRole = requiredRoles.some((r) => userRoles.includes(r));
@@ -113,49 +111,6 @@ export class JwtRolesGuard implements CanActivate {
     return true;
   }
 
-  /**
-   * Legacy shared-secret bypass. This credential is a static string held by more
-   * than one pod and is not revocable through Auth, so it is scoped to read-only
-   * rather than admin. Slated for replacement by a per-pair RS256 service JWT;
-   * see docs/RS256_SERVICE_TOKEN_MIGRATION_PLAN.md.
-   */
-  private resolveStaticServiceActor(token: string): AuthValidationUser | null {
-    // Warehouse's own scheduled maintenance identity, used by the
-    // reservation-expiry CronJob. Separate from any caller's credential so that
-    // restricting an external token cannot disable internal maintenance.
-    const maintenanceToken = process.env.WAREHOUSE_MAINTENANCE_TOKEN;
-    if (maintenanceToken && this.safeEqual(token, maintenanceToken)) {
-      return {
-        sub: 'warehouse-maintenance',
-        type: 'service',
-        authMethod: 'warehouse-maintenance-token',
-        roles: ['internal:warehouse-microservice:maintenance'],
-        service: 'warehouse-microservice',
-        serviceName: 'warehouse-microservice',
-        clientId: 'warehouse-maintenance',
-      };
-    }
-
-    const cliplotToken = process.env.CLIPLOT_WAREHOUSE_SERVICE_TOKEN;
-    if (cliplotToken && this.safeEqual(token, cliplotToken)) {
-      this.logger.warn(
-        'Request authenticated with the legacy static cliplot warehouse token; ' +
-          'this credential is shared and unrevocable, and is restricted to read-only routes.',
-      );
-      return {
-        sub: 'cliplot',
-        type: 'service',
-        authMethod: 'warehouse-static-service-token',
-        roles: ['internal:warehouse-microservice:readonly'],
-        service: 'cliplot',
-        serviceName: 'cliplot',
-        clientId: 'cliplot',
-      };
-    }
-
-    return null;
-  }
-
   private async validateWithAuthService(token: string): Promise<AuthValidationUser> {
     try {
       const response = await axios.post<AuthValidationResponse>(
@@ -182,14 +137,5 @@ export class JwtRolesGuard implements CanActivate {
   private getAuthValidateTimeoutMs(): number {
     const configured = Number(process.env.AUTH_VALIDATE_TIMEOUT_MS);
     return Number.isFinite(configured) && configured > 0 ? configured : DEFAULT_AUTH_VALIDATE_TIMEOUT_MS;
-  }
-
-  private safeEqual(left: string, right: string): boolean {
-    const leftBuffer = Buffer.from(left);
-    const rightBuffer = Buffer.from(right);
-    if (leftBuffer.length !== rightBuffer.length) {
-      return false;
-    }
-    return timingSafeEqual(leftBuffer, rightBuffer);
   }
 }
