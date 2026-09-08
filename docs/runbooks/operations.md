@@ -74,13 +74,6 @@ kubectl -n statex-apps exec deploy/warehouse-microservice -c app -- sh -c \
   'echo "${SERVICE_TOKEN:+SET}"'
 ```
 
-> **A previous version of this runbook told you to self-mint an HS256 token and
-> smoke-test with a named static token. Both are prohibited.** The guard validates
-> an Auth-issued RS256 credential; a self-minted token is unrevocable, carries a
-> self-granted role, and produced an opaque 401 that invited the conclusion that
-> the service was broken. Any residual static-token acceptance path is a defect to
-> be removed, not a supported test route.
-
 ## Event Verification
 
 Check RabbitMQ dependency and stock event metrics:
