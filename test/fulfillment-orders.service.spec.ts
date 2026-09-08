@@ -251,7 +251,6 @@ describe('FulfillmentOrdersService', () => {
       }),
       expect.objectContaining({
         headers: expect.objectContaining({
-          'x-service-name': 'warehouse-microservice',
           Authorization: 'Bearer warehouse-orders-rs256',
         }),
       }),

@@ -323,7 +323,6 @@ export class FulfillmentOrdersService {
         {
           timeout: 5000,
           headers: {
-            'x-service-name': 'warehouse-microservice',
             ...this.resolveOrdersAuthHeader(token.trim()),
           },
         },
