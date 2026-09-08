@@ -272,13 +272,7 @@ export class FulfillmentOrdersService {
     return parsed.toISOString();
   }
 
-  /**
-   * ORDERS_SERVICE_TOKEN is the per-pair RS256 principal
-   * (svc-warehouse-microservice--orders-microservice@internal.alfares.cz), verified by
-   * orders through /auth/validate. It is the only credential this lane has: the shared
-   * static JWT_TOKEN fallback was removed once orders stopped accepting that value
-   * on 2026-08-26 and its inbound entry was deleted from orders' ExternalSecret.
-   */
+  /** S2S: auth-microservice/docs/SERVICE_IDENTITY_CONSUMER_STANDARD.md */
   private resolveOrdersAuthHeader(token: string): Record<string, string> {
     const bearer = token.trim();
     if (!bearer) {
