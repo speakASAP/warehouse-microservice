@@ -21,7 +21,7 @@ spec:
       template:
         metadata:
           labels:
-            app: warehouse-microservice
+            app: warehouse-microservice-job
             job: reservation-expiry
         spec:
           restartPolicy: Never
